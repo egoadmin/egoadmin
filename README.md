@@ -11,14 +11,17 @@
 git clone https://github.com/egoadmin/egoadmin.git
 cd egoadmin
 
+# 设置镜像仓库为 ghcr.io（应用服务镜像从 GitHub Container Registry 拉取）
+export DOCKER_REGISTRY=ghcr.io/egoadmin
+
 # 启动全部服务（含中间件）
-make deploy-up
+DOCKER_REGISTRY=ghcr.io/egoadmin make deploy-up
 
 # 访问 http://localhost:9001
 # 默认管理员：admin / 123456
 ```
 
-镜像默认从 GitHub Container Registry 拉取，无需额外配置。
+中间件镜像（MySQL、Redis、etcd 等）使用 Docker Hub 公开镜像。应用服务镜像发布在 `ghcr.io/egoadmin/`，需要通过 `DOCKER_REGISTRY` 环境变量指定。
 
 ### 仅运行单个服务
 
