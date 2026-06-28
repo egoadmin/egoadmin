@@ -30,15 +30,31 @@ jobs:
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
       - name: Build frontend
         working-directory: web
         run: pnpm install && pnpm run build
 
-      - name: Upload web/dist
+      - name: Install protoc
+        run: |
+          wget -q https://github.com/protocolbuffers/protobuf/releases/download/v3.20.0/protoc-3.20.0-linux-x86_64.zip -O protoc.zip
+          sudo unzip protoc.zip -d /usr/local && rm protoc.zip
+
+      - name: Generate code
+        run: make install && make gen
+
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: web-dist
-          path: web/dist
+          name: build-output
+          path: |
+            web/dist
+            api/gen
+            api/openapi
+            api/catalog
           retention-days: 1
 
   docker:
@@ -50,11 +66,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download web/dist
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: web-dist
-          path: web/dist
+          name: build-output
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
