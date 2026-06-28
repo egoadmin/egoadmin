@@ -12,7 +12,7 @@ import (
 	"github.com/egoadmin/egoadmin/internal/component/idgen"
 	"github.com/egoadmin/egoadmin/internal/component/jetcache"
 	"github.com/egoadmin/egoadmin/internal/component/logincrypto"
-	"github.com/egoadmin/egoadmin/internal/platform/cache/local"
+	localcache "github.com/egoadmin/egoadmin/internal/platform/cache/local"
 	"github.com/egoadmin/egoadmin/internal/platform/cache/redis"
 	"github.com/egoadmin/egoadmin/internal/platform/captcha"
 	"github.com/egoadmin/egoadmin/internal/platform/config"

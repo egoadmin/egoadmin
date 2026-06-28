@@ -42,7 +42,7 @@ func mergeYAML(basePath, extraPath, outPath string) error {
 	if err != nil {
 		return fmt.Errorf("marshal yaml: %w", err)
 	}
-	return os.WriteFile(outPath, data, 0o644)
+	return os.WriteFile(outPath, data, 0o600)
 }
 
 func mergeJSON(basePath, extraPath, outPath string) error {
@@ -58,7 +58,7 @@ func mergeJSON(basePath, extraPath, outPath string) error {
 		return fmt.Errorf("marshal json: %w", err)
 	}
 	data = append(data, '\n')
-	return os.WriteFile(outPath, data, 0o644)
+	return os.WriteFile(outPath, data, 0o600)
 }
 
 func mergeExtra(base *map[string]any, extraPath string) error {

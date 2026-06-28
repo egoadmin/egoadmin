@@ -15,6 +15,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	dispositionInline    = "inline"
+	dispositionAttachment = "attachment"
+)
+
 func (c *Component) FileHandler(opts Options) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		referenceID, err := c.parseReferenceID(ctx.Param("referenceId"))
@@ -89,9 +94,9 @@ func (c *Component) serveFileObject(ctx *gin.Context, object *upload.DownloadObj
 		return
 	}
 	fileName := safeDownloadName(object.OriginalName, object.ObjectKey)
-	disposition := "attachment"
-	if ctx.Query("display") == "inline" {
-		disposition = "inline"
+	disposition := dispositionAttachment
+	if ctx.Query("display") == dispositionInline {
+		disposition = dispositionInline
 	}
 	contentType := firstNonEmpty(object.ContentType, stat.ContentType, mime.TypeByExtension(path.Ext(fileName)), "application/octet-stream")
 	modTime := time.Now()
@@ -130,7 +135,7 @@ func fileSignatureMaterial(u *url.URL) string {
 }
 
 func validateDisplay(display string) error {
-	if display == "" || display == "attachment" || display == "inline" {
+	if display == "" || display == dispositionAttachment || display == dispositionInline {
 		return nil
 	}
 	return ErrInvalidDisplay
