@@ -130,11 +130,17 @@ func newApp(opts Options) (*App, error) {
 	return &App{Ego: opts.app}, nil
 }
 
-func newEgo() *ego.Ego {
-	return ego.New()
+func newEgo(conf *config.Config) *ego.Ego {
+	return ego.New(ego.WithArguments([]string{"--config", conf.RenderedPath()}))
 }
 
-func newConfig(e *ego.Ego) *config.Config {
+// newEgoReady 在 ego.New() 之后产出配置就绪标志。读 econf 的组件依赖它，
+// Wire 据此保证这些组件在 ego 加载配置（econf 就绪）之后才构造。
+func newEgoReady(_ *ego.Ego) config.EgoReady {
+	return config.EgoReady{}
+}
+
+func newConfig() *config.Config {
 	return config.New(config.WithService(config.ServiceUser))
 }
 

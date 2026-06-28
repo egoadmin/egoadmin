@@ -21,7 +21,7 @@ func TestEnvSuffix(t *testing.T) {
 }
 
 func TestApplyEnvOverridesUsesMergedConfigTypes(t *testing.T) {
-	mg := NewMG(WithEnvPrefix("TESTAPP"))
+	mg := &Manager{envPrefix: "TESTAPP"}
 	config := map[string]interface{}{
 		"app": map[string]interface{}{
 			"service": map[string]interface{}{
@@ -95,7 +95,7 @@ func TestApplyEnvOverridesUsesMergedConfigTypes(t *testing.T) {
 }
 
 func TestApplyEnvOverridesReturnsConversionError(t *testing.T) {
-	mg := NewMG(WithEnvPrefix("TESTAPP"))
+	mg := &Manager{envPrefix: "TESTAPP"}
 	config := map[string]interface{}{
 		"app": map[string]interface{}{
 			"service": map[string]interface{}{
@@ -156,7 +156,7 @@ func TestLoadDotEnvDoesNotOverrideSystemEnv(t *testing.T) {
 	}
 	t.Setenv("TESTAPP_APP_NAME", "from-system")
 
-	mg := NewMG(WithEnvPrefix("TESTAPP"))
+	mg := &Manager{envPrefix: "TESTAPP"}
 	if err = mg.loadDotEnv(); err != nil {
 		t.Fatal(err)
 	}

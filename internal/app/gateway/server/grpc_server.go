@@ -7,6 +7,7 @@ import (
 	userv1 "github.com/egoadmin/egoadmin/api/gen/go/user/v1"
 	"github.com/egoadmin/egoadmin/internal/app/gateway/controller"
 	"github.com/egoadmin/egoadmin/internal/component/authsession"
+	"github.com/egoadmin/egoadmin/internal/platform/config"
 	platformi18n "github.com/egoadmin/egoadmin/internal/platform/i18n"
 	ecodev1 "github.com/egoadmin/elib/api/gen/go/ecode/v1"
 	"github.com/egoadmin/elib/pkg/constant"
@@ -51,7 +52,7 @@ type GrpcServer struct {
 }
 
 // NewGrpcServer 实例化grpc服务
-func NewGrpcServer(opts controller.Options) *GrpcServer {
+func NewGrpcServer(opts controller.Options, _ config.EgoReady) *GrpcServer {
 	// 从配置文件中加载gRPC服务器配置
 	s := egrpc.Load("server.grpc").Build(
 		// 设置一元拦截器

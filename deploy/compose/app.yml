@@ -6,6 +6,7 @@ services:
     environment:
       EGO_NAME: egoadmin-idgen
       EGOADMIN_SERVER_GRPC_NAME: egoadmin-idgen
+      EGOADMIN_SERVER_GRPC_HOST: idgen
       EGOADMIN_SERVER_GOVERNOR_NAME: egoadmin-idgen
       ATLAS_URL: mysql://${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@mysql-idgen:3306/${MYSQL_IDGEN_DATABASE:-egoadmin_idgen}?charset=utf8mb4&parseTime=True&loc=Local
       EGOADMIN_APP_DBMIGRATION_URL: mysql://${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@mysql-idgen:3306/${MYSQL_IDGEN_DATABASE:-egoadmin_idgen}?charset=utf8mb4&parseTime=True&loc=Local
@@ -39,6 +40,7 @@ services:
     environment:
       EGO_NAME: egoadmin-user
       EGOADMIN_SERVER_GRPC_NAME: egoadmin-user
+      EGOADMIN_SERVER_GRPC_HOST: user
       EGOADMIN_SERVER_GOVERNOR_NAME: egoadmin-user
       EGOADMIN_SERVER_HTTP_NAME: egoadmin-user
       ATLAS_URL: mysql://${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@mysql-user:3306/${MYSQL_USER_DATABASE:-egoadmin_user}?charset=utf8mb4&parseTime=True&loc=Local
@@ -87,6 +89,7 @@ services:
     environment:
       EGO_NAME: egoadmin-gateway
       EGOADMIN_SERVER_GRPC_NAME: egoadmin-gateway
+      EGOADMIN_SERVER_GRPC_HOST: gateway
       EGOADMIN_SERVER_GOVERNOR_NAME: egoadmin-gateway
       EGOADMIN_SERVER_HTTP_NAME: egoadmin-gateway
       ATLAS_URL: mysql://${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@mysql-gateway:3306/${MYSQL_GATEWAY_DATABASE:-egoadmin_gateway}?charset=utf8mb4&parseTime=True&loc=Local

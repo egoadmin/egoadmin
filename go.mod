@@ -13,6 +13,7 @@ require (
 	github.com/egoadmin/elib v1.0.0
 	github.com/egoadmin/eminio v1.0.0
 	github.com/egoadmin/xgin v1.0.0
+	github.com/fsnotify/fsnotify v1.5.4
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-playground/universal-translator v0.18.1
@@ -107,7 +108,6 @@ require (
 	github.com/fasthttp/websocket v1.5.2 // indirect
 	github.com/felixge/fgprof v0.9.5 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/glebarez/go-sqlite v1.20.3 // indirect

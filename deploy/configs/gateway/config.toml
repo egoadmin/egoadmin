@@ -19,4 +19,3 @@ grpcEndpoint = "gateway:9002"
 # 默认本地配置使用 127.0.0.1，只适合宿主机开发。
 # 容器部署需要把可被其它容器访问的地址注册到 etcd。
 # enableLocalMainIP 会让 EGO 使用容器网卡 IP 作为 gRPC 监听和注册地址。
-enableLocalMainIP = true

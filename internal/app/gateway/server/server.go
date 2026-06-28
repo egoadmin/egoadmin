@@ -185,12 +185,18 @@ func validateUploadAuth(ctx context.Context, header http.Header, client *usercli
 	return &uploadcomponent.AuthContext{UserID: auth.UserID}, nil
 }
 
-func newEgo() *ego.Ego {
-	return ego.New()
+func newEgo(conf *config.Config) *ego.Ego {
+	return ego.New(ego.WithArguments([]string{"--config", conf.RenderedPath()}))
+}
+
+// newEgoReady 在 ego.New() 之后产出配置就绪标志。读 econf 的组件依赖它，
+// Wire 据此保证这些组件在 ego 加载配置（econf 就绪）之后才构造。
+func newEgoReady(_ *ego.Ego) config.EgoReady {
+	return config.EgoReady{}
 }
 
 // newConfig 配置处理
-func newConfig(e *ego.Ego) *config.Config {
+func newConfig() *config.Config {
 	return config.New(config.WithService(config.ServiceGateway))
 }
 

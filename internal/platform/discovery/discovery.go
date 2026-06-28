@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/egoadmin/egoadmin/internal/platform/config"
 	"github.com/google/wire"
 	"github.com/gotomicro/ego-component/eetcd"
 	"github.com/gotomicro/ego-component/eetcd/registry"
@@ -20,7 +21,9 @@ func NewReady(reg eregistry.Registry) Ready {
 	return Ready{}
 }
 
-func NewRegistry() eregistry.Registry {
+// NewRegistry 初始化服务注册/发现组件。
+// 依赖 config.EgoReady 以保证在 ego 配置加载（econf 就绪）之后构造。
+func NewRegistry(ready config.EgoReady) eregistry.Registry {
 	if !hasConfig("etcd") || !hasConfig("registry") {
 		return eregistry.Nop{}
 	}
@@ -29,8 +32,8 @@ func NewRegistry() eregistry.Registry {
 	)
 }
 
-func EnsureResolver() Ready {
-	return NewReady(NewRegistry())
+func EnsureResolver(ready config.EgoReady) Ready {
+	return NewReady(NewRegistry(ready))
 }
 
 func hasConfig(key string) bool {

@@ -30,7 +30,7 @@ func EnvSuffix(path ...string) string {
 	return strings.Join(parts, "_")
 }
 
-func (m *MG) loadDotEnv() error {
+func (m *Manager) loadDotEnv() error {
 	if _, err := os.Stat(".env"); err != nil {
 		if os.IsNotExist(err) {
 			return nil
@@ -43,7 +43,7 @@ func (m *MG) loadDotEnv() error {
 	return nil
 }
 
-func (m *MG) applyEnvOverrides(config map[string]interface{}) error {
+func (m *Manager) applyEnvOverrides(config map[string]interface{}) error {
 	prefix := strings.TrimSpace(m.envPrefix)
 	if prefix == "" {
 		return nil

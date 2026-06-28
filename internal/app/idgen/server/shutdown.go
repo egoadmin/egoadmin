@@ -4,6 +4,7 @@ func configureShutdown(opts Options) {
 	if opts.shutdown == nil {
 		return
 	}
+	opts.shutdown.RegisterCloser("config", opts.conf)
 	opts.shutdown.RegisterRegistry(opts.registry)
 	opts.shutdown.RegisterDB("mysql", opts.db)
 	opts.shutdown.Bind(opts.app)

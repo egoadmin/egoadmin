@@ -16,6 +16,7 @@ import (
 func NewApp() (*App, error) {
 	panic(wire.Build(
 		newEgo,
+		newEgoReady,
 		newConfig,
 		newSchemaReady,
 		newHealth,

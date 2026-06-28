@@ -1,11 +1,20 @@
 package config
 
-import "sync"
+import (
+	"sync"
 
+	"github.com/BurntSushi/toml"
+	"github.com/gotomicro/ego/core/elog"
+)
+
+// Config 是业务侧使用的强类型配置。字段由 Manager 从渲染后的完整 TOML 解析填充，
+// 并发安全（读写受 mu 保护），支持热重载后原地更新。
 type Config struct {
 	mu sync.RWMutex
-	// 服务名
-	service ServiceName
+	// service 服务标识
+	service Service
+	// manager 配置编排器，提供临时文件路径与生命周期管理
+	manager *Manager
 	// 应用配置
 	app ServiceConf
 	// 停机配置
@@ -18,6 +27,37 @@ type Config struct {
 	idgen IDGenConf
 	// 前端运行时配置
 	web WebConf
+}
+
+// rootConfig 是渲染后完整 TOML 的顶层结构，仅用于一次性解析到各 typed 字段。
+type rootConfig struct {
+	App struct {
+		Service     ServiceConf     `toml:"service"`
+		Shutdown    ShutdownConf    `toml:"shutdown"`
+		DBMigration DBMigrationConf `toml:"dbMigration"`
+		User        UserConf        `toml:"user"`
+		IDGen       IDGenConf       `toml:"idgen"`
+		Web         WebConf         `toml:"web"`
+	} `toml:"app"`
+}
+
+// bindTOML 将渲染后的完整 TOML 解析并绑定到各 typed 字段。
+// 由 Manager 在初始化和热重载时调用。
+func (c *Config) bindTOML(rendered string) {
+	var root rootConfig
+	if _, err := toml.Decode(rendered, &root); err != nil {
+		elog.Error("config bind toml", elog.FieldErr(err))
+		return
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.app = root.App.Service
+	c.shutdown = root.App.Shutdown
+	c.dbMigration = root.App.DBMigration
+	c.user = root.App.User
+	c.idgen = root.App.IDGen
+	c.web = root.App.Web
 }
 
 // App 应用配置.
@@ -134,4 +174,22 @@ func (c *Config) SetUserForTest(user UserConf) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.user = user
+}
+
+// RenderedPath 返回渲染后的完整配置临时文件路径（含环境变量覆盖）。
+// 用于 ego.New(ego.WithArguments(["--config", path]))，确保 ego 内部的
+// loadConfig / initTracer 等读到的是合并并覆盖后的配置。
+func (c *Config) RenderedPath() string {
+	if c.manager == nil {
+		return ""
+	}
+	return c.manager.tempPath
+}
+
+// Close 删除临时配置文件。实现 io.Closer，可注册到 shutdown.Manager。
+func (c *Config) Close() error {
+	if c.manager != nil {
+		c.manager.removeRendered()
+	}
+	return nil
 }

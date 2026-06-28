@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 
+	"github.com/egoadmin/egoadmin/internal/platform/config"
 	"github.com/egoadmin/elib/pkg/util/xflake"
 	"github.com/egoadmin/elib/pkg/util/xorm"
 	"github.com/google/wire"
@@ -24,8 +25,9 @@ var NoIDProviderSet = wire.NewSet(
 // idGen id发号器
 var idGen xorm.IDSetter
 
-// NewDB 初始化数据库
-func NewDB() *egorm.Component {
+// NewDB 初始化数据库。
+// 依赖 config.EgoReady 以保证在 ego 配置加载（econf 就绪）之后构造。
+func NewDB(_ config.EgoReady) *egorm.Component {
 	db := egorm.Load("client.mysql").Build()
 	ApplyGormConfig(db)
 

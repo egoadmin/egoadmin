@@ -6,6 +6,7 @@ import (
 	egoadmin "github.com/egoadmin/egoadmin"
 	userv1 "github.com/egoadmin/egoadmin/api/gen/go/user/v1"
 	"github.com/egoadmin/egoadmin/internal/app/gateway/controller"
+	"github.com/egoadmin/egoadmin/internal/platform/config"
 	"github.com/egoadmin/elib/pkg/middleware/ecode"
 	"github.com/egoadmin/elib/pkg/middleware/perm"
 	"github.com/egoadmin/elib/pkg/middleware/recovery"
@@ -19,7 +20,7 @@ import (
 const openAPIYAMLPath = "/openapi.yaml"
 
 // NewHttpServer 实例化http服务
-func NewHttpServer(opts controller.Options) *egin.Component {
+func NewHttpServer(opts controller.Options, _ config.EgoReady) *egin.Component {
 	server := xgin.Load("server.http").Build()
 	util.DisableGinResponseWrapping()
 	util.WithMiddleware(

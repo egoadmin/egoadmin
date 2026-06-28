@@ -7,6 +7,7 @@ import (
 	userv1 "github.com/egoadmin/egoadmin/api/gen/go/user/v1"
 	"github.com/egoadmin/egoadmin/internal/app/user/controller"
 	"github.com/egoadmin/egoadmin/internal/component/authsession"
+	"github.com/egoadmin/egoadmin/internal/platform/config"
 	"github.com/egoadmin/elib/pkg/middleware/ecode"
 	"github.com/egoadmin/elib/pkg/middleware/perm"
 	"github.com/egoadmin/elib/pkg/middleware/recovery"
@@ -39,7 +40,7 @@ type GrpcServer struct {
 	*egrpc.Component
 }
 
-func NewGrpcServer(opts controller.Options) *GrpcServer {
+func NewGrpcServer(opts controller.Options, _ config.EgoReady) *GrpcServer {
 	s := egrpc.Load("server.grpc").Build(
 		egrpc.WithUnaryInterceptor(
 			grpc.Middleware(

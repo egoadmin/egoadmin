@@ -1,24 +1,13 @@
 package config
 
-import (
-	"strings"
-	"testing"
+import "testing"
 
-	"github.com/BurntSushi/toml"
-	"github.com/gotomicro/ego/core/econf"
-)
-
-func TestNewWithServiceUserDoesNotRequireWebConfig(t *testing.T) {
-	if err := econf.LoadFromReader(strings.NewReader(""), toml.Unmarshal); err != nil {
-		t.Fatalf("reset econf before test: %v", err)
-	}
-	t.Cleanup(func() {
-		if err := econf.LoadFromReader(strings.NewReader(""), toml.Unmarshal); err != nil {
-			t.Fatalf("reset econf: %v", err)
-		}
-	})
-
+// 无 --config 时源文件不存在，New 退化为只用内置默认配置。
+// 验证 user 服务的默认配置被正确绑定到 typed *Config。
+func TestNewWithServiceUserUsesDefaults(t *testing.T) {
 	conf := New(WithService(ServiceUser), WithEnvPrefix(""))
+	t.Cleanup(func() { _ = conf.Close() })
+
 	if conf.App().Name != "egoadmin-user" {
 		t.Fatalf("service name = %q, want egoadmin-user", conf.App().Name)
 	}

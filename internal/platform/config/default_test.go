@@ -36,7 +36,7 @@ func TestDefaultConfigDocumentIncludesEnvSuffixGuidance(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		service ServiceName
+		service Service
 		want    []string
 	}{
 		{
