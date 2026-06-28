@@ -1,0 +1,62 @@
+# Build artifacts
+bin/
+_output/
+dist
+web/dist
+*.exe
+*.o
+*.a
+*.so
+
+# Generated code (rebuild with `make gen`)
+api/gen
+api/openapi
+api/catalog
+*.pb.go
+*.pb.gw.go
+wire_gen.go
+
+# Go
+vendor/
+go.work
+go.work.sum
+coverage.txt
+*.test
+*.prof
+
+# Node
+node_modules
+web/node_modules
+
+# Runtime data
+logs/
+*.log
+*.pid
+deploy/data/*
+!deploy/data/.gitkeep
+test/data/
+test/e2e/.tmp
+test/e2e/gateway/test/
+
+# IDE
+.idea
+.DS_Store
+
+# Dev tooling
+.egoadmin-tools/
+lefthook-local.yml
+
+# Temporary / local
+tmp/
+*/*.profile
+*/*.out
+egoadmin-*
+__debug_bin
+tools/debug
+codex.txt
+.env.local
+
+# Secrets (should never be committed)
+*.pem
+*.p2
+*.key

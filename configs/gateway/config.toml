@@ -1,0 +1,91 @@
+# 普通运行时配置：只保留环境差异、地址和 secret。
+# 完整默认配置格式可通过 `go run ./cmd/gateway config print-default` 查看。
+
+[app.service]
+name = "egoadmin-gateway"
+platformName = "核心管理平台"
+webPath = "/tmp/egoadmin/core/frontend/html"
+bucketName = "egoadmin"
+
+[app.web]
+fileBaseUrl = ""
+offlineOnPageLeave = false
+
+[app.dbMigration]
+url = "mysql://egoadmin:egoadmin@127.0.0.1:3306/egoadmin_gateway?charset=utf8mb4&parseTime=True&loc=Local"
+dir = "file://atlas/migrations/gateway"
+
+[server.http]
+host = "0.0.0.0"
+port = 9001
+mode = "release"
+enableAccessInterceptorReq = false
+enableAccessInterceptorRes = false
+enableMetricInterceptor = false
+enableTraceInterceptor = true
+enableURLPathTrans = true
+ginRelativePath = "/api/*action"
+grpcEndpoint = "127.0.0.1:9002"
+stripPrefix = "/api"
+
+[client.mysql]
+dsn = "egoadmin:egoadmin@tcp(127.0.0.1:3306)/egoadmin_gateway?charset=utf8mb4&parseTime=True&loc=Local&readTimeout=1s&timeout=1s&writeTimeout=3s"
+
+[client.redis]
+addr = "127.0.0.1:6379"
+password = "egoadmin"
+
+[client.asyncq]
+redisAddr = "127.0.0.1:6379"
+redisPassword = "egoadmin"
+
+[client.minio]
+endpoint = "127.0.0.1:9000"
+accessKeyID = "egoadmin"
+secretAccessKey = "egoadmin123"
+ssl = false
+
+[component.cdn]
+signSecret = "local-cdn-sign-secret"
+
+[client.imageProcessor]
+url = "http://127.0.0.1:2853"
+secret = "local-image-processor-secret"
+timeout = "5s"
+
+[component.idgen.default]
+namespace = "egoadmin-local"
+name = "default"
+
+[component.idgen.machine]
+group = "egoadmin-local"
+
+[component.idgen.codec]
+secret = "local-stable-idcodec-secret"
+
+[client.grpc.user]
+addr = "etcd:///egoadmin-user"
+readTimeout = "3s"
+dialTimeout = "3s"
+
+[client.grpc.idgen]
+addr = "etcd:///egoadmin-idgen"
+readTimeout = "3s"
+dialTimeout = "5s"
+
+[etcd]
+addrs = ["127.0.0.1:2379"]
+connectTimeout = "1s"
+
+[registry]
+scheme = "etcd"
+prefix = "egoadmin"
+serviceTTL = "10s"
+
+[trace]
+ServiceName = "egoadmin-gateway-local"
+OtelType = "otlp"
+Fraction = 1.00
+
+[trace.otlp]
+Endpoint = "127.0.0.1:4317"

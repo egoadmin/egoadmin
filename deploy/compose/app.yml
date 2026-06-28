@@ -1,0 +1,135 @@
+services:
+  idgen:
+    image: ${DOCKER_REGISTRY:-egoadmin}/egoadmin-idgen:${DOCKER_TAG:-latest}
+    restart: always
+    command: ["--config=/app/config/config.toml"]
+    environment:
+      EGO_NAME: egoadmin-idgen
+      EGOADMIN_SERVER_GRPC_NAME: egoadmin-idgen
+      EGOADMIN_SERVER_GOVERNOR_NAME: egoadmin-idgen
+      ATLAS_URL: mysql://${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@mysql-idgen:3306/${MYSQL_IDGEN_DATABASE:-egoadmin_idgen}?charset=utf8mb4&parseTime=True&loc=Local
+      EGOADMIN_APP_DBMIGRATION_URL: mysql://${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@mysql-idgen:3306/${MYSQL_IDGEN_DATABASE:-egoadmin_idgen}?charset=utf8mb4&parseTime=True&loc=Local
+      EGOADMIN_CLIENT_MYSQL_DSN: ${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@tcp(mysql-idgen:3306)/${MYSQL_IDGEN_DATABASE:-egoadmin_idgen}?charset=utf8mb4&parseTime=True&loc=Local&readTimeout=1s&timeout=1s&writeTimeout=3s
+      EGOADMIN_ETCD_ADDRS: etcd:2379
+      EGOADMIN_TRACE_OTLP_ENDPOINT: jaeger:4317
+    volumes:
+      - ../configs/idgen/config.toml:/app/config/config.toml:ro
+    depends_on:
+      mysql-idgen:
+        condition: service_healthy
+      etcd:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+    ports:
+      - "${IDGEN_HTTP_PORT:-9201}:9201"
+      - "${IDGEN_GRPC_PORT:-9202}:9202"
+      - "${IDGEN_GOVERNOR_PORT:-9203}:9203"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9201/readyz >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  user:
+    image: ${DOCKER_REGISTRY:-egoadmin}/egoadmin-user:${DOCKER_TAG:-latest}
+    restart: always
+    command: ["--config=/app/config/config.toml"]
+    environment:
+      EGO_NAME: egoadmin-user
+      EGOADMIN_SERVER_GRPC_NAME: egoadmin-user
+      EGOADMIN_SERVER_GOVERNOR_NAME: egoadmin-user
+      EGOADMIN_SERVER_HTTP_NAME: egoadmin-user
+      ATLAS_URL: mysql://${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@mysql-user:3306/${MYSQL_USER_DATABASE:-egoadmin_user}?charset=utf8mb4&parseTime=True&loc=Local
+      EGOADMIN_APP_DBMIGRATION_URL: mysql://${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@mysql-user:3306/${MYSQL_USER_DATABASE:-egoadmin_user}?charset=utf8mb4&parseTime=True&loc=Local
+      EGOADMIN_CLIENT_MYSQL_DSN: ${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@tcp(mysql-user:3306)/${MYSQL_USER_DATABASE:-egoadmin_user}?charset=utf8mb4&parseTime=True&loc=Local&readTimeout=1s&timeout=1s&writeTimeout=3s
+      EGOADMIN_CLIENT_REDIS_ADDR: redis-user:6379
+      EGOADMIN_CLIENT_REDIS_PASSWORD: ${REDIS_PASSWORD:-egoadmin}
+      EGOADMIN_CLIENT_MINIO_ENDPOINT: minio:9000
+      EGOADMIN_CLIENT_MINIO_ACCESSKEYID: ${MINIO_ROOT_USER:-egoadmin}
+      EGOADMIN_CLIENT_MINIO_SECRETACCESSKEY: ${MINIO_ROOT_PASSWORD:-egoadmin123}
+      EGOADMIN_ETCD_ADDRS: etcd:2379
+      EGOADMIN_TRACE_OTLP_ENDPOINT: jaeger:4317
+      EGOADMIN_APP_USER_ADMINPASSWORD: ${EGOADMIN_ADMIN_PASSWORD:-123456}
+      EGOADMIN_APP_USER_ROOTPASSWORD: ${EGOADMIN_ROOT_PASSWORD:-}
+      EGOADMIN_APP_USER_JWTSIGNKEY: ${EGOADMIN_JWT_SIGN_KEY:-deploy-egoadmin-jwt-sign-key}
+    volumes:
+      - ../configs/user/config.toml:/app/config/config.toml:ro
+    depends_on:
+      mysql-user:
+        condition: service_healthy
+      redis-user:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      etcd:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+      idgen:
+        condition: service_healthy
+    ports:
+      - "${USER_HTTP_PORT:-9101}:9101"
+      - "${USER_GRPC_PORT:-9102}:9102"
+      - "${USER_GOVERNOR_PORT:-9103}:9103"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9101/readyz >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  gateway:
+    image: ${DOCKER_REGISTRY:-egoadmin}/egoadmin-gateway:${DOCKER_TAG:-latest}
+    restart: always
+    command: ["--config=/app/config/config.toml"]
+    environment:
+      EGO_NAME: egoadmin-gateway
+      EGOADMIN_SERVER_GRPC_NAME: egoadmin-gateway
+      EGOADMIN_SERVER_GOVERNOR_NAME: egoadmin-gateway
+      EGOADMIN_SERVER_HTTP_NAME: egoadmin-gateway
+      ATLAS_URL: mysql://${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@mysql-gateway:3306/${MYSQL_GATEWAY_DATABASE:-egoadmin_gateway}?charset=utf8mb4&parseTime=True&loc=Local
+      EGOADMIN_APP_DBMIGRATION_URL: mysql://${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@mysql-gateway:3306/${MYSQL_GATEWAY_DATABASE:-egoadmin_gateway}?charset=utf8mb4&parseTime=True&loc=Local
+      EGOADMIN_CLIENT_MYSQL_DSN: ${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@tcp(mysql-gateway:3306)/${MYSQL_GATEWAY_DATABASE:-egoadmin_gateway}?charset=utf8mb4&parseTime=True&loc=Local&readTimeout=1s&timeout=1s&writeTimeout=3s
+      EGOADMIN_CLIENT_REDIS_ADDR: redis-gateway:6379
+      EGOADMIN_CLIENT_REDIS_PASSWORD: ${REDIS_PASSWORD:-egoadmin}
+      EGOADMIN_CLIENT_MINIO_ENDPOINT: minio:9000
+      EGOADMIN_CLIENT_MINIO_ACCESSKEYID: ${MINIO_ROOT_USER:-egoadmin}
+      EGOADMIN_CLIENT_MINIO_SECRETACCESSKEY: ${MINIO_ROOT_PASSWORD:-egoadmin123}
+      EGOADMIN_COMPONENT_CDN_SIGNSECRET: ${CDN_SIGN_SECRET:-change-me}
+      EGOADMIN_CLIENT_IMAGEPROCESSOR_URL: http://image-processor:2853
+      EGOADMIN_CLIENT_IMAGEPROCESSOR_SECRET: ${IMAGE_PROCESSOR_SECRET:-change-me}
+      EGOADMIN_COMPONENT_IDGEN_CODEC_SECRET: ${IDGEN_CODEC_SECRET:-deploy-stable-idcodec-secret}
+      EGOADMIN_ETCD_ADDRS: etcd:2379
+      EGOADMIN_TRACE_OTLP_ENDPOINT: jaeger:4317
+    volumes:
+      - ../configs/gateway/config.toml:/app/config/config.toml:ro
+      - ../data/gateway/tus:/app/data/tus
+    depends_on:
+      mysql-gateway:
+        condition: service_healthy
+      redis-gateway:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      image-processor:
+        condition: service_started
+      etcd:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+      idgen:
+        condition: service_healthy
+      user:
+        condition: service_healthy
+    ports:
+      - "${GATEWAY_HTTP_PORT:-9001}:9001"
+      - "${GATEWAY_GRPC_PORT:-9002}:9002"
+      - "${GATEWAY_GOVERNOR_PORT:-9003}:9003"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9001/readyz >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s

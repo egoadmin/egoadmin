@@ -1,0 +1,10 @@
+when:
+  - event: [pull_request]
+
+pipeline:
+  lint:
+    image: golang:1.21.3-bullseye
+    depends_on:
+      - lint
+    when:
+      - event: [pull_request]

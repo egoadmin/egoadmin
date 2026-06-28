@@ -1,0 +1,23 @@
+version: v1
+deps:
+  - buf.build/grpc-ecosystem/grpc-gateway
+  - buf.build/googleapis/googleapis
+  - buf.build/srikrsna/protoc-gen-gotag
+
+breaking:
+  use:
+    - FILE
+    - PACKAGE
+    - WIRE_JSON
+lint:
+  use:
+    - STANDARD
+    - COMMENT_ENUM
+    - COMMENT_ENUM_VALUE
+    - COMMENT_FIELD
+    - COMMENT_MESSAGE
+    - COMMENT_ONEOF
+    - COMMENT_RPC
+    - COMMENT_SERVICE
+  ignore:
+#    - google/type/datetime.proto

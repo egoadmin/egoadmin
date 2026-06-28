@@ -1,0 +1,58 @@
+services:
+  redis-gateway:
+    image: bitnamilegacy/redis:8.0
+    user: root
+    privileged: true
+    restart: always
+    environment:
+      - REDIS_AOF_ENABLED=${REDIS_AOF_ENABLED:-yes}
+      - REDIS_PORT_NUMBER=${REDIS_PORT_NUMBER:-6379}
+      - REDIS_IO_THREADS=${REDIS_IO_THREADS:-4}
+      - ALLOW_EMPTY_PASSWORD=${ALLOW_EMPTY_PASSWORD:-no}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-egoadmin}
+    ports:
+      - "${REDIS_GATEWAY_PORT:-6379}:6379"
+    volumes:
+      - ../data/gateway/redis:/bitnami/redis/data:rw,Z
+    command: >
+      bash -c "
+        /opt/bitnami/scripts/redis/setup.sh
+        chown -R redis:redis /bitnami/redis/data
+        chmod g+s /bitnami/redis/data
+        exec /opt/bitnami/scripts/redis/entrypoint.sh /opt/bitnami/scripts/redis/run.sh
+      "
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+
+  redis-user:
+    image: bitnamilegacy/redis:8.0
+    user: root
+    privileged: true
+    restart: always
+    environment:
+      - REDIS_AOF_ENABLED=${REDIS_AOF_ENABLED:-yes}
+      - REDIS_PORT_NUMBER=${REDIS_PORT_NUMBER:-6379}
+      - REDIS_IO_THREADS=${REDIS_IO_THREADS:-4}
+      - ALLOW_EMPTY_PASSWORD=${ALLOW_EMPTY_PASSWORD:-no}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-egoadmin}
+    ports:
+      - "${REDIS_USER_PORT:-6380}:6379"
+    volumes:
+      - ../data/user/redis:/bitnami/redis/data:rw,Z
+    command: >
+      bash -c "
+        /opt/bitnami/scripts/redis/setup.sh
+        chown -R redis:redis /bitnami/redis/data
+        chmod g+s /bitnami/redis/data
+        exec /opt/bitnami/scripts/redis/entrypoint.sh /opt/bitnami/scripts/redis/run.sh
+      "
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 10s

@@ -1,0 +1,398 @@
+syntax = "proto3";
+
+package user.v1;
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "tagger/tagger.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "组织服务"
+    description: "服务名: user.v1.DeptService"
+    version: "1.0"
+    license: {
+      name: "MIT"
+    }
+  }
+  schemes: HTTP
+  consumes: "application/json"
+  produces: "application/json"
+  security_definitions: {
+    security: {
+      key: "BearerAuth"
+      value: {
+        type: TYPE_API_KEY
+        in: IN_HEADER
+        name: "Authorization"
+        description: "JWT 认证头。Swagger UI 中请输入完整值: Bearer <token>"
+      }
+    }
+  }
+};
+
+// DeptService 组织服务
+service DeptService {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {
+    description: "组织服务,服务名: user.v1.DeptService"
+  };
+
+  // AddDept 新增组织
+  rpc AddDept(AddDeptRequest) returns (AddDeptResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.DeptService/AddDept",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "组织服务,服务名: user.v1.DeptService"
+      tags: "DeptService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.DEPTSERVICE/ADDDEPT。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // DeleteDeptCascade 级联删除组织(含子组织)
+  rpc DeleteDeptCascade(DeleteDeptCascadeRequest) returns (DeleteDeptCascadeResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.DeptService/DeleteDeptCascade",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "组织服务,服务名: user.v1.DeptService"
+      tags: "DeptService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.DEPTSERVICE/DELETEDEPTCASCADE。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // UpdateDept 修改组织
+  rpc UpdateDept(UpdateDeptRequest) returns (UpdateDeptResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.DeptService/UpdateDept",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "组织服务,服务名: user.v1.DeptService"
+      tags: "DeptService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.DEPTSERVICE/UPDATEDEPT。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // UpdatePriorityDept 修改排序
+  //
+  // 修改时只允许修改同层级的排序,在前端将同级的所有数据按顺序排完后一次修改
+  rpc UpdatePriorityDept(UpdatePriorityDeptRequest) returns (UpdatePriorityDeptResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.DeptService/UpdatePriorityDept",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "组织服务,服务名: user.v1.DeptService"
+      tags: "DeptService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.DEPTSERVICE/UPDATEPRIORITYDEPT。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // GetDeptByName 根据组织名称获取组织
+  rpc GetDeptByName(GetDeptByNameRequest) returns (GetDeptByNameResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.DeptService/GetDeptByName",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "组织服务,服务名: user.v1.DeptService"
+      tags: "DeptService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.DEPTSERVICE/GETDEPTBYNAME。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // GetDept 查询组织
+  rpc GetDept(GetDeptRequest) returns (GetDeptResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.DeptService/GetDept",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "组织服务,服务名: user.v1.DeptService"
+      tags: "DeptService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.DEPTSERVICE/GETDEPT。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // GetDeptTop 获取顶级组织
+  rpc GetDeptTop(GetDeptTopRequest) returns (GetDeptTopResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.DeptService/GetDeptTop",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "组织服务,服务名: user.v1.DeptService"
+      tags: "DeptService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.DEPTSERVICE/GETDEPTTOP。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // GetDeptChild 获取子组织
+  rpc GetDeptChild(GetDeptChildRequest) returns (GetDeptChildResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.DeptService/GetDeptChild",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "组织服务,服务名: user.v1.DeptService"
+      tags: "DeptService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.DEPTSERVICE/GETDEPTCHILD。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // CheckDeptDelete 检查组织是否可删除
+  rpc CheckDeptDelete(CheckDeptDeleteRequest) returns (CheckDeptDeleteResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.DeptService/CheckDeptDelete",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "组织服务,服务名: user.v1.DeptService"
+      tags: "DeptService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.DEPTSERVICE/CHECKDEPTDELETE。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+}
+
+// AddDeptRequest 添加组织请求
+message AddDeptRequest {
+  // ParentID 父id,顶级组织父id为0
+  uint64 parent_id = 1;
+  // Dept 组织信息
+  Dept dept = 2 [
+    (tagger.tags) = "validate:\"required\" label:\"组织信息\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "组织信息"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+// AddDeptResponse 添加组织响应
+message AddDeptResponse {
+  // Id 组织id
+  uint64 id = 1;
+}
+
+// DeleteDeptCascadeRequest 级联删除组织请求
+message DeleteDeptCascadeRequest {
+  // Id 组织id
+  uint64 id = 1 [
+    (tagger.tags) = "validate:\"required\" label:\"组织\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "组织"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+// DeleteDeptCascadeResponse 级联删除组织响应
+message DeleteDeptCascadeResponse {}
+
+// UpdateDeptRequest 修改组织请求
+message UpdateDeptRequest {
+  // Id 组织id
+  uint64 id = 1 [
+    (tagger.tags) = "validate:\"required\" label:\"组织\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "组织"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // Dept 组织信息
+  Dept dept = 2 [
+    (tagger.tags) = "validate:\"required\" label:\"组织信息\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "组织信息"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+// UpdateDeptResponse 修改组织响应
+message UpdateDeptResponse {}
+
+// UpdatePriorityDeptItem 修改组织优先级项
+message UpdatePriorityDeptItem {
+  // Id 组织id
+  uint64 id = 1;
+  // Priority 组织排序
+  int32 priority = 2;
+}
+
+// UpdatePriorityDeptRequest 修改组织优先级
+message UpdatePriorityDeptRequest {
+  // Priorities 排序列表
+  repeated UpdatePriorityDeptItem priorities = 1;
+}
+
+// UpdatePriorityDeptResponse 修改组织优先级响应
+message UpdatePriorityDeptResponse {}
+
+// GetDeptByNameRequest 根据组织名称获取组织请求
+message GetDeptByNameRequest {
+  // Name 组织名称 为空时获取全部组织
+  string name = 1 [(tagger.tags) = "validate:\"lte=150\""];
+  // Id 组织id
+  uint64 id = 2 [(tagger.tags) = "label:\"组织id\""];
+}
+
+// GetDeptByNameResponse 根据组织名称获取组织响应
+message GetDeptByNameResponse {
+  // Depts 组织信息
+  repeated Dept depts = 1;
+}
+
+// GetDeptRequest 获取组织请求
+message GetDeptRequest {
+  // Id 组织id
+  uint64 id = 1 [
+    (tagger.tags) = "validate:\"required\" label:\"组织\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "组织"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+// GetDeptResponse 获取组织响应
+message GetDeptResponse {
+  // Dept 组织信息
+  Dept dept = 1;
+}
+
+// GetDeptTopRequest 获取顶级组织请求
+message GetDeptTopRequest {}
+
+// GetDeptTopResponse 获取顶级组织响应
+message GetDeptTopResponse {
+  // Depts 组织列表
+  repeated Dept depts = 1;
+}
+
+// GetDeptChildRequest 获取子组织请求
+message GetDeptChildRequest {
+  // Id 组织id
+  uint64 id = 1 [
+    (tagger.tags) = "validate:\"required\" label:\"组织\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "组织"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+// GetDeptChildResponse 获取子组织响应
+message GetDeptChildResponse {
+  // Depts 组织列表
+  repeated Dept depts = 1;
+}
+
+// CheckDeptDeleteRequest 检查组织是否可删除请求
+message CheckDeptDeleteRequest {
+  // Id 组织id
+  uint64 id = 1 [
+    (tagger.tags) = "validate:\"required\" label:\"组织\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "组织"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+// CheckDeptDeleteResponse 检查组织是否可删除响应
+message CheckDeptDeleteResponse {
+  // IsAllow 是否允许删除
+  bool is_allow = 1;
+  // Msg 不允许删除时的提示
+  string msg = 2;
+}
+
+// Dept 组织
+message Dept {
+  // Id 组织id
+  uint64 id = 1 [(tagger.tags) = "copier:\"ID\""];
+  // CreatedAt 创建时间
+  google.protobuf.Timestamp created_at = 2 [(tagger.tags) = "copier:\"CreatedAtToRPC\""];
+  // UpdatedAt 修改时间
+  google.protobuf.Timestamp updated_at = 3 [(tagger.tags) = "copier:\"UpdatedAtToRPC\""];
+  // DeletedAt 删除时间
+  google.protobuf.Timestamp deleted_at = 4 [(tagger.tags) = "copier:\"DeletedAtToRPC\""];
+  // ParentId 父id
+  uint64 parent_id = 5 [(tagger.tags) = "copier:\"ParentID\""];
+  // DeptName 组织名称
+  string dept_name = 6 [
+    (tagger.tags) = "validate:\"required,gte=1,lte=90\" label:\"组织名称\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "组织名称"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // Leader 组织领导姓名
+  string leader = 7;
+  // Phone 组织领导联系电话
+  string phone = 8;
+  // Email 组织领导邮箱
+  string email = 9;
+  // Remark 备注
+  string remark = 10;
+  // Status 状态,1:正常,2:禁用
+  int32 status = 11;
+  // Level 组织层级
+  int32 level = 12;
+  // HasChild 是否含有子组织
+  bool has_child = 13 [(tagger.tags) = "copier:\"HasChildToRPC\""];
+  // Childs 子组织
+  repeated Dept childs = 14;
+}

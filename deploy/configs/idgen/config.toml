@@ -1,0 +1,14 @@
+# idgen 容器部署覆盖配置。
+#
+# 程序启动时会先加载 internal/platform/config 内置默认配置，再合并本文件，
+# 最后应用 EGOADMIN_* 环境变量覆盖。这里不要重复默认值，只保留
+# Docker Compose 部署和本地开发配置不同、且必须写清楚的项。
+#
+# Atlas 迁移地址由 ATLAS_URL 提供；运行时数据库、etcd、trace 地址由
+# deploy/compose/app.yml 里的 EGOADMIN_* 环境变量注入。
+
+[server.grpc]
+# 默认本地配置使用 127.0.0.1，只适合宿主机开发。
+# 容器部署需要把可被其它容器访问的地址注册到 etcd。
+# enableLocalMainIP 会让 EGO 使用容器网卡 IP 作为 gRPC 监听和注册地址。
+enableLocalMainIP = true

@@ -1,0 +1,13 @@
+pre-commit:
+  commands:
+    run-lint:
+      tags: backend style
+      run: make lint
+  scripts:
+    "branch-checker.sh":
+      runner: bash
+      
+# commit-msg:
+#   scripts:
+#     "goji-check.sh":
+#       runner: bash

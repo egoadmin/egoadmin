@@ -1,0 +1,9 @@
+include:
+  - compose/mysql.yml
+  - compose/redis.yml
+  - compose/minio.yml
+  - compose/image-processor.yml
+  - compose/etcd.yml
+  - compose/dtm.yml
+  - compose/meilisearch.yml
+  - compose/jaeger.yml

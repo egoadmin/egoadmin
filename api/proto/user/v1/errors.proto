@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package user.v1;
+
+// @plugins=protoc-gen-go-errors
+// ErrorUser 错误
+enum ErrorUser {
+  // @code=INTERNAL 内部服务错误
+  ERROR_USER_UNKNOWN_UNSPECIFIED = 0;
+  // @code=UNKNOWN 用户导入重复
+  ERROR_USER_IMPORT = 1;
+  // @code=UNKNOWN 组织不允许删除
+  ERROR_USER_DEPT_NOT_DEL = 2;
+}

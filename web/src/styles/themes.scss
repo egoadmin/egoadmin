@@ -1,0 +1,191 @@
+:root {
+  /* ============================================================
+     EgoAdmin 设计令牌 (DESIGN.md §2–§6) · 现代极简 / 亮色优先
+     电光蓝 #1573E6 + Go 青 #19B6DD
+     ============================================================ */
+  /* 画布 / 表面 */
+  --bg: #fafbfc;
+  --surface: #fff;
+  --surface-2: #f4f6f8;
+  --surface-3: #eaedf1;
+  /* 文本 */
+  --fg: #14181f;
+  --text: #3a4250;
+  --muted: #6b7280;
+  --faint: #9aa3b2;
+  /* 描边 */
+  --border: #e6e8ec;
+  --border-strong: #d5d9e0;
+  /* 强调 · 电光蓝 */
+  --accent: #1573e6;
+  --accent-hover: #1267cc;
+  --accent-press: #0f58b0;
+  --accent-weak: #e8f1fc;
+  --accent-text: #1166c4;
+  --on-accent: #fff;
+  /* 信号 · Go 青 */
+  --cyan: #19b6dd;
+  --cyan-weak: #e2f6fc;
+  /* 状态 */
+  --success: #17b26a;
+  --success-weak: #e6f7ef;
+  --warning: #f5a623;
+  --warning-weak: #fdf3e2;
+  --danger: #e5484d;
+  --danger-weak: #fcebec;
+  /* 字体 */
+  --font-display: -apple-system, blinkmacsystemfont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+  --font-body: -apple-system, blinkmacsystemfont, "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", "Cascadia Code", ui-monospace, "Roboto Mono", menlo, consolas, monospace;
+  /* 圆角 / 阴影 / 动效 */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 999px;
+  --shadow-xs: 0 1px 2px rgb(16 24 40 / 4%);
+  --shadow-sm: 0 2px 6px rgb(16 24 40 / 6%);
+  --shadow-md: 0 6px 18px -6px rgb(16 24 40 / 12%);
+  --shadow-lg: 0 16px 40px -12px rgb(16 24 40 / 18%);
+  --focus: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* 间距节奏（8px 基准） */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  // 注：Element Plus 变量（--el-*）映射在 element.scss（最后引入，确保覆盖编译态默认）
+
+  --g-box-shadow-color: rgb(0 0 0 / 12%);
+
+  /* ----- 应用 ----- */
+  // 应用背景色
+  --g-app-bg: var(--surface);
+  // 主区域背景色
+  --g-main-bg: var(--bg);
+
+  /* ----- 顶部 ----- */
+  // 背景色
+  --g-header-bg: var(--surface);
+  // 文字颜色
+  --g-header-color: var(--fg);
+  // 导航文字颜色
+  --g-header-menu-color: var(--text);
+  // 导航鼠标悬浮文字颜色
+  --g-header-menu-hover-color: var(--fg);
+  // 导航鼠标悬浮背景色
+  --g-header-menu-hover-bg: var(--surface-2);
+  // 导航选中文字颜色
+  --g-header-menu-active-color: var(--accent-text);
+  // 导航选中背景色
+  --g-header-menu-active-bg: var(--surface-2);
+
+  /* ----- 主导航 ----- */
+  // 背景色
+  --g-main-sidebar-bg: var(--surface);
+  // 菜单文字颜色
+  --g-main-sidebar-menu-color: var(--text);
+  // 菜单鼠标悬浮文字颜色
+  --g-main-sidebar-menu-hover-color: var(--fg);
+  // 菜单鼠标悬浮背景色
+  --g-main-sidebar-menu-hover-bg: var(--surface-2);
+  // 菜单选中文字颜色
+  --g-main-sidebar-menu-active-color: var(--accent-text);
+  // 菜单选中背景色
+  --g-main-sidebar-menu-active-bg: var(--accent-weak);
+
+  /* ----- 次导航 ----- */
+  // 背景色
+  --g-sub-sidebar-bg: var(--surface);
+  // 菜单背景色
+  --g-sub-sidebar-menu-bg: var(--surface);
+  // 菜单文字颜色
+  --g-sub-sidebar-menu-color: var(--text);
+  // 菜单鼠标悬浮文字颜色
+  --g-sub-sidebar-menu-hover-color: var(--fg);
+  // 菜单鼠标悬浮背景色
+  --g-sub-sidebar-menu-hover-bg: var(--surface-2);
+  // 菜单选中文字颜色
+  --g-sub-sidebar-menu-active-color: var(--accent);
+  // 菜单选中背景色
+  --g-sub-sidebar-menu-active-bg: var(--accent-weak);
+
+  /* ----- 顶栏 ----- */
+  --g-toolbar-bg: var(--surface);
+
+  /* ----- 进度条 ----- */
+  --g-nprogress-color: var(--accent);
+
+  /* ============================================================
+     暗黑模式 —— 亮色为主，暗色为完整副本 (DESIGN.md §2.4)
+     ============================================================ */
+  &.dark {
+    /* 画布 / 表面 */
+    --bg: #0e1116;
+    --surface: #161b22;
+    --surface-2: #1c232d;
+    --surface-3: #232b36;
+    /* 文本 */
+    --fg: #e6eaf0;
+    --text: #c2c9d4;
+    --muted: #8b95a4;
+    --faint: #6a7382;
+    /* 描边 */
+    --border: #262c36;
+    --border-strong: #38414e;
+    /* 强调 · 暗底提亮 */
+    --accent: #4b9cf5;
+    --accent-hover: #62a9f7;
+    --accent-press: #3c8ae6;
+    --accent-weak: #17304e;
+    --accent-text: #6fb0f7;
+    /* 信号 · Go 青 */
+    --cyan: #43c6e8;
+    --cyan-weak: #16323c;
+    /* 状态浅底 */
+    --success-weak: #10261c;
+    --warning-weak: #2a2110;
+    --danger-weak: #2c1517;
+    --shadow-xs: 0 1px 2px rgb(0 0 0 / 40%);
+    --shadow-sm: 0 2px 6px rgb(0 0 0 / 45%);
+    --shadow-md: 0 6px 18px -6px rgb(0 0 0 / 50%);
+    --shadow-lg: 0 16px 40px -12px rgb(0 0 0 / 60%);
+
+    // 注：Element Plus 暗色变量映射在 element.scss
+
+    --g-box-shadow-color: rgb(0 0 0 / 72%);
+    --g-app-bg: var(--surface);
+    --g-main-bg: var(--bg);
+    --g-header-bg: var(--surface);
+    --g-header-color: var(--fg);
+    --g-header-menu-color: var(--text);
+    --g-header-menu-hover-color: var(--fg);
+    --g-header-menu-hover-bg: var(--surface-2);
+    --g-header-menu-active-color: var(--accent-text);
+    --g-header-menu-active-bg: var(--surface-2);
+    --g-main-sidebar-bg: var(--surface);
+    --g-main-sidebar-menu-color: var(--text);
+    --g-main-sidebar-menu-hover-color: var(--fg);
+    --g-main-sidebar-menu-hover-bg: var(--surface-2);
+    --g-main-sidebar-menu-active-color: var(--accent-text);
+    --g-main-sidebar-menu-active-bg: var(--accent-weak);
+    --g-sub-sidebar-bg: var(--surface);
+    --g-sub-sidebar-menu-bg: var(--surface);
+    --g-sub-sidebar-menu-color: var(--text);
+    --g-sub-sidebar-menu-hover-color: var(--fg);
+    --g-sub-sidebar-menu-hover-bg: var(--surface-2);
+    --g-sub-sidebar-menu-active-color: var(--accent);
+    --g-sub-sidebar-menu-active-bg: var(--accent-weak);
+    --g-toolbar-bg: var(--surface);
+    --g-nprogress-color: var(--accent);
+  }
+}

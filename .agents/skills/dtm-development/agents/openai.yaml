@@ -1,0 +1,4 @@
+interface:
+  display_name: "DTM Development"
+  short_description: "DTM docs, examples, and EgoAdmin guidance"
+  default_prompt: "Use $dtm-development to design a DTM Saga transaction from official docs through EgoAdmin implementation."

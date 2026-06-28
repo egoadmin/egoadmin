@@ -1,0 +1,34 @@
+pipeline:
+  send-dev:
+    image: appleboy/drone-scp
+    depends_on:
+      - build
+    settings:
+      host:
+        from_secret: ssh-host
+      username:
+        from_secret: ssh-user
+      password:
+        from_secret: ssh-pass
+      target: /egoadmin-app
+      source: scp-egoadmin-app
+    when:
+        - event: [push, tag]
+
+  deploy-dev:
+    image: appleboy/drone-ssh
+    depends_on:
+      - send-dev
+    settings:
+      host:
+        from_secret: ssh-host
+      username:
+        from_secret: ssh-user
+      password:
+        from_secret: ssh-pass
+      port:
+        from_secret: ssh-port
+      script:
+        from_secret: ks_script
+    when:
+      - event: [push, tag]

@@ -1,0 +1,24 @@
+services:
+  image-processor:
+    image: shumc/imagor:1.5.15
+    restart: always
+    environment:
+      PORT: 2853
+      IMAGOR_SECRET: ${IMAGE_PROCESSOR_SECRET:-local-image-processor-secret}
+      IMAGOR_STORAGE_PATH_STYLE: digest
+      IMAGOR_RESULT_STORAGE_PATH_STYLE: suffix
+      IMAGOR_AUTO_WEBP: 1
+      IMAGOR_AUTO_AVIF: 1
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-egoadmin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-egoadmin123}
+      AWS_REGION: us-east-1
+      S3_LOADER_BUCKET: ${STORAGE_BUCKET:-egoadmin}
+      S3_STORAGE_BUCKET: ${STORAGE_BUCKET:-egoadmin}
+      S3_RESULT_STORAGE_BUCKET: ${STORAGE_BUCKET:-egoadmin}
+      S3_ENDPOINT: http://minio:9000
+      S3_FORCE_PATH_STYLE: 1
+    depends_on:
+      minio:
+        condition: service_healthy
+    ports:
+      - "${IMAGE_PROCESSOR_PORT:-2853}:2853"

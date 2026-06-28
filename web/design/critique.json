@@ -1,0 +1,18 @@
+{
+  "kind": "critique-panel",
+  "target": "骨架屏 + 结构化空状态推广到 role / online_user / operation_log / organization",
+  "score": 4,
+  "axes": {
+    "clarity":    { "score": 5, "notes": "五个列表页空/加载态现已统一：首屏（及筛选）骨架屏 + 结构化空状态，与 user.html、states.html、DESIGN.md §9.10 一致。" },
+    "hierarchy":  { "score": 4, "notes": "骨架保留表头/占位行；空态单焦点（图标→标题→说明→操作）。" },
+    "typography": { "score": 4, "notes": "空态标题 15/600、说明 13/muted；骨架灰条按各页真实列宽近似。" },
+    "motion":     { "score": 4, "notes": "shimmer 1.3s；首屏 600ms 骨架；reduced-motion 下静止。" },
+    "brand":      { "score": 4, "notes": "线性图标 + 柔色圆底，无插画/emoji；token 驱动、亮暗通用。" },
+    "specificity":{ "score": 5, "notes": "按页面语义定制：role/organization 给「新增」引导；online_user/operation_log 无数据态不给新增（会话/日志不可手建），只在「有筛选无命中」给清空。" }
+  },
+  "fixed": [
+    "role / online_user / operation_log / organization 四页加入骨架屏加载（首屏 + 各自筛选/重置触发）",
+    "四页空状态升级为结构化两态：无数据（可引导新增）/ 无匹配（清空筛选），organization 原内联空态改为 .empty 结构",
+    "触发口径与 user.html 一致：关键词即时过滤不闪骨架，仅真实请求时刻显示"
+  ]
+}

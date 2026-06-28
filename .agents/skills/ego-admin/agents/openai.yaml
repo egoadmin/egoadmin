@@ -1,0 +1,16 @@
+interface:
+  display_name: "EgoAdmin"
+  short_description: "Guide EgoAdmin microservice development"
+  default_prompt: "Use $ego-admin before changing EgoAdmin gateway/user/idgen services, graceful shutdown, protobuf contracts, controller/service/store flows, data permissions, i18n, internal/platform infrastructure, internal/component wrappers, internal/client gRPC clients, EGO service discovery, auth/session, permission contracts, service Atlas migrations, Docker Compose middleware, e2e tests, build, deploy, or template tooling."
+catalog:
+  i18n:
+    zh:
+      display_name: "EgoAdmin"
+      short_description: "指导 EgoAdmin 微服务开发"
+      description: "用于开发 EgoAdmin 当前微服务模板及派生项目。适用于 gateway/user/idgen 服务、Go 后端、Vue 前端、proto 接口契约、OpenAPI 注解、validator 标签、controller/service/store 流程、GORM/MySQL 仓储、graceful shutdown/readiness drain、DataScope 数据权限、后端和前端 i18n 国际化、internal/platform 基础设施、internal/component 组件、internal/client gRPC 客户端、EGO 注册发现、认证会话、上传与嵌入式前端、运行时配置和环境变量、权限契约、Atlas 服务级迁移、Docker Compose 本地中间件、e2e 测试、构建部署和模板工具。完整功能实现后必须评估并补充 e2e。"
+      default_prompt: "使用 $ego-admin 开发或修改 EgoAdmin 微服务功能，并在完整功能完成后评估 e2e 覆盖。"
+    en:
+      display_name: "EgoAdmin"
+      short_description: "Guide EgoAdmin microservice development"
+      description: "Guidance for the current EgoAdmin microservice template and derived projects. Use for gateway/user/idgen services, Go backend, Vue frontend, protobuf contracts, OpenAPI annotations, validator tags, controller/service/store flows, GORM/MySQL repositories, graceful shutdown/readiness drain, DataScope data permissions, backend and frontend i18n/localization, internal/platform infrastructure, internal/component wrappers, internal/client gRPC clients, EGO registry/discovery, auth/session flows, upload and embedded static web behavior, runtime config and env overrides, permission contracts, service-level Atlas migrations, Docker Compose local middleware, e2e tests, build/deploy, and template tooling. Complete feature work must evaluate and add e2e coverage when user-visible or cross-service behavior is affected."
+      default_prompt: "Use $ego-admin to develop or modify EgoAdmin microservice features and evaluate e2e coverage after complete feature work."

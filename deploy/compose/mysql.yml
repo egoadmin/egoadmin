@@ -1,0 +1,72 @@
+services:
+  mysql-idgen:
+    image: mysql:8.4.5
+    user: root
+    privileged: true
+    restart: always
+    ports:
+      - "${MYSQL_IDGEN_PORT:-3308}:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-egoadmin}
+      MYSQL_DATABASE: ${MYSQL_IDGEN_DATABASE:-egoadmin_idgen}
+      MYSQL_USER: ${MYSQL_USER:-egoadmin}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-egoadmin}
+    volumes:
+      - ../data/idgen/mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$${MYSQL_USER} -p$${MYSQL_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mysql-user:
+    image: mysql:8.4.5
+    user: root
+    privileged: true
+    restart: always
+    ports:
+      - "${MYSQL_USER_PORT:-3307}:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-egoadmin}
+      MYSQL_DATABASE: ${MYSQL_USER_DATABASE:-egoadmin_user}
+      MYSQL_USER: ${MYSQL_USER:-egoadmin}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-egoadmin}
+    volumes:
+      - ../data/user/mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$${MYSQL_USER} -p$${MYSQL_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mysql-gateway:
+    image: mysql:8.4.5
+    user: root
+    privileged: true
+    restart: always
+    ports:
+      - "${MYSQL_GATEWAY_PORT:-3306}:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-egoadmin}
+      MYSQL_DATABASE: ${MYSQL_GATEWAY_DATABASE:-egoadmin_gateway}
+      MYSQL_USER: ${MYSQL_USER:-egoadmin}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-egoadmin}
+    volumes:
+      - ../data/gateway/mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$${MYSQL_USER} -p$${MYSQL_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s

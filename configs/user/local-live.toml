@@ -1,0 +1,135 @@
+# local-live.toml 用于 user 服务本地联调，配合 test/docker-compose.yml 使用。
+# user 服务第一阶段只暴露 gRPC，gateway 服务通过 client.grpc.user 调用它。
+
+[app.service]
+autoMigrate = false
+name = "egoadmin-user"
+platformName = "核心管理平台"
+skipPermissionContractCheck = true
+bucketName = "egoadmin"
+
+[app.dbMigration]
+enabled = true
+driver = "atlas"
+url = "mysql://egoadmin:egoadmin@127.0.0.1:3307/egoadmin_user?charset=utf8mb4&parseTime=True&loc=Local"
+dir = "file://atlas/migrations/user"
+bin = "atlas"
+
+[app.user]
+adminPassword = "123456"
+jwtExpire = 604800
+refreshTokenExpire = 2592000
+jwtSignKey = "local-egoadmin-jwt-sign-key"
+useCaptcha = false
+multiLoginEnabled = true
+maxLoginClient = 2
+heartbeatOfflineEnabled = true
+heartbeatOfflineSeconds = 660
+revokeSessionOnHeartbeatOffline = false
+
+[server.http]
+host = "0.0.0.0"
+port = 9101
+mode = "release"
+enableAccessInterceptorReq = false
+enableAccessInterceptorRes = false
+enableMetricInterceptor = false
+enableTraceInterceptor = false
+enableCors = false
+
+[server.grpc]
+host = "127.0.0.1"
+port = 9102
+
+[server.governor]
+host = "0.0.0.0"
+port = 9103
+
+[client.mysql]
+debug = true
+dsn = "egoadmin:egoadmin@tcp(127.0.0.1:3307)/egoadmin_user?charset=utf8mb4&parseTime=True&loc=Local&readTimeout=1s&timeout=1s&writeTimeout=3s"
+
+[client.redis]
+addr = "127.0.0.1:6380"
+debug = true
+mode = "stub"
+password = "egoadmin"
+
+[client.grpc.idgen]
+addr = "etcd:///egoadmin-idgen"
+debug = true
+readTimeout = "3s"
+dialTimeout = "5s"
+
+[client.jetcache]
+name = "default"
+remoteExpiry = "1h0m0s"
+localSize = 256
+localExpiry = "1m0s"
+refreshDuration = "2m0s"
+stopRefreshAfter = "1h0m0s"
+notFoundExpiry = "1m0s"
+enableMetrics = true
+enableSyncLocal = false
+codec = "msgpack"
+
+[component.logincrypto]
+challengeTTL = "3m0s"
+timestampSkew = "2m0s"
+rsaKeyBits = 4096
+enableMetrics = true
+
+[component.idgen.default]
+namespace = "egoadmin-local"
+name = "default"
+
+[component.idgen.machine]
+group = "egoadmin-local"
+
+[component.idgen.codec]
+secret = "local-stable-idcodec-secret"
+
+[client.asyncq]
+redisAddr = "127.0.0.1:6380"
+redisPassword = "egoadmin"
+redisDB = 0
+enableClient = true
+enableServer = false
+concurrency = 10
+queues = { critical = 6, default = 3, low = 1 }
+maxRetry = 3
+retryDelayFunc = "exponential"
+taskTimeout = "30s"
+enableAccessLog = false
+slowLogThreshold = "1s"
+enableHealthCheck = false
+
+[client.minio]
+endpoint = "127.0.0.1:9000"
+accessKeyID = "egoadmin"
+secretAccessKey = "egoadmin123"
+ssl = false
+
+[etcd]
+addrs = ["127.0.0.1:2379"]
+connectTimeout = "1s"
+
+[registry]
+scheme = "etcd"
+prefix = "egoadmin"
+serviceTTL = "10s"
+
+[trace]
+ServiceName = "egoadmin-user-local"
+OtelType = "otlp"
+Fraction = 1.00
+
+[trace.otlp]
+Endpoint = "127.0.0.1:4317"
+
+[cron.user.login.offline]
+delayExecType = "skip"
+enableDistributedTask = false
+enableImmediatelyRun = true
+enableSeconds = true
+spec = "0 0/1 * * * ?"

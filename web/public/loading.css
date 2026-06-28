@@ -1,0 +1,64 @@
+#app {
+  height: 100%;
+}
+
+/* 启动载入屏（Vue 加载前，令牌不可用，按设计 hex 硬编码）
+   亮色：bg #FAFBFC / accent #1573E6 / muted #6B7280 */
+.fantastic-admin-home {
+  position: absolute;
+  z-index: 10000;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 18px;
+  user-select: none;
+  background-color: #fafbfc;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+}
+
+.fantastic-admin-home .boot-spinner {
+  width: 22px;
+  height: 22px;
+  border: 2.5px solid #e6e8ec;
+  border-top-color: #1573e6;
+  border-radius: 50%;
+  animation: boot-spin 0.7s linear infinite;
+}
+
+@keyframes boot-spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.fantastic-admin-home .boot-text {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: #6b7280;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fantastic-admin-home .boot-spinner {
+    animation: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .fantastic-admin-home {
+    background-color: #0e1116;
+  }
+
+  .fantastic-admin-home .boot-spinner {
+    border-color: #262c36;
+    border-top-color: #4b9cf5;
+  }
+
+  .fantastic-admin-home .boot-text {
+    color: #8b95a4;
+  }
+}

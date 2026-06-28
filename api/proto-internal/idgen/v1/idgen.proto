@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+package idgen.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// SegmentService provides internal segment allocation for local ID generators.
+service SegmentService {
+  // EnsureSegment creates a segment definition when it does not already exist.
+  rpc EnsureSegment(EnsureSegmentRequest) returns (EnsureSegmentResponse);
+  // AllocateSegment allocates a non-overlapping half-open range [start, end).
+  rpc AllocateSegment(AllocateSegmentRequest) returns (AllocateSegmentResponse);
+  // Health checks whether the segment allocator is available.
+  rpc Health(SegmentServiceHealthRequest) returns (SegmentServiceHealthResponse);
+}
+
+// MachineLeaseService provides process-level machine leases for ID generators.
+service MachineLeaseService {
+  // AllocateLease allocates or renews a machine lease for an instance.
+  rpc AllocateLease(AllocateLeaseRequest) returns (AllocateLeaseResponse);
+  // RenewLease renews an existing machine lease.
+  rpc RenewLease(RenewLeaseRequest) returns (RenewLeaseResponse);
+  // ReleaseLease releases an existing machine lease.
+  rpc ReleaseLease(ReleaseLeaseRequest) returns (ReleaseLeaseResponse);
+}
+
+// EnsureSegmentRequest describes a segment definition to create if missing.
+message EnsureSegmentRequest {
+  // Namespace isolates ID streams between deployments or products.
+  string namespace = 1;
+  // Name identifies the business ID stream.
+  string name = 2;
+  // NextId is the first ID to allocate when the segment is created.
+  int64 next_id = 3;
+  // Step is the base allocation step.
+  int64 step = 4;
+  // MinStep is the minimum allocation step.
+  int64 min_step = 5;
+  // MaxStep is the maximum allocation step.
+  int64 max_step = 6;
+  // Status controls whether the stream can allocate IDs.
+  int32 status = 7;
+  // Description records why the stream exists.
+  string description = 8;
+}
+
+// EnsureSegmentResponse is empty when the segment definition is ensured.
+message EnsureSegmentResponse {}
+
+// AllocateSegmentRequest requests a new ID segment.
+message AllocateSegmentRequest {
+  // Namespace isolates ID streams between deployments or products.
+  string namespace = 1;
+  // Name identifies the business ID stream.
+  string name = 2;
+  // RequestedStep is the desired segment size. The service clamps it to policy.
+  int64 requested_step = 3;
+}
+
+// AllocateSegmentResponse contains an allocated half-open ID segment.
+message AllocateSegmentResponse {
+  // Start is the first allocated ID.
+  int64 start = 1;
+  // End is one past the last allocated ID.
+  int64 end = 2;
+  // Step is the base allocation step configured for the stream.
+  int64 step = 3;
+  // MinStep is the minimum allocation step configured for the stream.
+  int64 min_step = 4;
+  // MaxStep is the maximum allocation step configured for the stream.
+  int64 max_step = 5;
+  // Status is the current stream status.
+  int32 status = 6;
+}
+
+// SegmentServiceHealthRequest checks segment allocation health.
+message SegmentServiceHealthRequest {}
+
+// SegmentServiceHealthResponse is empty when segment allocation is healthy.
+message SegmentServiceHealthResponse {}
+
+// AllocateLeaseRequest requests a process-level machine lease.
+message AllocateLeaseRequest {
+  // Namespace identifies the machine lease group.
+  string namespace = 1;
+  // InstanceId identifies the requesting process instance.
+  string instance_id = 2;
+  // StableInstanceId optionally provides a stable operator-defined instance ID.
+  string stable_instance_id = 3;
+  // MaxMachineId is the maximum allowed machine ID.
+  int32 max_machine_id = 4;
+  // TtlSeconds is the lease TTL in seconds.
+  int64 ttl_seconds = 5;
+  // RenewIntervalSeconds is the recommended renew interval in seconds.
+  int64 renew_interval_seconds = 6;
+}
+
+// AllocateLeaseResponse returns the allocated machine lease.
+message AllocateLeaseResponse {
+  // Namespace identifies the machine lease group.
+  string namespace = 1;
+  // InstanceId identifies the requesting process instance.
+  string instance_id = 2;
+  // SessionId identifies the current lease session.
+  string session_id = 3;
+  // MachineId is the allocated machine ID.
+  int32 machine_id = 4;
+  // TtlSeconds is the lease TTL in seconds.
+  int64 ttl_seconds = 5;
+  // RenewIntervalSeconds is the recommended renew interval in seconds.
+  int64 renew_interval_seconds = 6;
+  // ExpiresAt is the current lease expiry time.
+  google.protobuf.Timestamp expires_at = 7;
+}
+
+// RenewLeaseRequest renews an existing machine lease.
+message RenewLeaseRequest {
+  // Namespace identifies the machine lease group.
+  string namespace = 1;
+  // InstanceId identifies the requesting process instance.
+  string instance_id = 2;
+  // SessionId identifies the current lease session.
+  string session_id = 3;
+  // MachineId is the allocated machine ID.
+  int32 machine_id = 4;
+  // TtlSeconds is the lease TTL in seconds.
+  int64 ttl_seconds = 5;
+  // RenewIntervalSeconds is the recommended renew interval in seconds.
+  int64 renew_interval_seconds = 6;
+}
+
+// RenewLeaseResponse is empty when renewal succeeds.
+message RenewLeaseResponse {}
+
+// ReleaseLeaseRequest releases an existing machine lease.
+message ReleaseLeaseRequest {
+  // Namespace identifies the machine lease group.
+  string namespace = 1;
+  // InstanceId identifies the requesting process instance.
+  string instance_id = 2;
+  // SessionId identifies the current lease session.
+  string session_id = 3;
+  // MachineId is the allocated machine ID.
+  int32 machine_id = 4;
+}
+
+// ReleaseLeaseResponse is empty when release succeeds.
+message ReleaseLeaseResponse {}

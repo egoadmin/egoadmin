@@ -1,0 +1,196 @@
+syntax = "proto3";
+
+package user.v1;
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "tagger/tagger.proto";
+import "user/v1/user.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "用户中心"
+    description: "服务名: user.v1.CenterService"
+    version: "1.0"
+    license: {
+      name: "MIT"
+    }
+  }
+  schemes: HTTP
+  consumes: "application/json"
+  produces: "application/json"
+  security_definitions: {
+    security: {
+      key: "BearerAuth"
+      value: {
+        type: TYPE_API_KEY
+        in: IN_HEADER
+        name: "Authorization"
+        description: "JWT 认证头。Swagger UI 中请输入完整值: Bearer <token>"
+      }
+    }
+  }
+};
+
+// CenterService 用户中心.
+service CenterService {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {
+    description: "用户中心,服务名: user.v1.CenterService"
+  };
+
+  // GetCenterInfo 获取用户资料
+  rpc GetCenterInfo(GetCenterInfoRequest) returns (GetCenterInfoResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.CenterService/GetCenterInfo",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户中心,服务名: user.v1.CenterService"
+      tags: "CenterService"
+      description: "认证: 需要 Authorization: Bearer <token>，无需接口权限。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // EditCenterInfo 修改个人资料
+  rpc EditCenterInfo(EditCenterInfoRequest) returns (EditCenterInfoResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.CenterService/EditCenterInfo",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户中心,服务名: user.v1.CenterService"
+      tags: "CenterService"
+      description: "认证: 需要 Authorization: Bearer <token>，无需接口权限。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // EditCenterPassword 修改密码
+  rpc EditCenterPassword(EditCenterPasswordRequest) returns (EditCenterPasswordResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.CenterService/EditCenterPassword",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户中心,服务名: user.v1.CenterService"
+      tags: "CenterService"
+      description: "认证: 需要 Authorization: Bearer <token>，无需接口权限。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // EditCenterAvatar 修改头像
+  rpc EditCenterAvatar(EditCenterAvatarRequest) returns (EditCenterAvatarResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.CenterService/EditCenterAvatar",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户中心,服务名: user.v1.CenterService"
+      tags: "CenterService"
+      description: "认证: 需要 Authorization: Bearer <token>，无需接口权限。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+}
+
+// GetCenterInfoRequest 获取用户中心信息
+message GetCenterInfoRequest {}
+
+// GetCenterInfoResponse 获取用户中心信息
+message GetCenterInfoResponse {
+  // User 用户信息
+  User user = 1;
+}
+
+// EditCenterInfoRequest 用户中心编辑信息请求
+message EditCenterInfoRequest {
+  // Name 姓名
+  string name = 1 [(tagger.tags) = "validate:\"omitempty,gte=1,lte=30\" label:\"姓名\""];
+  // Gender 性别,0:保密,1:男,2:女
+  int32 gender = 2 [(tagger.tags) = "validate:\"omitempty,oneof=1 2\" label:\"性别\""];
+  // Phone 手机号,中国手机不带国家代码，国际手机号格式为：国家代码-手机号
+  string phone = 3 [(tagger.tags) = "validate:\"omitempty,gte=1,lte=30\" label:\"手机号\""];
+  // PasswordCipher RSA-OAEP-SHA256 加密后的密码确认载荷
+  string password_cipher = 5 [
+    (tagger.tags) = "validate:\"omitempty\" label:\"登录密文\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "登录密文";
+      description: "修改手机号时使用 GetLoginCrypto 返回的 public_key 加密包含 password 的 JSON 载荷。"
+    }
+  ];
+  // KeyId 登录加密密钥标识
+  string key_id = 6 [(tagger.tags) = "validate:\"omitempty\" label:\"登录加密密钥\""];
+  // ChallengeId 一次性登录挑战标识
+  string challenge_id = 7 [(tagger.tags) = "validate:\"omitempty\" label:\"登录挑战\""];
+}
+
+// EditCenterInfoResponse 用户中心编辑信息响应
+message EditCenterInfoResponse {}
+
+// EditCenterPasswordRequest 用户中心修改密码请求
+message EditCenterPasswordRequest {
+  // PasswordCipher RSA-OAEP-SHA256 加密后的修改密码载荷
+  string password_cipher = 3 [
+    (tagger.tags) = "validate:\"required\" label:\"登录密文\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "登录密文";
+      description: "使用 GetLoginCrypto 返回的 public_key 加密包含 oldPassword 和 newPassword 的 JSON 载荷。"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // KeyId 登录加密密钥标识
+  string key_id = 4 [
+    (tagger.tags) = "validate:\"required\" label:\"登录加密密钥\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "登录加密密钥"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // ChallengeId 一次性登录挑战标识
+  string challenge_id = 5 [
+    (tagger.tags) = "validate:\"required\" label:\"登录挑战\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "登录挑战"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+// EditCenterPasswordResponse 用户中心修改密码响应
+message EditCenterPasswordResponse {}
+
+// EditCenterAvatarRequest 用户中心编辑头像请求
+message EditCenterAvatarRequest {
+  // ReferenceId 上传引用ID。上传接口返回的公开引用 ID，例如 ref-xxxx。
+  string reference_id = 2 [
+    (tagger.tags) = "validate:\"required\" label:\"上传引用\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "上传引用";
+      description: "上传组件返回的公开 referenceId，保存头像时会绑定为正式引用。"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+// EditCenterAvatarResponse 用户中心编辑头像响应
+message EditCenterAvatarResponse {}

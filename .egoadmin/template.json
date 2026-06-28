@@ -1,0 +1,11 @@
+{
+  "name": "EgoAdmin",
+  "slug": "egoadmin",
+  "module": "github.com/egoadmin/egoadmin",
+  "envPrefix": "EGOADMIN",
+  "goPackage": "egoadmin",
+  "services": [
+    "gateway",
+    "user"
+  ]
+}

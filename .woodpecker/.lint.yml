@@ -1,0 +1,43 @@
+when:
+  - event: [pull_request]
+
+clone:
+  git:
+    image: woodpeckerci/plugin-git:2.0.3
+    settings:
+      recursive: true
+      partial: false
+      depth: 10
+
+pipeline:
+  frontend-build:
+    image: node:22-alpine
+    environment:
+      CI: "true"
+    commands:
+      - apk add --no-cache git
+      - corepack enable
+      - corepack prepare pnpm@11 --activate
+      - cd web
+      - pnpm install
+      - pnpm run build
+    when:
+      - event: [pull_request]
+
+  lint:
+    image: golang:1.26.2-bullseye
+    privileged: true
+    volumes:
+      - /home/egoadmin/drone/cache/buf:/root/.cache/buf
+    environment:
+      GO111MODULE: "on"
+      GOPROXY: "https://goproxy.cn"
+    commands:
+      - sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
+      - apt update && apt install -y gcc g++ make unzip
+      - wget -q https://archive-1256457449.cos.ap-chengdu.myqcloud.com/mirrors/protoc/protoc-3.20.0-linux-x86_64.zip -O protoc.zip && unzip protoc.zip -d /usr/local && rm protoc.zip
+      - make install && make gen && make lint
+    depends_on:
+      - frontend-build
+    when:
+      - event: [pull_request]

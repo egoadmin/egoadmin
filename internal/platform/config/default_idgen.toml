@@ -1,0 +1,143 @@
+# idgen 服务默认配置。
+# idgen 负责全局号段分配和机器租约分配。
+# 环境变量覆盖格式：EGOADMIN_<EnvSuffix>。
+# 例如 client.mysql.dsn 对应 EGOADMIN_CLIENT_MYSQL_DSN。
+
+[app.service]
+# 是否启用 GORM 自动迁移。默认使用 Atlas，不建议打开。
+# EnvSuffix: APP_SERVICE_AUTOMIGRATE
+autoMigrate = false
+# 服务显示/注册相关名称。
+# EnvSuffix: APP_SERVICE_NAME
+name = "egoadmin-idgen"
+# 平台展示名称。
+# EnvSuffix: APP_SERVICE_PLATFORMNAME
+platformName = "核心管理平台"
+# idgen 不直接校验前端权限契约。
+# EnvSuffix: APP_SERVICE_SKIPPERMISSIONCONTRACTCHECK
+skipPermissionContractCheck = true
+# 默认对象存储桶，保留公共服务配置字段。
+# EnvSuffix: APP_SERVICE_BUCKETNAME
+bucketName = "egoadmin"
+
+[app.idgen]
+# 机器租约过期后保留多久再清理。过期租约在保留期内可被新实例复用；默认保留 7 天。
+# EnvSuffix: APP_IDGEN_MACHINELEASECLEANUPRETENTION
+machineLeaseCleanupRetention = "168h"
+# 单次清理过期机器租约的最大条数。
+# EnvSuffix: APP_IDGEN_MACHINELEASECLEANUPLIMIT
+machineLeaseCleanupLimit = 1000
+
+[app.shutdown]
+# graceful stop 总超时。需小于等于容器 terminationGracePeriodSeconds。
+# EnvSuffix: APP_SHUTDOWN_STOPTIMEOUT
+stopTimeout = "20s"
+# 收到停止信号后先将 /readyz 置为不可用，再等待摘流。
+# EnvSuffix: APP_SHUTDOWN_DRAINTIMEOUT
+drainTimeout = "2s"
+# Redis、DB、registry 等非 server 资源单项关闭超时。
+# EnvSuffix: APP_SHUTDOWN_CLOSETIMEOUT
+closeTimeout = "5s"
+
+[app.dbMigration]
+# 是否在进程启动时执行 Atlas migration。
+# EnvSuffix: APP_DBMIGRATION_ENABLED
+enabled = true
+# 迁移驱动，目前仅支持 atlas。
+# EnvSuffix: APP_DBMIGRATION_DRIVER
+driver = "atlas"
+# Atlas 迁移数据库 URL，生产环境必须通过环境变量覆盖。
+# EnvSuffix: APP_DBMIGRATION_URL
+url = "mysql://egoadmin:change-me@127.0.0.1:3308/egoadmin_idgen?charset=utf8mb4&parseTime=True&loc=Local"
+# idgen 服务迁移目录。
+# EnvSuffix: APP_DBMIGRATION_DIR
+dir = "file://atlas/migrations/idgen"
+# Atlas 可执行文件路径。
+# EnvSuffix: APP_DBMIGRATION_BIN
+bin = "atlas"
+
+[server.http]
+# idgen HTTP 监听地址。仅注册无鉴权 /healthz 与 /readyz。
+# EnvSuffix: SERVER_HTTP_HOST
+host = "0.0.0.0"
+# idgen HTTP 监听端口。
+# EnvSuffix: SERVER_HTTP_PORT
+port = 9201
+# Gin 运行模式。
+# EnvSuffix: SERVER_HTTP_MODE
+mode = "release"
+# 是否记录请求访问日志。
+# EnvSuffix: SERVER_HTTP_ENABLEACCESSINTERCEPTORREQ
+enableAccessInterceptorReq = false
+# 是否记录响应访问日志。
+# EnvSuffix: SERVER_HTTP_ENABLEACCESSINTERCEPTORRES
+enableAccessInterceptorRes = false
+# 是否启用 HTTP 指标。
+# EnvSuffix: SERVER_HTTP_ENABLEMETRICINTERCEPTOR
+enableMetricInterceptor = false
+# 是否启用 HTTP tracing。health-only HTTP server 不需要 HTTP 中间件链。
+# EnvSuffix: SERVER_HTTP_ENABLETRACEINTERCEPTOR
+enableTraceInterceptor = false
+# 是否启用 CORS。health-only HTTP server 不需要 CORS 中间件。
+# EnvSuffix: SERVER_HTTP_ENABLECORS
+enableCors = false
+
+[server.grpc]
+# gRPC 服务注册名称，用于 etcd 服务发现。
+# EnvSuffix: SERVER_GRPC_NAME
+name = "egoadmin-idgen"
+# idgen gRPC 监听地址。
+# EnvSuffix: SERVER_GRPC_HOST
+host = "127.0.0.1"
+# idgen gRPC 盂听端口。
+# EnvSuffix: SERVER_GRPC_PORT
+port = 9202
+
+[server.governor]
+# idgen governor 监听地址。
+# EnvSuffix: SERVER_GOVERNOR_HOST
+host = "0.0.0.0"
+# idgen governor 监听端口。
+# EnvSuffix: SERVER_GOVERNOR_PORT
+port = 9203
+
+[trace]
+# OpenTelemetry 服务名，默认开发环境写入本地 Jaeger。
+# EnvSuffix: TRACE_SERVICENAME
+ServiceName = "egoadmin-idgen"
+# trace exporter 类型，默认使用 Jaeger all-in-one 支持的 OTLP gRPC。
+# EnvSuffix: TRACE_OTELTYPE
+OtelType = "otlp"
+# trace 采样率。开发默认全采样，生产可通过环境变量降低。
+# EnvSuffix: TRACE_FRACTION
+Fraction = 1.00
+
+[trace.otlp]
+# OTLP gRPC endpoint，dev-up 默认启动本地 Jaeger 并暴露 4317。
+# EnvSuffix: TRACE_OTLP_ENDPOINT
+Endpoint = "127.0.0.1:4317"
+
+[client.mysql]
+# 是否输出 SQL debug 日志。
+# EnvSuffix: CLIENT_MYSQL_DEBUG
+debug = true
+# idgen 数据库 DSN，生产环境必须通过环境变量覆盖。
+# EnvSuffix: CLIENT_MYSQL_DSN
+dsn = "egoadmin:change-me@tcp(127.0.0.1:3308)/egoadmin_idgen?charset=utf8mb4&parseTime=True&loc=Local&readTimeout=1s&timeout=1s&writeTimeout=3s"
+
+[cron.idgen.machine.cleanup]
+# 清理超过保留期的过期机器租约。
+# EnvSuffix: CRON_IDGEN_MACHINE_CLEANUP_DELAYEXECTYPE
+delayExecType = "skip"
+# 单个 idgen 服务即可清理；多副本生产环境可按需接入分布式锁。
+# EnvSuffix: CRON_IDGEN_MACHINE_CLEANUP_ENABLEDISTRIBUTEDTASK
+enableDistributedTask = false
+# 启动后不立即清理，避免和迁移、服务注册抢资源。
+# EnvSuffix: CRON_IDGEN_MACHINE_CLEANUP_ENABLEIMMEDIATELYRUN
+enableImmediatelyRun = false
+# 使用秒级 cron 表达式。
+# EnvSuffix: CRON_IDGEN_MACHINE_CLEANUP_ENABLESECONDS
+enableSeconds = true
+# 每小时清理一次。
+# EnvSuffix: CRON_IDGEN_MACHINE_CLEANUP_SPEC
+spec = "0 0 0/1 * * ?"

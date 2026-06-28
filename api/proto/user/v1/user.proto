@@ -1,0 +1,795 @@
+syntax = "proto3";
+
+package user.v1;
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "tagger/tagger.proto";
+import "user/v1/dept.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "用户服务"
+    description: "服务名: user.v1.UserService"
+    version: "1.0"
+    license: {
+      name: "MIT"
+    }
+  }
+  schemes: HTTP
+  consumes: "application/json"
+  produces: "application/json"
+  security_definitions: {
+    security: {
+      key: "BearerAuth"
+      value: {
+        type: TYPE_API_KEY
+        in: IN_HEADER
+        name: "Authorization"
+        description: "JWT 认证头。Swagger UI 中请输入完整值: Bearer <token>"
+      }
+    }
+  }
+};
+
+// RequestURL: /<package_name>.<version>.<service_name>/{method}
+
+// UserService 用户服务
+service UserService {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {
+    description: "用户服务,服务名: user.v1.UserService"
+  };
+
+  // Login 登录
+  //
+  // 登录成功后前端会定时上报心跳，用于在线状态展示
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/Login",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 公开接口，无需 Authorization。登录成功后返回 token，Swagger UI 调试其他接口时请填写 Authorization: Bearer <token>。"
+    };
+  }
+  // GetLoginCrypto 获取登录加密参数
+  rpc GetLoginCrypto(GetLoginCryptoRequest) returns (GetLoginCryptoResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/GetLoginCrypto",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 公开接口，无需 Authorization。返回 RSA-OAEP-SHA256 公钥和一次性登录 challenge。"
+    };
+  }
+  // GetMenus 获取菜单
+  rpc GetMenus(GetMenusRequest) returns (GetMenusResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/GetMenus",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 需要 Authorization: Bearer <token>，无需接口权限。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // Logout 退出登录
+  rpc Logout(LogoutRequest) returns (LogoutResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/Logout",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 需要 Authorization: Bearer <token>，无需接口权限。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // GetCaptcha 获取验证码
+  rpc GetCaptcha(GetCaptchaRequest) returns (GetCaptchaResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/GetCaptcha",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 公开接口，无需 Authorization。"
+    };
+  }
+  // AddUser 新增后台用户
+  rpc AddUser(AddUserRequest) returns (AddUserResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/AddUser",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.USERSERVICE/ADDUSER。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // DeleteUser 删除用户
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/DeleteUser",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.USERSERVICE/DELETEUSER。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // UpdateUser 修改用户
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/UpdateUser",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.USERSERVICE/UPDATEUSER。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // GetUser 查询用户
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/GetUser",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.USERSERVICE/GETUSER。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // UGetDept 根据组织名称获取组织
+  rpc UGetDept(UGetDeptRequest) returns (UGetDeptResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/UGetDept",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.USERSERVICE/UGETDEPT。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // GetUserList 查询用户列表
+  rpc GetUserList(GetUserListRequest) returns (GetUserListResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/GetUserList",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.USERSERVICE/GETUSERLIST。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // GetAPIs 获取系统接口
+  rpc GetAPIs(GetAPIsRequest) returns (GetAPIsResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/GetAPIs",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.USERSERVICE/GETAPIS。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // ResetUserPassword 重置密码
+  rpc ResetUserPassword(ResetUserPasswordRequest) returns (ResetUserPasswordResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/ResetUserPassword",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.USERSERVICE/RESETUSERPASSWORD。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // HeartBeatUser 用户心跳
+  //
+  // 用于刷新在线状态；心跳超时默认只影响在线列表，是否撤销登录态由服务端配置控制
+  rpc HeartBeatUser(HeartBeatUserRequest) returns (HeartBeatUserResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/HeartBeatUser",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 需要 Authorization: Bearer <token>，无需接口权限。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // GetOnlineUserList 查询在线用户列表
+  rpc GetOnlineUserList(GetOnlineUserListRequest) returns (GetOnlineUserListResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/GetOnlineUserList",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.USERSERVICE/GETONLINEUSERLIST。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+  // OfflineUser 下线用户
+  rpc OfflineUser(OfflineUserRequest) returns (OfflineUserResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.UserService/OfflineUser",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "用户服务,服务名: user.v1.UserService"
+      tags: "UserService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.USERSERVICE/OFFLINEUSER。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+}
+
+// LoginRequest 登录请求
+message LoginRequest {
+  // Username 用户名/手机号
+  string username = 1 [
+    (tagger.tags) = "validate:\"omitempty,gte=1,lte=30\" label:\"用户名\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "用户名"
+    }
+  ];
+  // Token 续期密钥,续期时不需要用户名密码
+  string token = 3;
+  // CaptchaId 验证码id(token续期时不需要验证码)
+  string captcha_id = 4;
+  // CaptchaCode 验证字符串
+  string captcha_code = 5;
+  // UA 客户端设备标识
+  string ua = 6;
+  // PasswordCipher RSA-OAEP-SHA256 加密后的登录载荷
+  string password_cipher = 7 [
+    (tagger.tags) = "validate:\"omitempty\" label:\"登录密文\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "登录密文";
+      description: "使用 GetLoginCrypto 返回的 public_key 加密 JSON 登录载荷后得到的 Base64 字符串。"
+    }
+  ];
+  // KeyId 登录加密密钥标识
+  string key_id = 8 [
+    (tagger.tags) = "validate:\"omitempty\" label:\"登录加密密钥\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "登录加密密钥"
+    }
+  ];
+  // ChallengeId 一次性登录挑战标识
+  string challenge_id = 9 [
+    (tagger.tags) = "validate:\"omitempty\" label:\"登录挑战\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "登录挑战"
+    }
+  ];
+}
+
+// LoginResponse 登录响应
+message LoginResponse {
+  // UserTyp 用户类型, 1:平台用户
+  int32 user_typ = 1;
+  // Menus 菜单列表
+  string menus = 2;
+  // ExpiredAt 过期时间
+  google.protobuf.Timestamp expired_at = 3;
+  // Token 登录token，存在过期时间，在过期前需刷新token
+  string token = 4;
+  // RefreshToken 刷新令牌，刷新时提交到 LoginRequest.token
+  string refresh_token = 5;
+}
+
+// GetLoginCryptoRequest 获取登录加密参数请求
+message GetLoginCryptoRequest {
+  // Username 用户名/手机号
+  string username = 1 [
+    (tagger.tags) = "validate:\"required,gte=1,lte=30\" label:\"用户名\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "用户名"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // UA 客户端设备标识
+  string ua = 2 [
+    (tagger.tags) = "validate:\"required\" label:\"客户端设备标识\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "客户端设备标识"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // Action 使用场景,如 login、center.edit_password、center.edit_info
+  string action = 3 [
+    (tagger.tags) = "validate:\"omitempty,gte=1,lte=64\" label:\"加密场景\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "加密场景";
+      description: "用于将一次性 challenge 绑定到具体业务场景，未填写时按 login 处理。"
+    }
+  ];
+}
+
+// GetLoginCryptoResponse 获取登录加密参数响应
+message GetLoginCryptoResponse {
+  // KeyId 登录加密密钥标识
+  string key_id = 1;
+  // PublicKey RSA 公钥 PEM
+  string public_key = 2;
+  // ChallengeId 一次性登录挑战标识
+  string challenge_id = 3;
+  // Nonce 一次性随机数
+  string nonce = 4;
+  // Algorithm 加密算法，固定为 RSA-OAEP-SHA256
+  string algorithm = 5;
+  // ExpiresAt challenge 过期时间
+  google.protobuf.Timestamp expires_at = 6;
+}
+
+// GetMenusRequest 获取菜单请求
+message GetMenusRequest {}
+
+// GetMenusResponse 获取菜单响应
+message GetMenusResponse {
+  // Menus 菜单列表
+  string menus = 1;
+}
+
+// LogoutRequest 退出登录请求
+message LogoutRequest {}
+
+// LogoutResponse 退出登录响应
+message LogoutResponse {}
+
+// GetCaptchaRequest 获取验证码请求
+message GetCaptchaRequest {}
+
+// GetCaptchaResponse 获取验证码响应
+message GetCaptchaResponse {
+  // Id 验证码id
+  string id = 1;
+  // CaptchaImg 验证码图片(base64图片)
+  string captcha_img = 2;
+}
+
+// AddUserRequest 新增用户请求
+message AddUserRequest {
+  // RoleIds 角色列表
+  repeated uint64 role_ids = 1;
+  // User 用户信息
+  User user = 2 [
+    (tagger.tags) = "validate:\"required\" label:\"用户信息\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "用户信息"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+// AddUserResponse 新增用户响应
+message AddUserResponse {
+  // Id 角色id
+  uint64 id = 1;
+}
+
+// DeleteUserRequest 删除用户请求
+message DeleteUserRequest {
+  // ids 用户id列表
+  repeated uint64 ids = 1 [
+    (tagger.tags) = "validate:\"required\" label:\"用户\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "用户"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+// DeleteUserResponse 删除用户响应
+message DeleteUserResponse {}
+
+// UpdateUserRequest 修改用户请求
+message UpdateUserRequest {
+  // id 用户
+  uint64 id = 1 [
+    (tagger.tags) = "validate:\"required\" label:\"用户\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "用户"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // Name 姓名
+  string name = 2 [
+    (tagger.tags) = "validate:\"required,gte=1,lte=60\" label:\"姓名\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "姓名"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // Gender 性别,0:保密,1:男,2:女
+  int32 gender = 3 [
+    (tagger.tags) = "validate:\"required,oneof=1 2\" label:\"性别\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "性别"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // RoleIds 角色列表
+  repeated uint64 role_ids = 4 [
+    (tagger.tags) = "validate:\"required\" label:\"角色列表\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "角色列表"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // DeptId 组织id
+  uint64 dept_id = 5 [
+    (tagger.tags) = "validate:\"required\" label:\"组织\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "组织"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // Phone 手机号,中国手机不带国家代码，国际手机号格式为：国家代码-手机号
+  string phone = 6 [
+    (tagger.tags) = "validate:\"required,gte=1,lte=30\" label:\"手机号\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "手机号"
+      description: "中国手机不带国家代码，国际手机号格式为：国家代码-手机号"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // UserStatus 用户状态,1有效,2无效
+  int32 user_status = 7 [
+    (tagger.tags) = "validate:\"required,oneof=1 2\" label:\"用户状态\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "用户状态"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+// UpdateUserResponse 修改用户响应
+message UpdateUserResponse {}
+
+// GetUserRequest 查询用户请求
+message GetUserRequest {
+  // id 用户
+  uint64 id = 1 [
+    (tagger.tags) = "validate:\"required\" label:\"用户\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "用户"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+// GetUserResponse 查询用户响应
+message GetUserResponse {
+  // User 用户信息
+  User user = 1;
+}
+
+// UGetDeptRequest 根据组织名称获取组织请求
+message UGetDeptRequest {
+  // Name 组织名称 为空时获取全部组织
+  string name = 1 [(tagger.tags) = "validate:\"lte=150\""];
+  // Id 组织id
+  uint64 id = 2 [(tagger.tags) = "label:\"组织id\""];
+}
+
+// UGetDeptResponse 根据组织名称获取组织响应
+message UGetDeptResponse {
+  // Depts 组织信息
+  repeated Dept depts = 1;
+}
+
+// GetUserListRequest 查询用户列表请求
+message GetUserListRequest {
+  // Page int 页码,值>=1
+  int32 page = 1 [
+    (tagger.tags) = "validate:\"required,gte=1\" label:\"页码\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "页码"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // Limit int 单页数量,值>=1,<=50
+  int32 limit = 2 [
+    (tagger.tags) = "validate:\"required,gte=1,lte=50\" label:\"单页显示数量\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "单页显示数量"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // Sort 排序字段,如name(姓名)
+  string sort = 3 [(tagger.tags) = "validate:\"omitempty,gte=1\" label:\"排序字段\""];
+  // Order 排序方式,值为desc(降序)及asc(升序)
+  string order = 4 [(tagger.tags) = "validate:\"omitempty,oneof=desc asc\" label:\"排序方式\""];
+  // Name 用户名或姓名
+  string name = 5 [(tagger.tags) = "validate:\"omitempty\" label:\"姓名\""];
+  // UserStatus 用户状态,-1全部,1有效,2无效
+  int32 user_status = 6 [(tagger.tags) = "validate:\"omitempty,oneof=-1 1 2\" label:\"用户状态\""];
+  // RoleId 角色id
+  uint64 role_id = 7 [(tagger.tags) = "validate:\"omitempty\" label:\"角色\""];
+  // Phone 手机号,中国手机不带国家代码，国际手机号格式为：国家代码-手机号
+  string phone = 8 [(tagger.tags) = "validate:\"omitempty,gte=1,lte=30\" label:\"手机号\""];
+  // DeptId 组织id
+  uint64 dept_id = 9 [(tagger.tags) = "validate:\"omitempty\" label:\"组织\""];
+}
+
+// GetUserListResponse 查询用户列表响应
+message GetUserListResponse {
+  // Total 全部数据量
+  int32 total = 1;
+  // Users 用户列表
+  repeated User users = 2;
+}
+
+// GetAPIsRequest 获取接口请求
+message GetAPIsRequest {}
+
+// GetAPIsResponse 获取接口响应
+message GetAPIsResponse {
+  // Apis 接口列表
+  repeated API apis = 1;
+}
+
+// ResetUserPasswordRequest 重置密码请求
+message ResetUserPasswordRequest {
+  // id 用户
+  uint64 id = 1 [
+    (tagger.tags) = "validate:\"required\" label:\"用户\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "用户"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+// ResetUserPasswordResponse 重置密码响应
+message ResetUserPasswordResponse {}
+
+// HeartBeatUserRequest 心跳请求
+message HeartBeatUserRequest {}
+
+// HeartBeatUserResponse 心跳响应
+message HeartBeatUserResponse {}
+
+// GetOnlineUserListRequest 查询在线用户列表请求
+message GetOnlineUserListRequest {
+  // Page int 页码,值>=1
+  int32 page = 1 [
+    (tagger.tags) = "validate:\"required,gte=1\" label:\"页码\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "页码"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // Limit int 单页数量,值>=1,<=50
+  int32 limit = 2 [
+    (tagger.tags) = "validate:\"required,gte=1,lte=50\" label:\"单页显示数量\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "单页显示数量"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // Sort 排序字段,如name(姓名)
+  string sort = 3 [(tagger.tags) = "validate:\"omitempty,gte=1\" label:\"排序字段\""];
+  // Order 排序方式,值为desc(降序)及asc(升序)
+  string order = 4 [(tagger.tags) = "validate:\"omitempty,oneof=desc asc\" label:\"排序方式\""];
+  // Name 用户名或姓名
+  string name = 5 [(tagger.tags) = "validate:\"omitempty\" label:\"姓名\""];
+  // LastLoginIP 最后登录IP
+  string last_login_ip = 6 [(tagger.tags) = "validate:\"omitempty\" label:\"最后登录IP\""];
+}
+
+// GetOnlineUserListResponse 查询在线用户列表响应
+message GetOnlineUserListResponse {
+  // Total 全部数据量
+  int32 total = 1;
+  // Users 用户列表
+  repeated User users = 2;
+}
+
+// OfflineUserRequest 下线用户请求
+message OfflineUserRequest {
+  // ids 用户id列表
+  repeated uint64 ids = 1 [
+    (tagger.tags) = "validate:\"required\" label:\"用户\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "用户"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+// OfflineUserResponse 下线用户响应
+message OfflineUserResponse {}
+
+// User 用户
+message User {
+  // Id 组织id
+  uint64 id = 1 [(tagger.tags) = "copier:\"ID\""];
+  // CreatedAt 创建时间
+  google.protobuf.Timestamp created_at = 2 [(tagger.tags) = "copier:\"CreatedAtToRPC\""];
+  // UpdatedAt 修改时间
+  google.protobuf.Timestamp updated_at = 3 [(tagger.tags) = "copier:\"UpdatedAtToRPC\""];
+  // DeletedAt 删除时间
+  google.protobuf.Timestamp deleted_at = 4 [(tagger.tags) = "copier:\"DeletedAtToRPC\""];
+  // Username 用户名
+  string username = 5 [
+    (tagger.tags) = "validate:\"required,gte=1,lte=20\" label:\"用户名\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "用户名"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // Password 密码，响应中固定隐藏；前端不得通过该字段提交密码
+  string password = 6 [(tagger.tags) = "validate:\"omitempty\" label:\"密码\" copier:\"HiddenPasswordToRPC\""];
+  // Name 姓名
+  string name = 7 [
+    (tagger.tags) = "validate:\"required,gte=1,lte=60\" label:\"姓名\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "姓名"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // Avatar 头像 CDN URL。响应不返回对象存储 key。
+  string avatar = 8;
+  // AvatarReferenceId 头像公开引用ID，格式如 ref-...。
+  string avatar_reference_id = 24;
+  // Phone 手机号,中国手机不带国家代码，国际手机号格式为：国家代码-手机号
+  string phone = 9 [
+    (tagger.tags) = "validate:\"required,gte=1,lte=30\" label:\"手机号\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "手机号"
+      description: "中国手机不带国家代码，国际手机号格式为：国家代码-手机号"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // Email 邮箱
+  string email = 10 [(tagger.tags) = "validate:\"omitempty,gte=3,lte=50\" label:\"邮箱\""];
+  // Nickname 昵称
+  string nickname = 11 [(tagger.tags) = "validate:\"omitempty,gte=1,lte=30\" label:\"昵称\""];
+  // Gender 性别,0:保密,1:男,2:女
+  int32 gender = 12 [
+    (tagger.tags) = "validate:\"required,oneof=1 2\" label:\"性别\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "性别"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // FirstLogin 是否首次登录,1:是,2:不是
+  int32 first_login = 13 [(tagger.tags) = "validate:\"omitempty,oneof=1 2\" label:\"是否首次登录\""];
+  // LastLoginIP 最后登录IP
+  string last_login_ip = 14 [(tagger.tags) = "copier:\"LastLoginIP\""];
+  // LastLoginAt 最后登录时间
+  google.protobuf.Timestamp last_login_at = 15 [(tagger.tags) = "copier:\"LastLoginAtToRPC\""];
+  // UserStatus 用户状态,1有效,2无效
+  int32 user_status = 16 [
+    (tagger.tags) = "validate:\"required,oneof=1 2\" label:\"用户状态\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "用户状态"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // UserType 用户类型,1:后台用户
+  int32 user_type = 17 [(tagger.tags) = "validate:\"omitempty,oneof=1\" label:\"用户类型\""];
+  // UserOnline 是否在线 1:在线,2:不在线
+  int32 user_online = 18 [(tagger.tags) = "validate:\"omitempty,oneof=1 2\" label:\"是否在线\""];
+  // Remark 备注
+  string remark = 19 [(tagger.tags) = "label:\"备注\""];
+  // DeptId 组织id
+  uint64 dept_id = 20 [
+    (tagger.tags) = "validate:\"required\" copier:\"DeptID\" label:\"组织\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "组织"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // RoleIds 角色ID列表
+  repeated uint64 role_ids = 21 [(tagger.tags) = "copier:\"RoleIdsToRPC\""];
+  // RoleNames 角色名称列表
+  repeated string role_names = 22 [(tagger.tags) = "copier:\"RoleNamesToRPC\""];
+  // DeptName 组织名称
+  string dept_name = 23;
+}
+
+// API 接口
+message API {
+  // Id 接口ID
+  uint64 id = 1 [(tagger.tags) = "copier:\"ID\""];
+  // FullPath 接口路径
+  string full_path = 2 [(tagger.tags) = "copier:\"FullPath\""];
+}

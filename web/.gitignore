@@ -1,0 +1,18 @@
+node_modules
+node_modules/.tmp
+.DS_Store
+dist*
+dist-ssr
+*.local
+.eslintcache
+.stylelintcache
+.vite-hooks
+src/assets/sprites/*.*
+!src/assets/sprites/.gitkeep
+public/icons
+
+# vite-plus build artifacts
+*.js.map
+vite.config.js
+vite.config.d.ts
+tsconfig.tsbuildinfo

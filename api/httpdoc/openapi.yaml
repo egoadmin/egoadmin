@@ -1,0 +1,1473 @@
+tags:
+  - name: Upload
+    description: 文件上传、秒传和上传策略查询。
+  - name: TUS
+    description: TUS 断点续传协议端点。
+  - name: CDN
+    description: 文件下载、内嵌展示和图片处理访问端点。
+
+securityDefinitions:
+  BearerAuth:
+    type: apiKey
+    in: header
+    name: Authorization
+    description: "JWT 认证头。Swagger UI 中请输入完整值: Bearer <token>"
+  CdnSignedToken:
+    type: apiKey
+    in: query
+    name: token
+    description: CDN 短期签名 token。签名 URL 同时需要 expires 查询参数。
+
+paths:
+  /upload/profiles:
+    get:
+      tags:
+        - Upload
+      summary: 获取上传策略
+      description: |-
+        # 上传策略查询
+
+        ## 概述
+
+        该接口返回 gateway 当前可用的上传 `profile` 配置，用于前端展示上传限制和选择上传方式。`profile` 是上传策略，不是具体业务字段；常见值包括 `default`、`image`、`avatar`、`document`、`video`。
+
+        返回内容只作为 UI 提示，后端仍会在秒传、multipart 上传、TUS 创建上传和业务绑定阶段再次校验规则。
+
+        ## 请求地址
+
+        ```text
+        GET /upload/profiles
+        ```
+
+        ## 鉴权
+
+        需要 `Authorization: Bearer <token>`。
+
+        ## 返回字段
+
+        | 字段 | 类型 | 描述 |
+        | :--- | :--- | :--- |
+        | `name` | string | 上传 profile 名称。 |
+        | `maxSize` | integer | 单文件最大字节数。 |
+        | `ttlSeconds` | integer | temporary reference 默认有效期秒数。 |
+        | `allowedExtensions` | string[] | 允许的扩展名，例如 `.png`、`.pdf`。 |
+        | `allowedMimeTypes` | string[] | 允许的 MIME 类型，例如 `image/png`。 |
+        | `tusRequired` | boolean | 是否必须使用 TUS 断点续传。 |
+        | `maxCount` | integer | 单次最大文件数量。 |
+        | `instantEnabled` | boolean | 是否支持秒传预检查。 |
+
+        ## 响应示例
+
+        ```json
+        {
+          "profiles": [
+            {
+              "name": "avatar",
+              "maxSize": 5242880,
+              "ttlSeconds": 86400,
+              "allowedExtensions": [".jpg", ".jpeg", ".png", ".webp"],
+              "allowedMimeTypes": ["image/jpeg", "image/png", "image/webp"],
+              "tusRequired": false,
+              "maxCount": 1,
+              "instantEnabled": true
+            }
+          ]
+        }
+        ```
+
+        ## 注意事项
+
+        - 前端应把用户选择的 profile 原样传给上传接口。
+        - `tusRequired=true` 的 profile 不应走 multipart 上传。
+        - profile 不能作为权限依据；业务保存时仍必须绑定 `referenceId` 并校验业务规则。
+      produces:
+        - application/json
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: OK.
+          schema:
+            $ref: '#/definitions/GetUploadProfilesResponse'
+        "401":
+          $ref: '#/responses/Unauthorized'
+        "500":
+          $ref: '#/responses/InternalServerError'
+        default:
+          $ref: '#/responses/Error'
+
+  /upload/instant:
+    post:
+      tags:
+        - Upload
+      summary: 秒传检查
+      description: |-
+        # 秒传检查
+
+        ## 概述
+
+        该接口在真正上传文件内容之前，根据 `profile`、`sha256`、`size`、`filename` 和 `contentType` 查询当前用户是否已有可复用对象。命中时不会重复上传文件内容，而是创建一个新的 temporary `referenceId` 返回给前端。
+
+        秒传只复用已可用的物理对象，不复用上传中、删除中或已删除对象。业务保存仍必须提交 `referenceId`，由业务接口完成绑定。
+
+        ## 请求地址
+
+        ```text
+        POST /upload/instant
+        ```
+
+        ## 鉴权
+
+        需要 `Authorization: Bearer <token>`。
+
+        ## 请求体
+
+        | 字段 | 类型 | 必需 | 描述 |
+        | :--- | :--- | :--- | :--- |
+        | `profile` | string | 否 | 上传策略。为空时使用 `default`。 |
+        | `sha256` | string | 是 | 文件 SHA-256，建议前端按完整文件内容计算。 |
+        | `size` | integer | 是 | 文件大小，单位字节。 |
+        | `filename` | string | 是 | 原始文件名，用于扩展名校验和下载文件名。 |
+        | `contentType` | string | 否 | 文件 MIME 类型，用于 MIME 校验和下载/展示。 |
+
+        ## 请求示例
+
+        ```json
+        {
+          "profile": "document",
+          "sha256": "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4",
+          "size": 1376,
+          "filename": "report.pdf",
+          "contentType": "application/pdf"
+        }
+        ```
+
+        ## 响应字段
+
+        | 字段 | 类型 | 描述 |
+        | :--- | :--- | :--- |
+        | `hit` | boolean | 是否命中可复用对象。 |
+        | `shouldUpload` | boolean | 是否还需要继续上传文件内容。 |
+        | `fileId` | string | 公开文件 ID，未命中时为空。 |
+        | `referenceId` | string | 业务保存需要绑定的公开引用 ID，格式如 `ref-...`，未命中时为空。 |
+        | `profile` | string | 实际使用的上传 profile。 |
+        | `url` | string | CDN 访问 URL，图片为 `/cdn/image/{referenceId}`，普通文件为 `/cdn/file/{referenceId}`。 |
+        | `expiresAt` | string | temporary reference 过期时间。 |
+
+        ## 命中响应示例
+
+        ```json
+        {
+          "hit": true,
+          "shouldUpload": false,
+          "fileId": "file-0Zc9qP3m4T8x",
+          "referenceId": "ref-07uQlcBmL6d0",
+          "profile": "document",
+          "url": "/cdn/file/ref-07uQlcBmL6d0",
+          "expiresAt": "2026-06-28T12:00:00+08:00"
+        }
+        ```
+
+        ## 未命中响应示例
+
+        ```json
+        {
+          "hit": false,
+          "shouldUpload": true
+        }
+        ```
+
+        ## 注意事项
+
+        - 未命中时前端应继续调用 multipart 或 TUS 上传。
+        - 命中时业务保存仍必须绑定 `referenceId`，否则 temporary 引用过期后可能被清理。
+        - 后端会重新校验 profile、大小、扩展名和 MIME，不信任前端 UI 限制。
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/InstantUploadRequest'
+      responses:
+        "200":
+          description: OK.
+          schema:
+            $ref: '#/definitions/InstantUploadResponse'
+        "400":
+          $ref: '#/responses/BadRequest'
+        "401":
+          $ref: '#/responses/Unauthorized'
+        "403":
+          $ref: '#/responses/Forbidden'
+        "413":
+          $ref: '#/responses/PayloadTooLarge'
+        "415":
+          $ref: '#/responses/UnsupportedMediaType'
+        "500":
+          $ref: '#/responses/InternalServerError'
+        default:
+          $ref: '#/responses/Error'
+
+  /upload:
+    post:
+      tags:
+        - Upload
+      summary: multipart 文件上传
+      description: |-
+        # multipart 文件上传
+
+        ## 概述
+
+        该接口用于普通文件上传。前端通过 `multipart/form-data` 提交一个 `json` 字段和一个或多个 `file` 文件字段。后端会把文件内容流式写入对象存储，并创建 `file_object`、temporary `file_reference` 和 `upload_session` 记录。
+
+        上传成功后返回 `referenceId`。业务保存接口必须使用 `referenceId` 绑定文件；如果业务保存失败或用户放弃，temporary reference 会在过期后由清理任务处理。
+
+        ## 请求地址
+
+        ```text
+        POST /upload
+        ```
+
+        ## 鉴权
+
+        需要 `Authorization: Bearer <token>`。
+
+        ## 表单字段
+
+        | 字段 | 类型 | 必需 | 描述 |
+        | :--- | :--- | :--- | :--- |
+        | `json` | string | 是 | 文件描述数组 JSON。数组元素的 `name` 必须和对应文件 part 的 `filename` 一致。 |
+        | `file` | file | 是 | 一个或多个文件 part。 |
+
+        ## `json` 数组元素
+
+        | 字段 | 类型 | 必需 | 描述 |
+        | :--- | :--- | :--- | :--- |
+        | `name` | string | 是 | 原始文件名，必须匹配 multipart 文件名。 |
+        | `size` | string | 是 | 文件大小，单位字节。为兼容旧前端，该字段当前使用字符串。 |
+        | `profile` | string | 否 | 上传策略。为空时使用 `default`。 |
+        | `contentType` | string | 否 | 文件 MIME 类型。为空时后端尝试使用文件 part 的 `Content-Type`。 |
+        | `sha256` | string | 否 | 文件 SHA-256，用于后续秒传复用。 |
+
+        ## 请求示例
+
+        ```bash
+        curl -X POST "https://your-api-domain.com/upload" \
+          -H "Authorization: Bearer <token>" \
+          -F 'json=[{"name":"report.pdf","size":"1376","profile":"document","contentType":"application/pdf","sha256":"8f4343..."}]' \
+          -F "file=@./report.pdf;type=application/pdf"
+        ```
+
+        多文件上传示例：
+
+        ```bash
+        curl -X POST "https://your-api-domain.com/upload" \
+          -H "Authorization: Bearer <token>" \
+          -F 'json=[
+            {"name":"a.png","size":"1200","profile":"image","contentType":"image/png"},
+            {"name":"b.png","size":"1300","profile":"image","contentType":"image/png"}
+          ]' \
+          -F "file=@./a.png;type=image/png" \
+          -F "file=@./b.png;type=image/png"
+        ```
+
+        ## 响应字段
+
+        | 字段 | 类型 | 描述 |
+        | :--- | :--- | :--- |
+        | `filename` | string | 原始文件名，保留兼容字段名；不会返回对象存储 key。 |
+        | `originame` | string | 原始文件名。 |
+        | `size` | string | 文件大小，单位字节。 |
+        | `fileId` | string | 公开文件 ID，格式如 `file-...`。 |
+        | `referenceId` | string | 业务保存需要绑定的公开引用 ID，格式如 `ref-...`。 |
+        | `profile` | string | 实际使用的上传 profile。 |
+        | `status` | string | 引用状态，上传成功后为 `temporary`。 |
+        | `expiresAt` | string | temporary reference 过期时间。 |
+        | `url` | string | CDN 访问 URL。图片为 `/cdn/image/{referenceId}`，普通文件为 `/cdn/file/{referenceId}`。 |
+
+        ## 响应示例
+
+        ```json
+        {
+          "files": [
+            {
+              "filename": "report.pdf",
+              "originame": "report.pdf",
+              "size": "1376",
+              "fileId": "file-0Zc9qP3m4T8x",
+              "referenceId": "ref-07uQlcBmL6d0",
+              "profile": "document",
+              "status": "temporary",
+              "expiresAt": "2026-06-28T12:00:00+08:00",
+              "url": "/cdn/file/ref-07uQlcBmL6d0"
+            }
+          ]
+        }
+        ```
+
+        ## 生命周期
+
+        1. 上传成功：创建 `file_object.available`、`file_reference.temporary`、`upload_session.finished`。
+        2. 业务保存成功：业务接口调用绑定逻辑，把 `referenceId` 变为 `bound`。
+        3. 用户取消或业务保存失败：temporary 引用过期后会被清理任务释放。
+        4. 文件替换或业务数据删除：业务侧应释放旧引用，后续清理任务删除无引用对象。
+
+        ## 错误码
+
+        | HTTP 状态码 | 原因 |
+        | :--- | :--- |
+        | `400` | 表单结构错误、json 无法解析、文件描述缺失、文件名不匹配。 |
+        | `401` | 未登录或 token 无效。 |
+        | `403` | profile 不允许或权限不足。 |
+        | `413` | 文件大小超过 profile 限制。 |
+        | `415` | 扩展名或 MIME 类型不在 profile 允许范围内。 |
+        | `500` | 对象存储、ID 生成、数据库或 gateway 内部错误。 |
+
+        ## 注意事项
+
+        - `tusRequired=true` 的 profile 应使用 TUS，不应走 multipart。
+        - 上传响应不会返回对象存储 key；业务保存应使用 `referenceId`。
+        - 上传成功只表示文件进入临时引用状态，不代表业务数据已经保存成功。
+        - 大文件、弱网络或需要断点续传的场景建议使用 TUS。
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: json
+          in: formData
+          required: true
+          type: string
+          description: '文件描述数组 JSON。示例: [{"name":"avatar.png","size":"12345","profile":"avatar","contentType":"image/png","sha256":"..."}]。'
+        - name: file
+          in: formData
+          required: true
+          type: file
+          description: 一个或多个文件 part，文件名必须匹配 json 中的 name。
+      responses:
+        "200":
+          description: OK.
+          schema:
+            $ref: '#/definitions/MultipartUploadResponse'
+        "400":
+          $ref: '#/responses/BadRequest'
+        "401":
+          $ref: '#/responses/Unauthorized'
+        "403":
+          $ref: '#/responses/Forbidden'
+        "413":
+          $ref: '#/responses/PayloadTooLarge'
+        "415":
+          $ref: '#/responses/UnsupportedMediaType'
+        "500":
+          $ref: '#/responses/InternalServerError'
+        default:
+          $ref: '#/responses/Error'
+
+  /tus/upload:
+    options:
+      tags:
+        - TUS
+      summary: TUS 预检
+      description: |-
+        # TUS 预检
+
+        ## 概述
+
+        浏览器在跨域断点续传前会发送 `OPTIONS /tus/upload` 读取 TUS 能力、允许的方法和响应头。该预检接口不要求 Bearer token。
+
+        ## 请求地址
+
+        ```text
+        OPTIONS /tus/upload
+        ```
+
+        ## 关键响应头
+
+        | 头名称 | 描述 |
+        | :--- | :--- |
+        | `Tus-Version` | 服务端支持的 TUS 版本。 |
+        | `Tus-Resumable` | 当前 TUS 协议版本，通常为 `1.0.0`。 |
+        | `Tus-Max-Size` | 服务端允许的最大上传大小。 |
+        | `Tus-Extension` | 服务端支持的扩展能力。 |
+
+        ## 注意事项
+
+        - 正式创建、查询、上传分片、终止上传都需要认证。
+        - 网关默认放行 TUS 必需请求头和响应头，前端运行配置通常不需要额外配置 CORS 头。
+      responses:
+        "204":
+          description: No Content.
+          headers:
+            Tus-Version:
+              type: string
+              description: 支持的 TUS 版本。
+            Tus-Resumable:
+              type: string
+              description: TUS 协议版本。
+            Tus-Max-Size:
+              type: string
+              description: 最大上传大小。
+            Tus-Extension:
+              type: string
+              description: 支持的 TUS 扩展。
+        default:
+          $ref: '#/responses/Error'
+    post:
+      tags:
+        - TUS
+      summary: 创建 TUS 上传
+      description: |-
+        # 创建 TUS 上传
+
+        ## 概述
+
+        该接口用于创建断点续传资源。服务端会根据 `Upload-Length` 和 `Upload-Metadata` 先创建 `file_object`、temporary `file_reference` 和 `upload_session`，再返回 TUS 资源地址 `Location`。后续前端使用 `PATCH Location` 上传文件分片。
+
+        TUS 上传直接写入对象存储 multipart upload，不需要先落完整本地文件。服务端可能使用本地临时目录缓存小块元数据或缓冲分片，目录大小受配置限制。
+
+        ## 请求地址
+
+        ```text
+        POST /tus/upload
+        ```
+
+        ## 鉴权
+
+        需要 `Authorization: Bearer <token>`。
+
+        ## 请求头
+
+        | 头名称 | 必需 | 描述 |
+        | :--- | :--- | :--- |
+        | `Tus-Resumable` | 是 | TUS 协议版本，例如 `1.0.0`。 |
+        | `Upload-Length` | 是 | 文件总大小，单位字节。 |
+        | `Upload-Defer-Length` | 否 | 是否延迟声明文件大小。当前建议优先提供 `Upload-Length`。 |
+        | `Upload-Metadata` | 是 | 逗号分隔的元数据，值为 Base64。建议包含 `filename`、`profile`、`filetype` 或 `contentType`、`sha256`。 |
+
+        ## Upload-Metadata 示例
+
+        TUS 元数据格式为 `key base64(value)`，多项用逗号分隔：
+
+        ```text
+        filename cmVwb3J0LnBkZg==,profile ZG9jdW1lbnQ=,filetype YXBwbGljYXRpb24vcGRm,sha256 OGY0MzQz...
+        ```
+
+        常用字段：
+
+        | 字段 | 描述 |
+        | :--- | :--- |
+        | `filename` | 原始文件名，用于扩展名校验和下载文件名。 |
+        | `profile` | 上传策略。为空时使用 `default`。 |
+        | `filetype` | 文件 MIME 类型，TUS 客户端常用字段。 |
+        | `contentType` | 文件 MIME 类型，兼容字段。 |
+        | `sha256` | 文件 SHA-256，用于后续秒传复用。 |
+
+        ## curl 示例
+
+        ```bash
+        curl -i -X POST "https://your-api-domain.com/tus/upload" \
+          -H "Authorization: Bearer <token>" \
+          -H "Tus-Resumable: 1.0.0" \
+          -H "Upload-Length: 1376" \
+          -H "Upload-Metadata: filename cmVwb3J0LnBkZg==,profile ZG9jdW1lbnQ=,filetype YXBwbGljYXRpb24vcGRm"
+        ```
+
+        ## 响应头
+
+        | 头名称 | 描述 |
+        | :--- | :--- |
+        | `Location` | TUS 上传资源地址，后续 `HEAD/PATCH/DELETE` 使用该地址。 |
+        | `Tus-Resumable` | TUS 协议版本。 |
+        | `X-Upload-File-Id` | 公开文件 ID，格式如 `file-...`。 |
+        | `X-Upload-Reference-Id` | 业务保存需要绑定的公开 `referenceId`，格式如 `ref-...`。 |
+        | `X-Upload-Profile` | 实际使用的 profile。 |
+        | `X-Upload-Expires-At` | temporary reference 过期时间。 |
+        | `X-Upload-Status` | 引用状态，创建后为 `temporary`。 |
+        | `X-Upload-Url` | CDN 访问 URL。 |
+
+        ## 注意事项
+
+        - 创建成功不代表文件已上传完成；业务保存前应等待分片上传完成。
+        - `referenceId` 会在创建阶段返回，前端可以先保存到上传状态中，完成后提交给业务保存接口。
+        - 若 profile 强制 TUS，multipart 上传会被拒绝，应从该接口开始上传。
+      consumes:
+        - application/offset+octet-stream
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Tus-Resumable
+          in: header
+          required: true
+          type: string
+          description: TUS 协议版本，例如 1.0.0。
+        - name: Upload-Length
+          in: header
+          required: true
+          type: string
+          description: 上传文件总大小，单位字节。
+        - name: Upload-Defer-Length
+          in: header
+          required: false
+          type: string
+          description: 是否延迟声明上传文件大小。
+        - name: Upload-Metadata
+          in: header
+          required: false
+          type: string
+          description: Base64 编码的元数据，建议包含 filename、profile、filetype/contentType、sha256。
+        - name: file
+          in: body
+          required: false
+          description: 可选的首段二进制数据。
+          schema:
+            type: string
+            format: binary
+      responses:
+        "201":
+          description: Created.
+          headers:
+            Location:
+              type: string
+              description: TUS 上传资源地址。
+            Tus-Resumable:
+              type: string
+              description: TUS 协议版本。
+            X-Upload-File-Id:
+              type: string
+              description: 公开文件 ID。
+            X-Upload-Reference-Id:
+              type: string
+              description: 业务保存需要绑定的公开 referenceId。
+            X-Upload-Profile:
+              type: string
+              description: 上传 profile。
+            X-Upload-Expires-At:
+              type: string
+              description: temporary reference 过期时间。
+            X-Upload-Status:
+              type: string
+              description: 引用状态。
+            X-Upload-Url:
+              type: string
+              description: CDN 访问 URL。
+        "400":
+          $ref: '#/responses/BadRequest'
+        "401":
+          $ref: '#/responses/Unauthorized'
+        "403":
+          $ref: '#/responses/Forbidden'
+        "413":
+          $ref: '#/responses/PayloadTooLarge'
+        "415":
+          $ref: '#/responses/UnsupportedMediaType'
+        "500":
+          $ref: '#/responses/InternalServerError'
+        default:
+          $ref: '#/responses/Error'
+
+  /tus/upload/{id}:
+    head:
+      tags:
+        - TUS
+      summary: 查询 TUS 上传偏移
+      description: |-
+        # 查询 TUS 上传偏移
+
+        ## 概述
+
+        该接口用于断点续传前查询服务端已经接收的字节偏移。前端应以返回的 `Upload-Offset` 作为下一次 `PATCH` 的起始位置。
+
+        ## 请求地址
+
+        ```text
+        HEAD /tus/upload/{id}
+        ```
+
+        `{id}` 来自创建上传时 `Location` 响应头。
+
+        ## 鉴权
+
+        需要 `Authorization: Bearer <token>`。
+
+        ## 请求头
+
+        | 头名称 | 必需 | 描述 |
+        | :--- | :--- | :--- |
+        | `Tus-Resumable` | 是 | TUS 协议版本，例如 `1.0.0`。 |
+
+        ## 响应头
+
+        | 头名称 | 描述 |
+        | :--- | :--- |
+        | `Upload-Offset` | 当前已上传偏移，单位字节。 |
+        | `Upload-Length` | 文件总大小，单位字节。 |
+        | `Tus-Resumable` | TUS 协议版本。 |
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: TUS 上传资源 ID。
+        - name: Tus-Resumable
+          in: header
+          required: true
+          type: string
+          description: TUS 协议版本，例如 1.0.0。
+      responses:
+        "200":
+          description: OK.
+          headers:
+            Upload-Offset:
+              type: string
+              description: 当前已上传偏移。
+            Upload-Length:
+              type: string
+              description: 上传文件总大小。
+            Tus-Resumable:
+              type: string
+              description: TUS 协议版本。
+        "401":
+          $ref: '#/responses/Unauthorized'
+        "403":
+          $ref: '#/responses/Forbidden'
+        "404":
+          $ref: '#/responses/NotFound'
+        default:
+          $ref: '#/responses/Error'
+    patch:
+      tags:
+        - TUS
+      summary: 上传 TUS 分片
+      description: |-
+        # 上传 TUS 分片
+
+        ## 概述
+
+        该接口向 TUS 上传资源追加二进制分片。请求体必须从 `Upload-Offset` 指定的位置开始，服务端会校验偏移并返回新的 `Upload-Offset`。
+
+        当文件所有字节上传完成后，服务端会把 `file_object` 标记为 `available`、`upload_session` 标记为 `finished`，并异步清理 TUS 元数据。
+
+        ## 请求地址
+
+        ```text
+        PATCH /tus/upload/{id}
+        ```
+
+        ## 鉴权
+
+        需要 `Authorization: Bearer <token>`。
+
+        ## 请求头
+
+        | 头名称 | 必需 | 描述 |
+        | :--- | :--- | :--- |
+        | `Content-Type` | 是 | 必须为 `application/offset+octet-stream`。 |
+        | `Tus-Resumable` | 是 | TUS 协议版本，例如 `1.0.0`。 |
+        | `Upload-Offset` | 是 | 本次分片起始偏移。 |
+
+        ## curl 示例
+
+        ```bash
+        curl -i -X PATCH "https://your-api-domain.com/tus/upload/{id}" \
+          -H "Authorization: Bearer <token>" \
+          -H "Tus-Resumable: 1.0.0" \
+          -H "Upload-Offset: 0" \
+          -H "Content-Type: application/offset+octet-stream" \
+          --data-binary "@./report.pdf"
+        ```
+
+        ## 响应头
+
+        | 头名称 | 描述 |
+        | :--- | :--- |
+        | `Upload-Offset` | 分片写入后的新偏移。 |
+        | `Tus-Resumable` | TUS 协议版本。 |
+
+        ## 常见错误
+
+        - `409 Conflict`：客户端提交的 `Upload-Offset` 与服务端当前偏移不一致，应先 `HEAD` 查询后重试。
+        - `413 Payload Too Large`：文件大小超过 profile 限制。
+        - `415 Unsupported Media Type`：扩展名或 MIME 不允许。
+      consumes:
+        - application/offset+octet-stream
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: TUS 上传资源 ID。
+        - name: Tus-Resumable
+          in: header
+          required: true
+          type: string
+          description: TUS 协议版本，例如 1.0.0。
+        - name: Upload-Offset
+          in: header
+          required: true
+          type: string
+          description: 本次分片起始偏移。
+        - name: file
+          in: body
+          required: true
+          description: 分片二进制数据。
+          schema:
+            type: string
+            format: binary
+      responses:
+        "204":
+          description: No Content.
+          headers:
+            Upload-Offset:
+              type: string
+              description: 新的上传偏移。
+            Tus-Resumable:
+              type: string
+              description: TUS 协议版本。
+        "400":
+          $ref: '#/responses/BadRequest'
+        "401":
+          $ref: '#/responses/Unauthorized'
+        "403":
+          $ref: '#/responses/Forbidden'
+        "409":
+          $ref: '#/responses/Conflict'
+        "413":
+          $ref: '#/responses/PayloadTooLarge'
+        "415":
+          $ref: '#/responses/UnsupportedMediaType'
+        "500":
+          $ref: '#/responses/InternalServerError'
+        default:
+          $ref: '#/responses/Error'
+    delete:
+      tags:
+        - TUS
+      summary: 终止 TUS 上传
+      description: |-
+        # 终止 TUS 上传
+
+        ## 概述
+
+        该接口用于主动终止未完成的 TUS 上传。适合用户取消上传、关闭上传任务或前端确认不再继续上传的场景。
+
+        服务端会尽量终止对象存储 multipart upload，标记 `upload_session` 为 `aborted`，并把对应 temporary reference 标记为不可继续使用。若对象存储中已无可删除内容，该操作应保持幂等。
+
+        ## 请求地址
+
+        ```text
+        DELETE /tus/upload/{id}
+        ```
+
+        ## 鉴权
+
+        需要 `Authorization: Bearer <token>`。
+
+        ## 请求头
+
+        | 头名称 | 必需 | 描述 |
+        | :--- | :--- | :--- |
+        | `Tus-Resumable` | 是 | TUS 协议版本，例如 `1.0.0`。 |
+
+        ## 响应
+
+        成功返回 `204 No Content`。
+
+        ## 注意事项
+
+        - 已完成上传的文件不应通过该接口删除；业务文件删除应释放 `file_reference`，再由清理任务删除无引用对象。
+        - 如果服务端无法找到上传资源，可能返回 `404` 或 `410`。
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: TUS 上传资源 ID。
+        - name: Tus-Resumable
+          in: header
+          required: true
+          type: string
+          description: TUS 协议版本，例如 1.0.0。
+      responses:
+        "204":
+          description: No Content.
+        "400":
+          $ref: '#/responses/BadRequest'
+        "401":
+          $ref: '#/responses/Unauthorized'
+        "403":
+          $ref: '#/responses/Forbidden'
+        "404":
+          $ref: '#/responses/NotFound'
+        "410":
+          $ref: '#/responses/Gone'
+        "500":
+          $ref: '#/responses/InternalServerError'
+        default:
+          $ref: '#/responses/Error'
+
+  /cdn/file/{referenceId}:
+    get:
+      tags:
+        - CDN
+      summary: CDN 文件下载或内嵌展示
+      description: |-
+        # CDN 文件下载与内嵌展示
+
+        ## 概述
+
+        该接口通过上传响应中的 `referenceId` 访问文件，不允许客户端直接传对象存储 key。gateway 会先校验 `file_reference` 与 `file_object` 状态，再从对象存储中打开文件流并返回。
+
+        支持两种访问方式：
+
+        - `Authorization: Bearer <token>`：适合后台页面使用 `fetch` 下载 Blob。
+        - `expires` + `token` 短期签名 URL：适合浏览器直接打开、新窗口下载、邮件链接等不能稳定携带 Authorization 的场景。
+
+        ## 请求地址
+
+        ```text
+        GET /cdn/file/{referenceId}
+        ```
+
+        ## 查询参数
+
+        | 参数名 | 类型 | 必需 | 描述 |
+        | :--- | :--- | :--- | :--- |
+        | `display` | string | 否 | 内容处置方式。默认 `attachment` 触发下载；`inline` 尝试在浏览器内嵌显示。 |
+        | `expires` | string | 签名 URL 必需 | Unix 秒级过期时间。 |
+        | `token` | string | 签名 URL 必需 | CDN 短期签名 token。 |
+
+        ## 功能说明
+
+        1. 安全获取文件：只接受 `referenceId`，不接受用户提交的对象存储路径。
+        2. 生命周期校验：仅允许 `bound` 引用或未过期且已授权的 `temporary` 引用；`released`、`expired`、`deleted`、不可用对象会被拒绝。
+        3. 动态内容处置：根据 `display` 设置 `Content-Disposition`。
+        4. MIME 类型检测：优先使用上传记录中的 `contentType`，其次使用对象元数据和扩展名推断，最后回退到 `application/octet-stream`。
+        5. 流式传输：使用 `http.ServeContent`，支持 `Range`、断点续传和条件请求。
+
+        ## 使用示例
+
+        下载文件：
+
+        ```bash
+        curl -OJ -H "Authorization: Bearer <token>" \
+          "https://your-api-domain.com/cdn/file/ref-07uQlcBmL6d0"
+        ```
+
+        浏览器内嵌显示 PDF：
+
+        ```html
+        <embed
+          src="https://your-api-domain.com/cdn/file/ref-07uQlcBmL6d0?display=inline&expires=1783000000&token=xxx"
+          type="application/pdf"
+          width="100%"
+          height="600">
+        ```
+
+        Range 下载前 1KB：
+
+        ```bash
+        curl -H "Authorization: Bearer <token>" \
+          -H "Range: bytes=0-1023" \
+          "https://your-api-domain.com/cdn/file/ref-07uQlcBmL6d0"
+        ```
+
+        ## 响应头
+
+        | 头名称 | 示例值 | 描述 |
+        | :--- | :--- | :--- |
+        | `Content-Disposition` | `attachment; filename="report.pdf"` | 控制下载或内嵌展示，文件名经过安全处理。 |
+        | `Content-Type` | `application/pdf` | 文件 MIME 类型。 |
+        | `Content-Length` | `1024000` | 文件大小或 Range 分段大小。 |
+        | `Accept-Ranges` | `bytes` | 表示支持 Range 请求。 |
+        | `Content-Range` | `bytes 0-1023/1024000` | 206 响应时返回分段范围。 |
+        | `Last-Modified` | `Mon, 15 Sep 2025 09:00:00 GMT` | 文件可用时间或对象最后修改时间。 |
+
+        ## 错误码
+
+        | HTTP 状态码 | 原因 |
+        | :--- | :--- |
+        | `400` | `referenceId` 或 `display` 参数非法。 |
+        | `401` | 需要登录但未提供有效 Bearer token。 |
+        | `403` | 签名错误、签名过期、引用不属于当前用户或权限不足。 |
+        | `404` | 文件引用或对象不存在。 |
+        | `410` | 引用已释放、已过期，或对象状态不可用。 |
+        | `500` | 对象存储或 gateway 内部错误。 |
+
+        ## 注意事项
+
+        - `referenceId` 只接受上传响应返回的 `ref-...` 公开 ID；裸数字 ID 会返回 `400 Bad Request`。
+        - 业务接口保存文件时应保存公开 `referenceId` 并完成绑定，不应保存对象存储 key。
+        - `inline` 是否能在浏览器展示取决于浏览器对该 MIME 类型的支持。
+        - 大文件下载建议使用 Range 或浏览器原生下载能力，服务端不会把整个文件读入内存。
+      produces:
+        - application/octet-stream
+      security:
+        - BearerAuth: []
+        - CdnSignedToken: []
+      parameters:
+        - name: referenceId
+          in: path
+          required: true
+          type: string
+          description: 上传响应返回的公开 referenceId，格式如 `ref-...`。
+        - name: display
+          in: query
+          required: false
+          type: string
+          enum:
+            - attachment
+            - inline
+          description: 内容处置方式。默认为 attachment；inline 尝试在浏览器内嵌展示。
+        - name: expires
+          in: query
+          required: false
+          type: string
+          format: int64
+          description: 签名 URL 过期时间，Unix 秒级时间戳。
+        - name: token
+          in: query
+          required: false
+          type: string
+          description: CDN 短期签名 token。
+      responses:
+        "200":
+          description: File stream.
+          headers:
+            Content-Disposition:
+              type: string
+              description: attachment 或 inline 文件名。
+            Content-Type:
+              type: string
+              description: 文件 MIME 类型。
+            Content-Length:
+              type: string
+              description: 文件大小。
+            Accept-Ranges:
+              type: string
+              description: Range 支持。
+            Last-Modified:
+              type: string
+              description: 最后修改时间。
+        "206":
+          description: Partial content.
+          headers:
+            Content-Range:
+              type: string
+              description: Range 响应范围。
+            Content-Length:
+              type: string
+              description: 分段大小。
+        "400":
+          $ref: '#/responses/BadRequest'
+        "401":
+          $ref: '#/responses/Unauthorized'
+        "403":
+          $ref: '#/responses/Forbidden'
+        "404":
+          $ref: '#/responses/NotFound'
+        "410":
+          $ref: '#/responses/Gone'
+        "500":
+          $ref: '#/responses/InternalServerError'
+        default:
+          $ref: '#/responses/Error'
+
+  /cdn/image/{referenceId}:
+    get:
+      tags:
+        - CDN
+      summary: CDN 原图访问
+      description: |-
+        # CDN 图片原图访问
+
+        ## 概述
+
+        该接口用于通过 `referenceId` 访问原始图片。图片 `<img src>` 通常不能稳定携带 `Authorization`，因此 `bound` 图片可按配置公开访问，或使用 `expires` + `token` 短期签名 URL。
+
+        gateway 会先校验引用和对象状态，再把请求代理到内部图片处理服务。对外只暴露 `/cdn/image`，不暴露底层服务名称或对象存储路径。
+
+        ## 请求地址
+
+        ```text
+        GET /cdn/image/{referenceId}
+        ```
+
+        ## 使用示例
+
+        公开头像展示：
+
+        ```html
+        <img src="https://your-api-domain.com/cdn/image/ref-07uQlcBmL6d0" alt="avatar">
+        ```
+
+        短期签名图片：
+
+        ```html
+        <img src="https://your-api-domain.com/cdn/image/ref-07uQlcBmL6d0?expires=1783000000&token=xxx" alt="preview">
+        ```
+
+        ## 响应头
+
+        代理响应会保留必要图片头，包括 `Content-Type`、`Content-Length`、`Cache-Control`、`ETag`、`Last-Modified`、`Accept-Ranges` 等。
+
+        ## 错误码
+
+        | HTTP 状态码 | 原因 |
+        | :--- | :--- |
+        | `400` | `referenceId` 非法。 |
+        | `401` | 配置要求认证但未提供凭证。 |
+        | `403` | 签名错误、签名过期或访问被拒绝。 |
+        | `404` | 图片引用或对象不存在。 |
+        | `410` | 引用已释放、已过期，或对象状态不可用。 |
+        | `502` | 内部图片处理服务返回异常。 |
+        | `504` | 内部图片处理服务超时。 |
+
+        ## 注意事项
+
+        - `referenceId` 只接受上传响应返回的 `ref-...` 公开 ID；裸数字 ID 会返回 `400 Bad Request`。
+        - 图片访问路径不会暴露对象存储 key，也不会暴露内部图片处理服务名称。
+      produces:
+        - image/*
+      parameters:
+        - name: referenceId
+          in: path
+          required: true
+          type: string
+          description: 上传响应返回的公开 referenceId，格式如 `ref-...`。
+        - name: expires
+          in: query
+          required: false
+          type: string
+          format: int64
+          description: 签名 URL 过期时间，Unix 秒级时间戳。
+        - name: token
+          in: query
+          required: false
+          type: string
+          description: CDN 短期签名 token。
+      responses:
+        "200":
+          $ref: '#/responses/ImageStream'
+        "400":
+          $ref: '#/responses/BadRequest'
+        "401":
+          $ref: '#/responses/Unauthorized'
+        "403":
+          $ref: '#/responses/Forbidden'
+        "404":
+          $ref: '#/responses/NotFound'
+        "410":
+          $ref: '#/responses/Gone'
+        "502":
+          $ref: '#/responses/BadGateway'
+        "504":
+          $ref: '#/responses/GatewayTimeout'
+        default:
+          $ref: '#/responses/Error'
+
+  /cdn/image/{referenceId}/{processPath}:
+    get:
+      tags:
+        - CDN
+      summary: CDN 图片处理
+      description: |-
+        # CDN 图片处理
+
+        ## 概述
+
+        该接口用于通过 `referenceId` 访问图片并追加处理参数。客户端只需要拼接 `/cdn/image/{referenceId}/{processPath}`，gateway 会根据 `referenceId` 查找真实对象，完成权限和生命周期校验后代理到内部图片处理服务。
+
+        `processPath` 是 catch-all 路径参数，用于表达裁剪、缩放、格式转换、质量、滤镜等处理规则。对外路径不暴露底层服务名称，也不允许客户端直接传对象存储 key。
+
+        ## 请求地址
+
+        ```text
+        GET /cdn/image/{referenceId}/{processPath}
+        ```
+
+        ## 访问方式
+
+        - 公开图片：`bound` 图片可按配置直接用于 `<img src>`。
+        - 签名图片：私有展示场景可使用 `expires` + `token` 短期签名 URL。
+        - 临时引用：默认不允许公开访问，除非使用有效签名 URL 或显式开启临时图片公开配置。
+
+        ## 常用处理示例
+
+        固定尺寸缩放：
+
+        ```text
+        /cdn/image/ref-07uQlcBmL6d0/300x200
+        /cdn/image/ref-07uQlcBmL6d0/100x100
+        /cdn/image/ref-07uQlcBmL6d0/300x0
+        /cdn/image/ref-07uQlcBmL6d0/0x200
+        ```
+
+        等比适配容器：
+
+        ```text
+        /cdn/image/ref-07uQlcBmL6d0/fit-in/300x200
+        /cdn/image/ref-07uQlcBmL6d0/fit-in/1000x1000
+        ```
+
+        拉伸到指定尺寸：
+
+        ```text
+        /cdn/image/ref-07uQlcBmL6d0/stretch/300x200
+        /cdn/image/ref-07uQlcBmL6d0/stretch/100x100
+        ```
+
+        智能裁剪：
+
+        ```text
+        /cdn/image/ref-07uQlcBmL6d0/100x100/smart
+        /cdn/image/ref-07uQlcBmL6d0/200x200/smart
+        ```
+
+        手动裁剪：
+
+        ```text
+        /cdn/image/ref-07uQlcBmL6d0/10x11:120x130
+        /cdn/image/ref-07uQlcBmL6d0/0.2x0.15:0.45x0.67
+        ```
+
+        对齐方式：
+
+        ```text
+        /cdn/image/ref-07uQlcBmL6d0/200x100/left/top
+        /cdn/image/ref-07uQlcBmL6d0/200x100/right/bottom
+        /cdn/image/ref-07uQlcBmL6d0/200x100/center/middle
+        ```
+
+        格式转换与质量：
+
+        ```text
+        /cdn/image/ref-07uQlcBmL6d0/filters:format(webp)
+        /cdn/image/ref-07uQlcBmL6d0/filters:format(jpeg):quality(70)
+        /cdn/image/ref-07uQlcBmL6d0/fit-in/300x300/filters:format(webp):quality(80)
+        ```
+
+        颜色和效果：
+
+        ```text
+        /cdn/image/ref-07uQlcBmL6d0/filters:brightness(30)
+        /cdn/image/ref-07uQlcBmL6d0/filters:contrast(50)
+        /cdn/image/ref-07uQlcBmL6d0/filters:grayscale()
+        /cdn/image/ref-07uQlcBmL6d0/filters:blur(5)
+        /cdn/image/ref-07uQlcBmL6d0/filters:sharpen(2)
+        /cdn/image/ref-07uQlcBmL6d0/filters:round_corner(40)
+        ```
+
+        背景和填充：
+
+        ```text
+        /cdn/image/ref-07uQlcBmL6d0/fit-in/100x100/10x5/filters:fill(white)
+        /cdn/image/ref-07uQlcBmL6d0/filters:background_color(ffff00)
+        /cdn/image/ref-07uQlcBmL6d0/fit-in/300x300/filters:fill(none):format(png)
+        ```
+
+        HTML 中使用：
+
+        ```html
+        <img
+          src="https://your-api-domain.com/cdn/image/ref-07uQlcBmL6d0/fit-in/300x300/filters:format(webp):quality(80)"
+          alt="preview">
+        ```
+
+        ## 参数限制
+
+        - `processPath` 不能为空段，不能包含 `.`、`..` 或控制字符。
+        - `processPath` 和 query 长度受 gateway 配置限制，默认最大 2048 字节。
+        - 图片引用仍必须满足生命周期校验：`bound` 或已授权的未过期 `temporary`。
+
+        ## 响应头
+
+        代理响应会保留必要图片头，包括 `Content-Type`、`Content-Length`、`Cache-Control`、`ETag`、`Last-Modified`、`Accept-Ranges`、`Content-Range` 等。
+
+        ## 错误码
+
+        | HTTP 状态码 | 原因 |
+        | :--- | :--- |
+        | `400` | `referenceId` 或 `processPath` 非法。 |
+        | `401` | 配置要求认证但未提供凭证。 |
+        | `403` | 签名错误、签名过期或访问被拒绝。 |
+        | `404` | 图片引用或对象不存在。 |
+        | `410` | 引用已释放、已过期，或对象状态不可用。 |
+        | `502` | 内部图片处理服务返回异常。 |
+        | `504` | 内部图片处理服务超时。 |
+
+        ## 注意事项
+
+        - `referenceId` 只接受上传响应返回的 `ref-...` 公开 ID；裸数字 ID 会返回 `400 Bad Request`。
+        - `processPath` 只表达图片处理规则，不包含对象存储路径。
+      produces:
+        - image/*
+      parameters:
+        - name: referenceId
+          in: path
+          required: true
+          type: string
+          description: 上传响应返回的公开 referenceId，格式如 `ref-...`。
+        - name: processPath
+          in: path
+          required: true
+          type: string
+          description: 图片处理参数路径，例如 300x200/smart 或 fit-in/300x200/filters:format(webp):quality(80)。
+        - name: expires
+          in: query
+          required: false
+          type: string
+          format: int64
+          description: 签名 URL 过期时间，Unix 秒级时间戳。
+        - name: token
+          in: query
+          required: false
+          type: string
+          description: CDN 短期签名 token。
+      responses:
+        "200":
+          $ref: '#/responses/ImageStream'
+        "400":
+          $ref: '#/responses/BadRequest'
+        "401":
+          $ref: '#/responses/Unauthorized'
+        "403":
+          $ref: '#/responses/Forbidden'
+        "404":
+          $ref: '#/responses/NotFound'
+        "410":
+          $ref: '#/responses/Gone'
+        "502":
+          $ref: '#/responses/BadGateway'
+        "504":
+          $ref: '#/responses/GatewayTimeout'
+        default:
+          $ref: '#/responses/Error'
+
+definitions:
+  GetUploadProfilesResponse:
+    type: object
+    properties:
+      profiles:
+        type: array
+        items:
+          $ref: '#/definitions/UploadProfile'
+  UploadProfile:
+    type: object
+    properties:
+      name:
+        type: string
+        description: 上传 profile 名称。
+      maxSize:
+        type: integer
+        format: int64
+        description: 单文件最大字节数。
+      ttlSeconds:
+        type: integer
+        format: int64
+        description: temporary reference 有效期秒数。
+      allowedExtensions:
+        type: array
+        items:
+          type: string
+        description: 允许的扩展名。
+      allowedMimeTypes:
+        type: array
+        items:
+          type: string
+        description: 允许的 MIME 类型。
+      tusRequired:
+        type: boolean
+        description: 是否必须使用 TUS。
+      maxCount:
+        type: integer
+        format: int32
+        description: 单次最大文件数。
+      instantEnabled:
+        type: boolean
+        description: 是否支持秒传。
+  InstantUploadRequest:
+    type: object
+    required:
+      - sha256
+      - size
+      - filename
+    properties:
+      profile:
+        type: string
+        description: 上传 profile。为空时使用 default。
+      sha256:
+        type: string
+        description: 文件 SHA-256。
+      size:
+        type: integer
+        format: int64
+        description: 文件大小，单位字节。
+      filename:
+        type: string
+        description: 原始文件名。
+      contentType:
+        type: string
+        description: MIME 类型。
+  InstantUploadResponse:
+    type: object
+    properties:
+      hit:
+        type: boolean
+        description: 是否命中秒传。
+      shouldUpload:
+        type: boolean
+        description: 是否需要继续上传文件内容。
+      fileId:
+        type: string
+        description: 公开文件 ID，格式如 file-...。
+      referenceId:
+        type: string
+        description: 业务保存需要绑定的公开 referenceId，格式如 ref-...。
+      profile:
+        type: string
+        description: 上传 profile。
+      url:
+        type: string
+        description: CDN 访问 URL。
+      expiresAt:
+        type: string
+        description: temporary reference 过期时间。
+  MultipartUploadResponse:
+    type: object
+    properties:
+      files:
+        type: array
+        items:
+          $ref: '#/definitions/UploadedFile'
+  UploadedFile:
+    type: object
+    properties:
+      filename:
+        type: string
+        description: 原始文件名，保留兼容字段名；不会返回对象存储 key。
+      originame:
+        type: string
+        description: 原始文件名。
+      size:
+        type: string
+        description: 文件大小。
+      fileId:
+        type: string
+        description: 公开文件 ID，格式如 file-...。
+      referenceId:
+        type: string
+        description: 业务保存需要绑定的公开 referenceId，格式如 ref-...。
+      profile:
+        type: string
+        description: 上传 profile。
+      status:
+        type: string
+        description: 引用状态。
+      expiresAt:
+        type: string
+        description: temporary reference 过期时间。
+      url:
+        type: string
+        description: CDN 访问 URL。
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'
+
+responses:
+  ImageStream:
+    description: Image stream.
+    headers:
+      Content-Type:
+        type: string
+        description: 图片 MIME 类型。
+      Content-Length:
+        type: string
+        description: 图片大小。
+      Cache-Control:
+        type: string
+        description: 缓存策略。
+      ETag:
+        type: string
+        description: 缓存校验标签。
+      Last-Modified:
+        type: string
+        description: 最后修改时间。
+  Error:
+    description: Error response.
+    schema:
+      $ref: '#/definitions/rpcStatus'
+  BadRequest:
+    description: Bad Request.
+    schema:
+      $ref: '#/definitions/rpcStatus'
+  Unauthorized:
+    description: Unauthorized.
+    schema:
+      $ref: '#/definitions/rpcStatus'
+  Forbidden:
+    description: Forbidden.
+    schema:
+      $ref: '#/definitions/rpcStatus'
+  NotFound:
+    description: Not Found.
+    schema:
+      $ref: '#/definitions/rpcStatus'
+  Conflict:
+    description: Conflict.
+    schema:
+      $ref: '#/definitions/rpcStatus'
+  Gone:
+    description: Gone.
+    schema:
+      $ref: '#/definitions/rpcStatus'
+  PayloadTooLarge:
+    description: Payload Too Large.
+    schema:
+      $ref: '#/definitions/rpcStatus'
+  UnsupportedMediaType:
+    description: Unsupported Media Type.
+    schema:
+      $ref: '#/definitions/rpcStatus'
+  InternalServerError:
+    description: Internal Server Error.
+    schema:
+      $ref: '#/definitions/rpcStatus'
+  BadGateway:
+    description: Bad Gateway.
+    schema:
+      $ref: '#/definitions/rpcStatus'
+  GatewayTimeout:
+    description: Gateway Timeout.
+    schema:
+      $ref: '#/definitions/rpcStatus'

@@ -1,0 +1,27 @@
+services:
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.15
+    user: root
+    privileged: true
+    restart: always
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    command:
+      - /usr/local/bin/etcd
+      - --name=default
+      - --data-dir=/data
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://etcd:2379
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --initial-advertise-peer-urls=http://etcd:2380
+      - --initial-cluster=default=http://etcd:2380
+      - --initial-cluster-token=egoadmin-local
+      - --initial-cluster-state=new
+    volumes:
+      - ../data/etcd:/data
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health", "--endpoints=http://127.0.0.1:2379"]
+      interval: 5s
+      timeout: 3s
+      retries: 20

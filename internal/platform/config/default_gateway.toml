@@ -1,0 +1,378 @@
+# gateway 服务默认配置。
+# gateway 负责前端入口、HTTP 兼容层、上传、API catalog 和 user gRPC 聚合调用。
+# 环境变量覆盖格式：EGOADMIN_<EnvSuffix>。
+# 例如 client.grpc.user.addr 对应 EGOADMIN_CLIENT_GRPC_USER_ADDR。
+
+[app.web]
+# 前端 API 前缀。空值表示前端使用 /api。
+# EnvSuffix: APP_WEB_APIBASEURL
+apiBaseUrl = ""
+# 文件访问基础地址。默认留空，前端文件/图片访问走网关 /cdn 代理。
+# EnvSuffix: APP_WEB_FILEBASEURL
+fileBaseUrl = ""
+# 是否在最后一个浏览器标签页离开时主动登出。默认关闭，避免离开页面导致登录态失效。
+# EnvSuffix: APP_WEB_OFFLINEONPAGELEAVE
+offlineOnPageLeave = false
+
+[app.service]
+# 是否启用 GORM 自动迁移。默认使用 Atlas，不建议打开。
+# EnvSuffix: APP_SERVICE_AUTOMIGRATE
+autoMigrate = false
+# 服务显示/注册相关名称。
+# EnvSuffix: APP_SERVICE_NAME
+name = "egoadmin-gateway"
+# 平台展示名称。
+# EnvSuffix: APP_SERVICE_PLATFORMNAME
+platformName = "核心管理平台"
+# 外部前端静态文件目录；嵌入式 web 可不依赖该路径。
+# EnvSuffix: APP_SERVICE_WEBPATH
+webPath = "/tmp/egoadmin/core/frontend/html"
+# 是否跳过前端权限契约校验。
+# EnvSuffix: APP_SERVICE_SKIPPERMISSIONCONTRACTCHECK
+skipPermissionContractCheck = false
+# 默认对象存储桶。
+# EnvSuffix: APP_SERVICE_BUCKETNAME
+bucketName = "egoadmin"
+
+[app.shutdown]
+# graceful stop 总超时。需小于等于容器 terminationGracePeriodSeconds。
+# EnvSuffix: APP_SHUTDOWN_STOPTIMEOUT
+stopTimeout = "20s"
+# 收到停止信号后先将 /readyz 置为不可用，再等待摘流。
+# EnvSuffix: APP_SHUTDOWN_DRAINTIMEOUT
+drainTimeout = "2s"
+# Redis、DB、registry 等非 server 资源单项关闭超时。
+# EnvSuffix: APP_SHUTDOWN_CLOSETIMEOUT
+closeTimeout = "5s"
+
+[app.dbMigration]
+# 是否在进程启动时执行 Atlas migration。
+# EnvSuffix: APP_DBMIGRATION_ENABLED
+enabled = true
+# 迁移驱动，目前仅支持 atlas。
+# EnvSuffix: APP_DBMIGRATION_DRIVER
+driver = "atlas"
+# Atlas 迁移数据库 URL，生产环境必须通过环境变量覆盖。
+# EnvSuffix: APP_DBMIGRATION_URL
+url = "mysql://egoadmin:change-me@127.0.0.1:3306/egoadmin_gateway?charset=utf8mb4&parseTime=True&loc=Local"
+# gateway 服务迁移目录。
+# EnvSuffix: APP_DBMIGRATION_DIR
+dir = "file://atlas/migrations/gateway"
+# Atlas 可执行文件路径。
+# EnvSuffix: APP_DBMIGRATION_BIN
+bin = "atlas"
+
+[server.http]
+# 是否记录请求访问日志。
+# EnvSuffix: SERVER_HTTP_ENABLEACCESSINTERCEPTORREQ
+enableAccessInterceptorReq = false
+# 是否记录响应访问日志。
+# EnvSuffix: SERVER_HTTP_ENABLEACCESSINTERCEPTORRES
+enableAccessInterceptorRes = false
+# 是否启用 HTTP 指标。
+# EnvSuffix: SERVER_HTTP_ENABLEMETRICINTERCEPTOR
+enableMetricInterceptor = false
+# 是否启用 HTTP tracing。
+# EnvSuffix: SERVER_HTTP_ENABLETRACEINTERCEPTOR
+enableTraceInterceptor = true
+# 是否启用 URL path 转换。
+# EnvSuffix: SERVER_HTTP_ENABLEURLPATHTRANS
+enableURLPathTrans = true
+# HTTP 监听地址。
+# EnvSuffix: SERVER_HTTP_HOST
+host = "0.0.0.0"
+# HTTP 监听端口。
+# EnvSuffix: SERVER_HTTP_PORT
+port = 9001
+# Gin 运行模式。
+# EnvSuffix: SERVER_HTTP_MODE
+mode = "release"
+# CORS 是否允许凭据。
+# EnvSuffix: SERVER_HTTP_ACCESSCONTROLALLOWCREDENTIALS
+accessControlAllowCredentials = true
+# CORS 允许请求头，逗号分隔环境变量值。默认包含 TUS 浏览器上传所需的协议头。
+# EnvSuffix: SERVER_HTTP_ACCESSCONTROLALLOWHEADERS
+accessControlAllowHeaders = [
+  "Authorization",
+  "Accept-Language",
+  "Content-Type",
+  "Content-Length",
+  "X-CSRF-Token",
+  "X-Requested-With",
+  "X-Request-ID",
+  "X-HTTP-Method-Override",
+  "Tus-Resumable",
+  "Upload-Length",
+  "Upload-Offset",
+  "Upload-Metadata",
+  "Upload-Defer-Length",
+  "Upload-Concat"
+]
+# CORS 允许方法，逗号分隔环境变量值。
+# EnvSuffix: SERVER_HTTP_ACCESSCONTROLALLOWMETHODS
+accessControlAllowMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+# CORS 暴露响应头，默认包含 TUS 续传和上传组件返回的业务引用信息。
+# EnvSuffix: SERVER_HTTP_ACCESSCONTROLEXPOSEHEADERS
+accessControlExposeHeaders = [
+  "Content-Length",
+  "Location",
+  "Upload-Offset",
+  "Upload-Length",
+  "Tus-Version",
+  "Tus-Resumable",
+  "Tus-Max-Size",
+  "Tus-Extension",
+  "Upload-Metadata",
+  "Upload-Defer-Length",
+  "Upload-Concat",
+  "X-Upload-File-Id",
+  "X-Upload-Reference-Id",
+  "X-Upload-Profile",
+  "X-Upload-Expires-At",
+  "X-Upload-Status",
+  "X-Upload-Url"
+]
+# CORS 允许来源，逗号分隔环境变量值。
+# EnvSuffix: SERVER_HTTP_ACCESSCONTROLALLOWORIGIN
+accessControlAllowOrigin = ["*"]
+# 是否启用 CORS。
+# EnvSuffix: SERVER_HTTP_ENABLECORS
+enableCors = true
+# gRPC-Gateway 兼容入口路由。
+# EnvSuffix: SERVER_HTTP_GINRELATIVEPATH
+ginRelativePath = "/api/*action"
+# gateway 自身 gRPC endpoint。
+# EnvSuffix: SERVER_HTTP_GRPCENDPOINT
+grpcEndpoint = "127.0.0.1:9002"
+# 转发到 gRPC 的入站请求头，逗号分隔环境变量值。
+# EnvSuffix: SERVER_HTTP_INCOMINGHEADERS
+incomingHeaders = ["X-User-Id"]
+# HTTP 兼容层剥离的前缀。
+# EnvSuffix: SERVER_HTTP_STRIPPREFIX
+stripPrefix = "/api"
+
+[server.grpc]
+# gRPC 服务注册名称，用于 etcd 服务发现。
+# EnvSuffix: SERVER_GRPC_NAME
+name = "egoadmin-gateway"
+# gateway gRPC 监听地址。
+# EnvSuffix: SERVER_GRPC_HOST
+host = "127.0.0.1"
+# gateway gRPC 监听端口。
+# EnvSuffix: SERVER_GRPC_PORT
+port = 9002
+
+[trace]
+# OpenTelemetry 服务名，默认开发环境写入本地 Jaeger。
+# EnvSuffix: TRACE_SERVICENAME
+ServiceName = "egoadmin-gateway"
+# trace exporter 类型，默认使用 Jaeger all-in-one 支持的 OTLP gRPC。
+# EnvSuffix: TRACE_OTELTYPE
+OtelType = "otlp"
+# trace 采样率。开发默认全采样，生产可通过环境变量降低。
+# EnvSuffix: TRACE_FRACTION
+Fraction = 1.00
+
+[trace.otlp]
+# OTLP gRPC endpoint，dev-up 默认启动本地 Jaeger 并暴露 4317。
+# EnvSuffix: TRACE_OTLP_ENDPOINT
+Endpoint = "127.0.0.1:4317"
+
+[client.grpc.user]
+# user 服务 gRPC 地址。默认通过 etcd 服务发现，可按需覆盖为直连地址。
+# EnvSuffix: CLIENT_GRPC_USER_ADDR
+addr = "etcd:///egoadmin-user"
+# user gRPC 读超时。首次冷启动和登录加密密钥预热可能略高于 1s。
+# EnvSuffix: CLIENT_GRPC_USER_READTIMEOUT
+readTimeout = "3s"
+# user gRPC 建连超时。
+# EnvSuffix: CLIENT_GRPC_USER_DIALTIMEOUT
+dialTimeout = "3s"
+
+[client.grpc.idgen]
+# idgen 服务 gRPC 地址。默认通过 etcd 服务发现。
+# EnvSuffix: CLIENT_GRPC_IDGEN_ADDR
+addr = "etcd:///egoadmin-idgen"
+# idgen gRPC 读超时。
+# EnvSuffix: CLIENT_GRPC_IDGEN_READTIMEOUT
+readTimeout = "3s"
+# idgen gRPC 建连超时。
+# EnvSuffix: CLIENT_GRPC_IDGEN_DIALTIMEOUT
+dialTimeout = "5s"
+
+[client.mysql]
+# 是否输出 SQL debug 日志。
+# EnvSuffix: CLIENT_MYSQL_DEBUG
+debug = true
+# gateway 数据库 DSN，生产环境必须通过环境变量覆盖。
+# EnvSuffix: CLIENT_MYSQL_DSN
+dsn = "egoadmin:change-me@tcp(127.0.0.1:3306)/egoadmin_gateway?charset=utf8mb4&parseTime=True&loc=Local&readTimeout=1s&timeout=1s&writeTimeout=3s"
+
+[client.redis]
+# gateway Redis 地址。
+# EnvSuffix: CLIENT_REDIS_ADDR
+addr = "127.0.0.1:6379"
+# 是否输出 Redis debug 日志。
+# EnvSuffix: CLIENT_REDIS_DEBUG
+debug = true
+# Redis 组件模式。
+# EnvSuffix: CLIENT_REDIS_MODE
+mode = "stub"
+# Redis 密码，生产环境通过环境变量覆盖。
+# EnvSuffix: CLIENT_REDIS_PASSWORD
+password = ""
+
+[client.asyncq]
+# asyncq 使用的 Redis 地址。
+# EnvSuffix: CLIENT_ASYNCQ_REDISADDR
+redisAddr = "127.0.0.1:6379"
+# asyncq Redis 密码。
+# EnvSuffix: CLIENT_ASYNCQ_REDISPASSWORD
+redisPassword = ""
+# asyncq Redis DB。
+# EnvSuffix: CLIENT_ASYNCQ_REDISDB
+redisDB = 0
+# 是否启用 asyncq client。
+# EnvSuffix: CLIENT_ASYNCQ_ENABLECLIENT
+enableClient = true
+# 是否启用 asyncq server。
+# EnvSuffix: CLIENT_ASYNCQ_ENABLESERVER
+enableServer = false
+# asyncq 并发数。
+# EnvSuffix: CLIENT_ASYNCQ_CONCURRENCY
+concurrency = 10
+# asyncq 队列权重。inline table 的 key 分别覆盖，例如 CLIENT_ASYNCQ_QUEUES_CRITICAL。
+queues = { critical = 6, default = 3, low = 1 }
+# 最大重试次数。
+# EnvSuffix: CLIENT_ASYNCQ_MAXRETRY
+maxRetry = 3
+# 重试策略。
+# EnvSuffix: CLIENT_ASYNCQ_RETRYDELAYFUNC
+retryDelayFunc = "exponential"
+# 单任务超时。
+# EnvSuffix: CLIENT_ASYNCQ_TASKTIMEOUT
+taskTimeout = "30s"
+# 是否记录 asyncq 访问日志。
+# EnvSuffix: CLIENT_ASYNCQ_ENABLEACCESSLOG
+enableAccessLog = false
+# asyncq 慢日志阈值。
+# EnvSuffix: CLIENT_ASYNCQ_SLOWLOGTHRESHOLD
+slowLogThreshold = "1s"
+# 是否启用 asyncq 健康检查。
+# EnvSuffix: CLIENT_ASYNCQ_ENABLEHEALTHCHECK
+enableHealthCheck = false
+
+[client.meili]
+# Meilisearch 地址。
+# EnvSuffix: CLIENT_MEILI_HOST
+host = "http://127.0.0.1:7700"
+# Meilisearch API Key。
+# EnvSuffix: CLIENT_MEILI_APIKEY
+apiKey = ""
+# Meilisearch 请求超时。
+# EnvSuffix: CLIENT_MEILI_TIMEOUT
+timeout = "5s"
+# 是否启用 Meilisearch 健康检查。
+# EnvSuffix: CLIENT_MEILI_ENABLEHEALTH
+enableHealth = true
+# 启动时是否确保索引存在。
+# EnvSuffix: CLIENT_MEILI_ENSUREONBUILD
+ensureOnBuild = false
+# 是否记录 Meilisearch 访问日志。
+# EnvSuffix: CLIENT_MEILI_ENABLEACCESSLOG
+enableAccessLog = false
+# Meilisearch 慢日志阈值。
+# EnvSuffix: CLIENT_MEILI_SLOWLOG
+slowLog = "1s"
+
+[client.minio]
+# MinIO/S3 endpoint。
+# EnvSuffix: CLIENT_MINIO_ENDPOINT
+endpoint = "127.0.0.1:9000"
+# MinIO/S3 Access Key，生产环境通过环境变量覆盖。
+# EnvSuffix: CLIENT_MINIO_ACCESSKEYID
+accessKeyID = ""
+# MinIO/S3 Secret Key，生产环境通过环境变量覆盖。
+# EnvSuffix: CLIENT_MINIO_SECRETACCESSKEY
+secretAccessKey = ""
+# 是否使用 HTTPS。
+# EnvSuffix: CLIENT_MINIO_SSL
+ssl = false
+
+[component.upload]
+# 兼容旧 multipart 上传入口。profile 默认由 upload 组件内置。
+# EnvSuffix: COMPONENT_UPLOAD_MULTIPARTPATH
+multipartPath = "/upload"
+# 临时上传引用默认过期时间。
+# EnvSuffix: COMPONENT_UPLOAD_DEFAULTTTL
+defaultTTL = "24h"
+
+[component.upload.tus]
+# TUS 断点续传默认关闭，联调完成后可按环境开启。
+# EnvSuffix: COMPONENT_UPLOAD_TUS_ENABLED
+enabled = false
+# TUS HTTP 入口。
+# EnvSuffix: COMPONENT_UPLOAD_TUS_PATH
+path = "/tus/upload"
+# tusd s3store 本地 part 临时缓存目录。
+# EnvSuffix: COMPONENT_UPLOAD_TUS_TEMPORARYDIRECTORY
+temporaryDirectory = "./data/tus-tmp"
+# 最终对象与 TUS metadata 的 object prefix。
+# EnvSuffix: COMPONENT_UPLOAD_TUS_OBJECTPREFIX
+objectPrefix = "files"
+# EnvSuffix: COMPONENT_UPLOAD_TUS_METADATAPREFIX
+metadataPrefix = "tus-meta"
+
+[component.cdn]
+# 普通文件 CDN 下载入口。
+# EnvSuffix: COMPONENT_CDN_FILEPATH
+filePath = "/cdn/file"
+# 图片处理 CDN 入口。
+# EnvSuffix: COMPONENT_CDN_IMAGEPATH
+imagePath = "/cdn/image"
+# CDN 短期签名密钥，生产环境必须通过环境变量覆盖。
+# EnvSuffix: COMPONENT_CDN_SIGNSECRET
+signSecret = "change-me"
+# 短期签名 URL 默认有效期。
+# EnvSuffix: COMPONENT_CDN_DEFAULTSIGNEDTTL
+defaultSignedTTL = "10m"
+# bound 图片是否允许无 Authorization 公开访问，适配 <img src> 场景。
+# EnvSuffix: COMPONENT_CDN_PUBLICIMAGE
+publicImage = true
+# temporary 图片是否允许无签名公开访问，默认关闭。
+# EnvSuffix: COMPONENT_CDN_ALLOWTEMPORARYIMAGE
+allowTemporaryImage = false
+# 图片处理参数路径最大长度。
+# EnvSuffix: COMPONENT_CDN_MAXPROCESSPATHBYTES
+maxProcessPathBytes = 2048
+# 图片处理 query 最大长度。
+# EnvSuffix: COMPONENT_CDN_MAXQUERYBYTES
+maxQueryBytes = 2048
+
+[client.imageProcessor]
+# 图片处理服务地址。生产环境建议通过部署 DNS 覆盖。
+# EnvSuffix: CLIENT_IMAGEPROCESSOR_URL
+url = "http://image-processor:2853"
+# 图片处理服务签名密钥，生产环境必须通过环境变量覆盖。
+# EnvSuffix: CLIENT_IMAGEPROCESSOR_SECRET
+secret = "change-me"
+# 图片处理服务请求超时。
+# EnvSuffix: CLIENT_IMAGEPROCESSOR_TIMEOUT
+timeout = "5s"
+
+[cron.gateway.upload.cleanup]
+# 分布式任务延迟执行策略。
+# EnvSuffix: CRON_GATEWAY_UPLOAD_CLEANUP_DELAYEXECTYPE
+delayExecType = "skip"
+# 是否启用分布式任务锁。gateway 默认单实例开发，生产多副本可开启。
+# EnvSuffix: CRON_GATEWAY_UPLOAD_CLEANUP_ENABLEDISTRIBUTEDTASK
+enableDistributedTask = false
+# 启动后是否立即执行一次。默认关闭，避免刚启动时和迁移/联调抢资源。
+# EnvSuffix: CRON_GATEWAY_UPLOAD_CLEANUP_ENABLEIMMEDIATELYRUN
+enableImmediatelyRun = false
+# Cron 表达式是否包含秒。
+# EnvSuffix: CRON_GATEWAY_UPLOAD_CLEANUP_ENABLESECONDS
+enableSeconds = true
+# 上传临时引用和无引用对象清理 Cron 表达式。
+# EnvSuffix: CRON_GATEWAY_UPLOAD_CLEANUP_SPEC
+spec = "0 0/10 * * * ?"

@@ -1,0 +1,22 @@
+# gateway 容器部署覆盖配置。
+#
+# 程序启动时会先加载 internal/platform/config 内置默认配置，再合并本文件，
+# 最后应用 EGOADMIN_* 环境变量覆盖。这里不要重复默认值，只保留
+# Docker Compose 部署和本地开发配置不同、且必须写清楚的项。
+#
+# 数据库、Redis、MinIO、Atlas、etcd、trace、CDN 和图片处理服务等由 deploy/compose/app.yml 注入。
+# 真实部署请在 deploy/.env 覆盖这些值。
+# 对外文件访问建议通过 /cdn/file 和 /cdn/image；如需兼容旧 objectKey 直连，可通过
+# EGOADMIN_APP_WEB_FILEBASEURL 覆盖。
+
+[server.http]
+# HTTP 兼容层需要回连 gateway 自己的 gRPC 服务。
+# 本地默认值是 127.0.0.1:9002；容器部署中 gRPC 服务会监听容器网卡 IP，
+# 因此使用 Docker DNS，避免回连 loopback 失败。
+grpcEndpoint = "gateway:9002"
+
+[server.grpc]
+# 默认本地配置使用 127.0.0.1，只适合宿主机开发。
+# 容器部署需要把可被其它容器访问的地址注册到 etcd。
+# enableLocalMainIP 会让 EGO 使用容器网卡 IP 作为 gRPC 监听和注册地址。
+enableLocalMainIP = true

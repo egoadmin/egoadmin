@@ -1,0 +1,54 @@
+# local-live.toml 用于 idgen 服务本地联调，配合 test/docker-compose.yml 使用。
+
+[app.service]
+autoMigrate = false
+name = "egoadmin-idgen"
+platformName = "核心管理平台"
+skipPermissionContractCheck = true
+bucketName = "egoadmin"
+
+[app.dbMigration]
+enabled = true
+driver = "atlas"
+url = "mysql://egoadmin:egoadmin@127.0.0.1:3308/egoadmin_idgen?charset=utf8mb4&parseTime=True&loc=Local"
+dir = "file://atlas/migrations/idgen"
+bin = "atlas"
+
+[server.http]
+host = "0.0.0.0"
+port = 9201
+mode = "release"
+enableAccessInterceptorReq = false
+enableAccessInterceptorRes = false
+enableMetricInterceptor = false
+enableTraceInterceptor = false
+enableCors = false
+
+[server.grpc]
+host = "127.0.0.1"
+port = 9202
+
+[server.governor]
+host = "0.0.0.0"
+port = 9203
+
+[client.mysql]
+debug = true
+dsn = "egoadmin:egoadmin@tcp(127.0.0.1:3308)/egoadmin_idgen?charset=utf8mb4&parseTime=True&loc=Local&readTimeout=1s&timeout=1s&writeTimeout=3s"
+
+[etcd]
+addrs = ["127.0.0.1:2379"]
+connectTimeout = "1s"
+
+[registry]
+scheme = "etcd"
+prefix = "egoadmin"
+serviceTTL = "10s"
+
+[trace]
+ServiceName = "egoadmin-idgen-local"
+OtelType = "otlp"
+Fraction = 1.00
+
+[trace.otlp]
+Endpoint = "127.0.0.1:4317"

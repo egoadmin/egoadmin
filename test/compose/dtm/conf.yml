@@ -1,0 +1,15 @@
+Store:
+  Driver: mysql
+  Host: 127.0.0.1
+  User: egoadmin
+  Password: egoadmin
+  Port: 3309
+  Db: egoadmin_dtm
+
+MicroService:
+  Driver: dtm-driver-ego
+  Target: etcd://127.0.0.1:2379/egoadmin-dtm
+  EndPoint: 127.0.0.1:36790
+
+HttpPort: 36789
+GrpcPort: 36790

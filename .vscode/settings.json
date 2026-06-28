@@ -1,0 +1,17 @@
+{
+    "go.useLanguageServer": true,
+    "gopls": {
+        "formatting.gofumpt": true,
+    },
+    "go.inferGopath": false,
+    "go.testFlags": [
+        "-v"
+    ],
+    "remote.localPortHost": "allInterfaces",
+    "go.formatTool": "gofumpt",
+    "go.lintTool": "golangci-lint",
+    "go.lintFlags": [
+        "--fast",
+    ],
+    "editor.formatOnSave": true,
+}

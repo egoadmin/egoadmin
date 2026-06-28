@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>登录 · 核心管理平台 EgoAdmin</title>
+<style>
+/* ============================================================
+   EgoAdmin 登录页 · 令牌取自 DESIGN.md（亮色为主 + 深色契约面板）
+   ============================================================ */
+:root{
+  --bg:#FAFBFC; --surface:#FFFFFF; --surface-2:#F4F6F8;
+  --fg:#14181F; --text:#3A4250; --muted:#6B7280; --faint:#9AA3B2;
+  --border:#E6E8EC; --border-strong:#D5D9E0;
+  --accent:#1573E6; --accent-hover:#1267CC; --accent-press:#0F58B0;
+  --accent-weak:#E8F1FC; --accent-text:#1166C4;
+  --cyan:#19B6DD; --cyan-weak:#E2F6FC; --success:#17B26A; --danger:#E5484D; --danger-weak:#FCEBEC;
+  /* 深色契约面板（固定深色，不随主题） */
+  --d-bg:#0E1116; --d-surface:#161B22; --d-border:#222934; --d-text:#C2C9D4; --d-muted:#8B95A4; --d-cyan:#43C6E8; --d-accent:#4B9CF5;
+  --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono","Cascadia Code",ui-monospace,Menlo,Consolas,monospace;
+  --r-sm:6px; --r-md:8px; --r-lg:12px; --r-xl:16px; --r-pill:999px;
+  --shadow-md:0 6px 18px -6px rgb(16 24 40 / .12);
+  --focus:0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+  --ease:cubic-bezier(.2,0,0,1);
+}
+*{box-sizing:border-box}
+html,body{height:100%; margin:0}
+body{background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:15px; -webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--font-display); color:var(--fg); margin:0; text-wrap:balance}
+.mono{font-family:var(--font-mono)} .num{font-variant-numeric:tabular-nums}
+a{color:var(--accent-text); text-decoration:none} a:hover{text-decoration:underline}
+
+.login{display:grid; grid-template-columns:1.08fr .92fr; min-height:100vh}
+
+/* ---------- 左：契约面板 ---------- */
+.brandp{position:relative; background:var(--d-bg); color:var(--d-text); padding:48px 56px; display:flex; flex-direction:column; overflow:hidden}
+.brandp .grid-bg{position:absolute; inset:0; background-image:linear-gradient(#1b2230 1px,transparent 1px),linear-gradient(90deg,#1b2230 1px,transparent 1px); background-size:36px 36px; opacity:.5; -webkit-mask-image:radial-gradient(120% 80% at 30% 10%,#000,transparent 72%); mask-image:radial-gradient(120% 80% at 30% 10%,#000,transparent 72%)}
+.brandp > *{position:relative; z-index:1}
+.bp-logo{display:flex; align-items:center; gap:11px; font-family:var(--font-display); font-weight:700; font-size:18px; color:#fff; letter-spacing:-.01em}
+.bp-logo small{font-family:var(--font-mono); font-size:11px; color:var(--d-muted); font-weight:500}
+.bp-mid{margin-top:auto; margin-bottom:auto; padding:40px 0; max-width:480px}
+.bp-eyebrow{font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--d-cyan)}
+.bp-mid h2{font-size:32px; font-weight:680; letter-spacing:-.02em; line-height:1.18; color:#fff; margin:14px 0 14px}
+.bp-mid p{color:var(--d-muted); font-size:15px; line-height:1.65; margin:0 0 26px}
+.bp-code{background:var(--d-surface); border:1px solid var(--d-border); border-radius:var(--r-lg); overflow:hidden}
+.bp-code .bar{display:flex; align-items:center; gap:7px; padding:11px 14px; border-bottom:1px solid var(--d-border)}
+.bp-code .dot{width:10px; height:10px; border-radius:50%}
+.bp-code .file{font-family:var(--font-mono); font-size:12px; color:var(--d-muted); margin-left:6px}
+.bp-code pre{margin:0; padding:16px; font-family:var(--font-mono); font-size:12.5px; line-height:1.7; color:var(--d-text); overflow:auto}
+.bp-code .k{color:var(--d-accent); font-weight:600} .bp-code .s{color:#7DD491} .bp-code .c{color:#5A6573} .bp-code .t{color:var(--d-cyan)}
+.bp-chips{display:flex; gap:10px; flex-wrap:wrap; margin-top:22px}
+.bp-chips span{font-family:var(--font-mono); font-size:12px; color:var(--d-text); background:#1b2230; border:1px solid var(--d-border); padding:5px 11px; border-radius:var(--r-pill)}
+.bp-foot{font-family:var(--font-mono); font-size:11.5px; color:var(--d-muted)}
+
+/* ---------- 右：登录卡 ---------- */
+.formp{display:flex; align-items:center; justify-content:center; padding:40px}
+.formc{width:100%; max-width:380px}
+.formc h1{font-size:26px; font-weight:660; letter-spacing:-.012em; margin-bottom:8px}
+.formc .sub{color:var(--muted); font-size:14px; margin:0 0 30px}
+.field-l{display:block; font-size:13px; font-weight:550; color:var(--text); margin-bottom:7px}
+.field-w{position:relative; margin-bottom:18px}
+.field{width:100%; height:42px; font:inherit; font-size:14px; color:var(--fg); background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-md); padding:0 14px; transition:border-color .18s var(--ease), box-shadow .18s var(--ease)}
+.field::placeholder{color:var(--faint)}
+.field:focus{outline:none; border-color:var(--accent); box-shadow:var(--focus)}
+.field.err{border-color:var(--danger)}
+.field-w .eye{position:absolute; right:8px; top:7px; width:28px; height:28px; display:flex; align-items:center; justify-content:center; color:var(--muted); cursor:pointer; border-radius:var(--r-sm)}
+.field-w .eye:hover{background:var(--surface-2); color:var(--fg)}
+.err-msg{color:var(--danger); font-size:12.5px; margin-top:6px; display:none}
+.err-msg.show{display:block}
+.opt-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; font-size:13.5px}
+.chk{display:inline-flex; align-items:center; gap:8px; color:var(--text); cursor:pointer; user-select:none}
+.chk input{position:absolute; opacity:0; width:0; height:0}
+.chk .box{width:16px; height:16px; border:1.5px solid var(--border-strong); border-radius:4px; display:inline-flex; align-items:center; justify-content:center; transition:.15s var(--ease)}
+.chk input:checked + .box{background:var(--accent); border-color:var(--accent)}
+.chk input:checked + .box::after{content:""; width:4px; height:8px; border:2px solid #fff; border-top:0; border-left:0; transform:rotate(45deg) translateY(-1px)}
+.btn{width:100%; height:44px; font:inherit; font-size:15px; font-weight:600; cursor:pointer; border:0; border-radius:var(--r-md); background:var(--accent); color:#fff; transition:background .18s var(--ease)}
+.btn:hover{background:var(--accent-hover)} .btn:active{background:var(--accent-press)}
+.btn:disabled{opacity:.7; cursor:default}
+.btn:focus-visible{outline:none; box-shadow:var(--focus)}
+.divider{display:flex; align-items:center; gap:14px; margin:26px 0 16px; color:var(--faint); font-size:12.5px}
+.divider::before,.divider::after{content:""; flex:1; height:1px; background:var(--border)}
+.demo{display:flex; gap:10px}
+.demo button{flex:1; height:38px; font:inherit; font-size:13px; font-weight:550; cursor:pointer; background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-md); color:var(--text); transition:.15s var(--ease); display:flex; align-items:center; justify-content:center; gap:7px}
+.demo button:hover{border-color:var(--accent); color:var(--accent-text); background:var(--accent-weak)}
+.demo button .mono{font-size:12px; color:var(--muted)}
+.formc .reg{text-align:center; margin-top:24px; font-size:13.5px; color:var(--muted)}
+.formc .copy{text-align:center; margin-top:18px; font-size:12px; color:var(--faint)}
+.toast{position:fixed; top:24px; left:50%; transform:translateX(-50%) translateY(-16px); background:var(--success); color:#fff; font-size:13.5px; font-weight:550; padding:11px 20px; border-radius:var(--r-pill); box-shadow:var(--shadow-md); opacity:0; pointer-events:none; transition:.26s var(--ease)}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+@media (max-width:880px){
+  .login{grid-template-columns:1fr}
+  .brandp{padding:28px 28px 24px} .bp-mid{padding:22px 0; margin:0} .bp-mid h2{font-size:24px} .bp-code,.bp-chips{display:none}
+  .formp{padding:32px 24px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<div class="login">
+
+  <!-- ===== 左：契约面板 ===== -->
+  <aside class="brandp" data-od-id="brand-panel">
+    <div class="grid-bg"></div>
+    <div class="bp-logo">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19" stroke-linecap="round"/></svg>
+      核心管理平台 <small>EgoAdmin</small>
+    </div>
+    <div class="bp-mid">
+      <div class="bp-eyebrow">GO 微服务后台开发底座</div>
+      <h2>这是给工程师的底座，<br>不是又一个后台模板</h2>
+      <p>Proto First 串起接口、验证、文档、权限与响应映射。登录后即可查看角色、用户、组织与操作审计如何由契约约束。</p>
+      <div class="bp-code">
+        <div class="bar"><span class="dot" style="background:#ED6A5E"></span><span class="dot" style="background:#F5C14E"></span><span class="dot" style="background:#61C554"></span><span class="file">make run</span></div>
+<pre><span class="c"># 启动默认服务</span>
+<span class="k">$</span> make run
+  <span class="t">gateway</span>  listening :8080  <span class="c">(HTTP+gRPC)</span>
+  <span class="t">user</span>     ready  · casbin loaded
+  <span class="t">idgen</span>    ready  · segment mode
+<span class="c"># readiness / graceful shutdown 已内置</span></pre>
+      </div>
+      <div class="bp-chips"><span>Proto First</span><span>HTTP + gRPC</span><span>gateway·user·idgen</span></div>
+    </div>
+    <div class="bp-foot">EgoAdmin · 开箱即用的微服务后台开发底座</div>
+  </aside>
+
+  <!-- ===== 右：登录卡 ===== -->
+  <main class="formp" data-od-id="login-form">
+    <form class="formc" id="loginForm" novalidate>
+      <h1>登录核心管理平台</h1>
+      <p class="sub">使用账号或手机号登录，进入后台管理控制台。</p>
+
+      <label class="field-l" for="acct">用户名 / 手机号</label>
+      <div class="field-w">
+        <input class="field" id="acct" name="acct" autocomplete="username" placeholder="请输入用户名或手机号">
+        <div class="err-msg" id="acctErr">请输入用户名或手机号</div>
+      </div>
+
+      <label class="field-l" for="pwd">密码</label>
+      <div class="field-w">
+        <input class="field" id="pwd" name="pwd" type="password" autocomplete="current-password" placeholder="请输入密码" style="padding-right:42px">
+        <div class="eye" id="eye" role="button" tabindex="0" aria-label="显示密码">
+          <svg id="eyeOn" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg id="eyeOff" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="display:none"><path d="M2 12s3.5-7 10-7c2 0 3.8.6 5.3 1.5M22 12s-3.5 7-10 7c-2 0-3.8-.6-5.3-1.5" stroke-linecap="round"/><path d="M4 4l16 16" stroke-linecap="round"/></svg>
+        </div>
+        <div class="err-msg" id="pwdErr">请输入密码</div>
+      </div>
+
+      <div class="opt-row">
+        <label class="chk"><input type="checkbox" id="remember" checked><span class="box"></span>记住登录</label>
+        <a href="#">忘记密码？</a>
+      </div>
+
+      <button class="btn" type="submit" id="submitBtn">登录</button>
+
+      <div class="divider">演示账号</div>
+      <div class="demo">
+        <button type="button" data-u="admin" data-p="admin123">admin <span class="mono">超级管理员</span></button>
+      </div>
+
+      <p class="reg">还没有账号？<a href="#">创建账号</a></p>
+      <p class="copy mono">© 2026 EgoAdmin · MIT License</p>
+    </form>
+  </main>
+</div>
+
+<div class="toast" id="toast">登录成功，正在进入控制台…</div>
+
+<script>
+/* ---------- 密码显隐 ---------- */
+const pwd=document.getElementById('pwd'), eye=document.getElementById('eye'), eyeOn=document.getElementById('eyeOn'), eyeOff=document.getElementById('eyeOff');
+function toggleEye(){const show=pwd.type==='password'; pwd.type=show?'text':'password'; eyeOn.style.display=show?'none':'block'; eyeOff.style.display=show?'block':'none'; eye.setAttribute('aria-label',show?'隐藏密码':'显示密码');}
+eye.addEventListener('click',toggleEye);
+eye.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleEye();}});
+
+/* ---------- 演示账号填充 ---------- */
+document.querySelectorAll('.demo button').forEach(b=>b.addEventListener('click',()=>{
+  document.getElementById('acct').value=b.dataset.u; pwd.value=b.dataset.p;
+  document.getElementById('acctErr').classList.remove('show'); document.getElementById('pwdErr').classList.remove('show');
+  document.getElementById('acct').classList.remove('err'); pwd.classList.remove('err');
+}));
+
+/* ---------- 校验 + 提交 ---------- */
+const acct=document.getElementById('acct'), acctErr=document.getElementById('acctErr'), pwdErr=document.getElementById('pwdErr'), btn=document.getElementById('submitBtn'), toast=document.getElementById('toast');
+function check(el,err){const ok=el.value.trim().length>0; el.classList.toggle('err',!ok); err.classList.toggle('show',!ok); return ok;}
+acct.addEventListener('input',()=>check(acct,acctErr));
+pwd.addEventListener('input',()=>check(pwd,pwdErr));
+document.getElementById('loginForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const a=check(acct,acctErr), p=check(pwd,pwdErr);
+  if(!a||!p)return;
+  btn.disabled=true; btn.textContent='登录中…';
+  setTimeout(()=>{
+    toast.classList.add('show');
+    setTimeout(()=>{toast.classList.remove('show'); btn.disabled=false; btn.textContent='登录';},1800);
+  },600);
+});
+</script>
+</body>
+</html>

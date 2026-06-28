@@ -1,0 +1,16 @@
+version: v1
+deps:
+  - buf.build/googleapis/googleapis
+
+breaking:
+  use:
+    - FILE
+    - PACKAGE
+    - WIRE_JSON
+lint:
+  use:
+    - STANDARD
+    - COMMENT_FIELD
+    - COMMENT_MESSAGE
+    - COMMENT_RPC
+    - COMMENT_SERVICE

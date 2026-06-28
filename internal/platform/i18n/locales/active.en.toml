@@ -1,0 +1,191 @@
+[AuthMissingToken]
+other = "JWT token is missing"
+
+[LoginExpired]
+other = "Login has expired"
+
+[LoginInvalid]
+other = "Login is invalid"
+
+[AccountUnavailable]
+other = "Account is unavailable"
+
+[LoggedOut]
+other = "Logged out"
+
+[ForcedOffline]
+other = "Login has been forced offline"
+
+[LoginReplaced]
+other = "Login has been replaced by another device"
+
+[LoginAbnormal]
+other = "Login state is abnormal. Please log in again."
+
+[InvalidLoginParams]
+other = "Invalid login parameters"
+
+[InvalidCaptcha]
+other = "Invalid captcha"
+
+[InvalidGender]
+other = "Invalid gender"
+
+[LoginInfoAbnormal]
+other = "Login information is abnormal"
+
+[LoginFailed]
+other = "Incorrect username or password"
+
+[BuiltinUserNameChangeDenied]
+other = "Built-in users cannot change their names"
+
+[SubmittedPasswordUnsupported]
+other = "Creating a user with a submitted password is not supported"
+
+[UsernameNotAllowed]
+other = "Username is not allowed"
+
+[UsernameExists]
+other = "Username already exists. Please enter another username."
+
+[PhoneExists]
+other = "Phone number already exists. Please enter another phone number."
+
+[BuiltinPasswordResetDenied]
+other = "Administrator passwords cannot be reset here. Change it in the personal center."
+
+[DefaultPasswordPhoneTooShort]
+other = "Phone number is too short to generate the default password"
+
+[CannotDeleteBuiltinUser]
+other = "Some users cannot be deleted"
+
+[OldPasswordIncorrect]
+other = "Old password is incorrect"
+
+[LoginPasswordIncorrect]
+other = "Login password is incorrect"
+
+[UserNotFound]
+other = "User does not exist"
+
+[UserInvalidated]
+other = "User is invalid"
+
+[UserCountExceeded]
+other = "User count exceeds the limit"
+
+[OnlineUserUseCaseNotInitialized]
+other = "Online user use case is not initialized"
+
+[UserUpdateUseCaseNotInitialized]
+other = "User update use case is not initialized"
+
+[UserResetPasswordUseCaseNotInitialized]
+other = "User password reset use case is not initialized"
+
+[DeptUseCaseNotInitialized]
+other = "Department use case is not initialized"
+
+[DeptNameExists]
+other = "A department with the same name already exists. Please enter another name."
+
+[DeptNameExistsWithName]
+other = "Department {{.Name}} already exists. Please enter another name."
+
+[DeptMaxLevelExceeded]
+other = "A maximum of {{.MaxLevel}} department levels is supported. Please choose another parent."
+
+[DeptTooManySiblings]
+other = "Department count exceeds the limit"
+
+[DataChangedRetry]
+other = "Data has changed. Please refresh and try again."
+
+[InvalidPriority]
+other = "Invalid sort value"
+
+[DeptNotFound]
+other = "Department does not exist"
+
+[DeptInUse]
+other = "This department is linked to accounts. Edit those accounts before deleting it."
+
+[DeptInUseCount]
+other = "{{.Count}} accounts are linked to this department. Edit those accounts before deleting it."
+
+[CurrentUserNoDept]
+other = "Current user is not bound to a department"
+
+[NoAccessUserData]
+other = "No permission to access this user data"
+
+[NoAccessDeptData]
+other = "No permission to access this department data"
+
+[NoModifyDeptData]
+other = "No permission to modify this department data"
+
+[NoAccessRoleData]
+other = "No permission to access this role data"
+
+[NoModifyRoleData]
+other = "No permission to modify this role data"
+
+[DataPermissionOutOfScope]
+other = "Cannot assign data permissions outside your own scope"
+
+[RoleUseCaseNotInitialized]
+other = "Role use case is not initialized"
+
+[RoleNameExists]
+other = "Role name already exists. Please enter another role name."
+
+[RoleInUse]
+other = "This role is used by accounts. Edit those accounts before deleting it."
+
+[RoleInUseCount]
+other = "{{.Count}} accounts have this role. Edit those accounts before deleting it."
+
+[RoleCountExceeded]
+other = "Role count exceeds the limit"
+
+[LogCountExceeded]
+other = "Log count exceeds the limit"
+
+[ReadFileInfoFailed]
+other = "Failed to read file information"
+
+[FileUploadFailed]
+other = "File upload failed"
+
+[FileDescriptionMissing]
+other = "File description was not found"
+
+[UploadDescriptionTooLarge]
+other = "Upload description file is too large. Maximum size is 4MB."
+
+[UploadedFileMissing]
+other = "Uploaded file was not found"
+
+[FileNameRequired]
+other = "File name is required"
+
+[FileTooLarge]
+other = "File upload failed: file is too large"
+
+[PermissionEmptyMenuAPIs]
+other = "Security warning: selected menus have no function APIs, so API permissions cannot be granted directly"
+
+[PermissionAPIMetadataUnavailable]
+other = "System error: unable to load API dictionary metadata"
+
+[PermissionContractUnavailable]
+other = "System error: unable to load frontend permission contract"
+
+[PermissionIllegalAPIID]
+other = "Security warning: request contains illegal system API ID: {{.ID}}"
+
+[PermissionAPIBoundaryDenied]
+other = "Security block: selected function module does not include API permission \"{{.Name}}\", so it cannot be assigned"

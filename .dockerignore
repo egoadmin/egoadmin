@@ -1,0 +1,16 @@
+.git
+.devcontainer
+.claude
+.agents
+.woodpecker
+.vscode
+.githooks
+.lefthook
+node_modules
+web/node_modules
+deploy
+test
+docs
+logs
+codex.txt
+*.md

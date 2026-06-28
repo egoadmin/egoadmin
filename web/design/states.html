@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>状态预览 · 空状态 / 加载 · 核心管理平台</title>
+<style>
+/* EgoAdmin · 状态预览（设计预览页）— 令牌取自 DESIGN.md */
+:root{
+  --bg:#FAFBFC; --surface:#FFFFFF; --surface-2:#F4F6F8; --surface-3:#EAEDF1;
+  --fg:#14181F; --text:#3A4250; --muted:#6B7280; --faint:#9AA3B2; --border:#E6E8EC; --border-strong:#D5D9E0;
+  --accent:#1573E6; --accent-hover:#1267CC; --accent-press:#0F58B0; --accent-weak:#E8F1FC; --accent-text:#1166C4;
+  --cyan:#19B6DD; --cyan-weak:#E2F6FC; --success:#17B26A; --success-weak:#E6F7EF; --warning:#F5A623; --warning-weak:#FDF3E2; --danger:#E5484D; --danger-weak:#FCEBEC;
+  --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono","Cascadia Code",ui-monospace,Menlo,Consolas,monospace;
+  --r-sm:6px; --r-md:8px; --r-lg:12px; --r-xl:16px; --r-pill:999px;
+  --shadow-sm:0 2px 6px rgb(16 24 40 / .06); --shadow-md:0 6px 18px -6px rgb(16 24 40 / .12); --shadow-lg:0 16px 40px -12px rgb(16 24 40 / .18);
+  --focus:0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent); --ease:cubic-bezier(.2,0,0,1); --ease-out:cubic-bezier(.16,1,.3,1);
+}
+.dark{
+  --bg:#0E1116; --surface:#161B22; --surface-2:#1C232D; --surface-3:#232B36; --fg:#E6EAF0; --text:#C2C9D4; --muted:#8B95A4; --faint:#6A7382; --border:#262C36; --border-strong:#38414E;
+  --accent:#4B9CF5; --accent-hover:#62A9F7; --accent-press:#3C8AE6; --accent-weak:#17304E; --accent-text:#6FB0F7; --cyan:#43C6E8; --cyan-weak:#16323C; --success-weak:#10261C; --warning-weak:#2A2110; --danger-weak:#2C1517;
+  --shadow-md:0 6px 18px -6px rgb(0 0 0 / .5); --shadow-lg:0 16px 40px -12px rgb(0 0 0 / .6);
+}
+*{box-sizing:border-box} html,body{margin:0; height:100%}
+body{background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:14px; -webkit-font-smoothing:antialiased; transition:background .3s var(--ease), color .3s var(--ease)}
+h1,h2,h3,h4{font-family:var(--font-display); color:var(--fg); margin:0}
+.mono{font-family:var(--font-mono)} .num{font-variant-numeric:tabular-nums}
+
+/* 顶部（预览页，非产品导航） */
+.topbar{position:sticky; top:0; z-index:50; display:flex; align-items:center; gap:12px; height:60px; padding:0 28px; background:color-mix(in oklab,var(--surface) 88%,transparent); backdrop-filter:saturate(1.4) blur(8px); border-bottom:1px solid var(--border)}
+.brand{display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-weight:680; color:var(--fg); font-size:15.5px}
+.chip{font-family:var(--font-mono); font-size:11px; color:var(--accent-text); background:var(--accent-weak); padding:3px 9px; border-radius:var(--r-pill); font-weight:600}
+.spacer{flex:1}
+.toggle{display:inline-flex; align-items:center; gap:8px; font-size:12.5px; color:var(--muted); background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-pill); padding:6px 12px; cursor:pointer}
+.toggle:hover{border-color:var(--border-strong); color:var(--fg)}
+
+.page{max-width:1080px; margin:0 auto; padding:32px 28px 80px}
+.eyebrow{font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-text)}
+h1.title{font-size:28px; font-weight:620; letter-spacing:-.012em; margin:6px 0 6px}
+.lead{color:var(--muted); font-size:15px; margin:0 0 24px; max-width:64ch}
+
+/* 切换器 */
+.seg{display:inline-flex; flex-wrap:wrap; gap:4px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-pill); padding:4px; margin-bottom:22px}
+.seg button{font:inherit; font-size:13.5px; color:var(--muted); background:none; border:0; padding:8px 15px; border-radius:var(--r-pill); cursor:pointer; transition:.15s var(--ease)}
+.seg button:hover{color:var(--fg)}
+.seg button.on{background:var(--surface); color:var(--fg); box-shadow:var(--shadow-sm); font-weight:550}
+
+/* 卡片 + 表格（与后台一致） */
+.pagemain{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:22px 24px}
+.pm-head{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; flex-wrap:wrap}
+.pm-head h2{font-size:22px; font-weight:620; letter-spacing:-.01em}
+.pm-head .tools{display:flex; align-items:center; gap:10px}
+.search{position:relative}
+.search svg{position:absolute; left:11px; top:9px; color:var(--faint)}
+.search input{height:36px; width:200px; font:inherit; font-size:14px; color:var(--fg); background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-md); padding:0 12px 0 34px; pointer-events:none}
+.btn{font:inherit; font-size:14px; font-weight:550; cursor:pointer; border-radius:var(--r-md); padding:8px 16px; border:1px solid transparent; display:inline-flex; align-items:center; gap:7px; transition:.18s var(--ease)}
+.btn:focus-visible{outline:none; box-shadow:var(--focus)}
+.btn-primary{background:var(--accent); color:#fff} .btn-primary:hover{background:var(--accent-hover)}
+.btn-secondary{background:var(--surface); color:var(--text); border-color:var(--border-strong)} .btn-secondary:hover{border-color:var(--accent); color:var(--accent-text)}
+
+.tbl{width:100%; border-collapse:collapse; font-size:14px}
+.tbl th{text-align:left; font-size:13px; font-weight:600; color:var(--text); background:var(--surface-2); padding:13px 16px; border-bottom:1px solid var(--border); white-space:nowrap}
+.tbl th:first-child{border-top-left-radius:var(--r-md)} .tbl th:last-child{border-top-right-radius:var(--r-md)}
+.tbl td{padding:0 16px; border-bottom:1px solid var(--border)}
+
+/* 空状态 */
+.empty{text-align:center; padding:56px 0; color:var(--muted); display:flex; flex-direction:column; align-items:center}
+.empty .ei{width:64px; height:64px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--faint); margin-bottom:14px}
+.empty .ei.danger{background:var(--danger-weak); color:var(--danger); border-color:transparent}
+.empty h4{font-size:15px; font-weight:600; color:var(--fg); margin:0}
+.empty p{font-size:13px; color:var(--muted); margin:5px 0 0; max-width:38ch}
+.empty .ea{margin-top:16px}
+
+/* 骨架屏 */
+.sk-body .sk-row{display:flex; align-items:center; gap:18px; padding:0 16px; height:56px; border-bottom:1px solid var(--border)}
+.sk-body .sk-row:last-child{border-bottom:0}
+.sk{position:relative; overflow:hidden; background:var(--surface-2); border-radius:6px; height:12px}
+.sk::after{content:""; position:absolute; inset:0; transform:translateX(-100%); background:linear-gradient(90deg,transparent,color-mix(in oklab,var(--surface) 75%,transparent),transparent); animation:shimmer 1.3s infinite}
+@keyframes shimmer{100%{transform:translateX(100%)}}
+.spin{width:16px; height:16px; border:2px solid color-mix(in oklab,#fff 45%,transparent); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; display:inline-block; vertical-align:middle; margin-right:7px}
+@keyframes spin{100%{transform:rotate(360deg)}}
+
+.pager{display:flex; align-items:center; justify-content:flex-end; gap:16px; margin-top:18px; color:var(--muted); font-size:13px}
+.pager b{color:var(--fg)} .pager.dim{opacity:.5}
+
+.caption{margin-top:18px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-md); padding:14px 18px; font-size:13.5px; color:var(--muted); line-height:1.7}
+.caption b{color:var(--fg); font-weight:600}
+.caption .tag{display:inline-block; font-family:var(--font-mono); font-size:11px; color:var(--accent-text); background:var(--accent-weak); padding:1px 7px; border-radius:var(--r-pill); margin-right:2px}
+.toast{position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(16px); background:var(--fg); color:var(--bg); font-size:13.5px; padding:11px 18px; border-radius:var(--r-pill); box-shadow:var(--shadow-lg); opacity:0; pointer-events:none; transition:.24s var(--ease-out); z-index:200}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+@media (max-width:680px){ .page{padding:20px 16px 60px} .search input{width:140px} }
+@media (prefers-reduced-motion:reduce){.sk::after,.spin{animation:none}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19" stroke-linecap="round"/></svg>
+    核心管理平台 <span class="chip">状态预览</span>
+  </div>
+  <div class="spacer"></div>
+  <button class="toggle" id="themeBtn">◐ 切换 暗色</button>
+</header>
+
+<div class="page" data-od-id="states">
+  <div class="eyebrow">EMPTY · LOADING · ERROR</div>
+  <h1 class="title">状态预览</h1>
+  <p class="lead">后台页都带模拟数据，平时看不到这些状态。这里在真实表格语境里逐个切换查看 —— 无需清空数据。这是设计预览页，切换器仅用于演示。</p>
+
+  <div class="seg" id="seg">
+    <button data-s="loading" class="on">加载（骨架屏）</button>
+    <button data-s="nodata">无数据</button>
+    <button data-s="nosearch">无搜索结果</button>
+    <button data-s="noperm">无权限</button>
+    <button data-s="error">加载失败</button>
+  </div>
+
+  <section class="pagemain" data-od-id="preview-card">
+    <div class="pm-head">
+      <h2>角色管理</h2>
+      <div class="tools">
+        <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg><input placeholder="输入角色名称" tabindex="-1"></div>
+        <button class="btn btn-primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>新增</button>
+      </div>
+    </div>
+    <table class="tbl">
+      <thead><tr><th style="width:24%">角色名称</th><th>角色描述</th><th style="width:18%">数据范围</th><th style="width:22%">创建时间</th></tr></thead>
+      <tbody id="body"></tbody>
+    </table>
+    <div class="pager dim" id="pager"><span>共 <b class="num">0</b> 条</span><span>每页 10 条</span></div>
+  </section>
+
+  <div class="caption" id="caption"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const bar=w=>`<div class="sk" style="width:${w}"></div>`;
+function skeleton(){
+  const ws=[['22%','40%','14%','20%'],['18%','46%','12%','18%'],['24%','38%','16%','16%'],['16%','44%','12%','22%'],['20%','42%','14%','18%'],['18%','40%','16%','20%']];
+  return `<tr><td colspan="4" style="padding:0;border:0"><div class="sk-body">`+ws.map(r=>`<div class="sk-row">${bar(r[0])}${bar(r[1])}${bar(r[2])}<div style="margin-left:auto">${bar(r[3])}</div></div>`).join('')+`</div></td></tr>`;
+}
+function emptyCell(inner){ return `<tr><td colspan="4">${inner}</td></tr>`; }
+const ICON={
+  box:`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 13h5l1.6 2.5h4.8L16 13h5M5 6h14l2 7v5H3v-5z" stroke-linejoin="round"/></svg>`,
+  search:`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg>`,
+  lock:`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" stroke-linecap="round"/></svg>`,
+  err:`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 8v5m0 3h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+};
+const STATES={
+  loading:{ pager:false, body:()=>skeleton(),
+    cap:`<span class="tag">加载</span> <b>骨架屏</b> —— 何时：首屏、切换组织/筛选、任何「真实请求」等待时。<br>要点：保留表头，表体用等高占位行 + 微光 shimmer；体感比转圈遮罩快，<b>不</b>用整页 spinner。` },
+  nodata:{ pager:true, body:()=>emptyCell(`<div class="empty"><div class="ei">${ICON.box}</div><h4>暂无数据</h4><p>还没有任何角色，点击右上角「新增」创建第一个。</p><button class="btn btn-primary ea" data-demo="add">+ 新增角色</button></div>`),
+    cap:`<span class="tag">空</span> <b>无数据</b> —— 何时：该列表确实没有任何记录（全新系统 / 空模块）。<br>要点：图标 + 说明 + 一个引导性<b>主</b >按钮，把用户推向「创建第一条」。` },
+  nosearch:{ pager:true, body:()=>emptyCell(`<div class="empty"><div class="ei">${ICON.search}</div><h4>没有匹配的结果</h4><p>试试调整关键词，或清空当前筛选条件。</p><button class="btn btn-secondary ea" data-demo="reset">清空筛选</button></div>`),
+    cap:`<span class="tag">空</span> <b>无搜索结果</b> —— 何时：有数据，但当前关键词/筛选无命中。<br>要点：用放大镜图标与「无数据」区分；给<b>次</b>按钮「清空筛选」帮用户退回。` },
+  noperm:{ pager:false, body:()=>emptyCell(`<div class="empty"><div class="ei">${ICON.lock}</div><h4>无访问权限</h4><p>你没有查看该内容的权限，请联系管理员开通。</p></div>`),
+    cap:`<span class="tag">空</span> <b>无权限</b> —— 何时：接口返回无权限（对应后台 VA 权限校验失败）。<br>要点：锁图标 + 说明，<b>不</b>给操作按钮，避免诱导无效操作。` },
+  error:{ pager:false, body:()=>emptyCell(`<div class="empty"><div class="ei danger">${ICON.err}</div><h4>加载失败</h4><p>请求超时或网络异常，请稍后重试。</p><button class="btn btn-secondary ea" data-demo="retry">重试</button></div>`),
+    cap:`<span class="tag">出错</span> <b>加载失败</b> —— 何时：请求出错 / 超时 / 断网。<br>要点：警示图标（danger 浅底）+ 简述原因 + 「重试」；重试时回到骨架屏再渲染。` }
+};
+const body=document.getElementById('body'), pager=document.getElementById('pager'), caption=document.getElementById('caption'), seg=document.getElementById('seg');
+let cur='loading';
+function show(key){
+  cur=key; const s=STATES[key];
+  body.innerHTML=s.body(); caption.innerHTML=s.cap;
+  pager.style.display=s.pager?'flex':'none';
+  seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.s===key));
+}
+seg.addEventListener('click',e=>{const b=e.target.closest('button'); if(b)show(b.dataset.s);});
+/* 演示交互：重试 / 清空筛选 → 骨架 → 内容；新增 → 提示 */
+body.addEventListener('click',e=>{
+  const d=e.target.closest('[data-demo]'); if(!d)return;
+  if(d.dataset.demo==='add'){ toast('这是状态预览，操作在真实页面生效'); return; }
+  // retry / reset：演示「加载 → 渲染」过渡
+  body.innerHTML=skeleton(); pager.style.display='none';
+  setTimeout(()=>show(d.dataset.demo==='retry'?'nodata':'nodata'),700);
+});
+document.getElementById('themeBtn').addEventListener('click',function(){const dk=document.documentElement.classList.toggle('dark'); this.textContent=dk?'◐ 切换 亮色':'◐ 切换 暗色';});
+let tt; function toast(m){const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),1800);}
+show('loading');
+</script>
+</body>
+</html>

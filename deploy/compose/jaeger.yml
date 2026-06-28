@@ -1,0 +1,18 @@
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:1.40
+    restart: always
+    ports:
+      - "${JAEGER_AGENT_COMPACT_PORT:-6831}:6831/udp"
+      - "${JAEGER_AGENT_BINARY_PORT:-6832}:6832/udp"
+      - "${JAEGER_CONFIG_PORT:-5778}:5778"
+      - "${JAEGER_UI_PORT:-16686}:16686"
+      - "${JAEGER_OTLP_GRPC_PORT:-4317}:4317"
+      - "${JAEGER_OTLP_HTTP_PORT:-4318}:4318"
+      - "${JAEGER_COLLECTOR_GRPC_PORT:-14250}:14250"
+      - "${JAEGER_COLLECTOR_HTTP_PORT:-14268}:14268"
+      - "${JAEGER_ADMIN_PORT:-14269}:14269"
+      - "${JAEGER_ZIPKIN_PORT:-9411}:9411"
+    environment:
+      COLLECTOR_ZIPKIN_HOST_PORT: :9411
+      COLLECTOR_OTLP_ENABLED: "true"

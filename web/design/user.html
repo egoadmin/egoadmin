@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>用户管理 · 核心管理平台</title>
+<style>
+/* EgoAdmin 后台 · 用户管理 — 令牌取自 DESIGN.md（亮/暗双主题） */
+:root{
+  --bg:#FAFBFC; --surface:#FFFFFF; --surface-2:#F4F6F8; --surface-3:#EAEDF1;
+  --fg:#14181F; --text:#3A4250; --muted:#6B7280; --faint:#9AA3B2; --border:#E6E8EC; --border-strong:#D5D9E0;
+  --accent:#1573E6; --accent-hover:#1267CC; --accent-press:#0F58B0; --accent-weak:#E8F1FC; --accent-text:#1166C4;
+  --cyan:#19B6DD; --cyan-weak:#E2F6FC; --success:#17B26A; --success-weak:#E6F7EF; --warning:#F5A623; --warning-weak:#FDF3E2; --danger:#E5484D; --danger-weak:#FCEBEC;
+  --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono","Cascadia Code",ui-monospace,Menlo,Consolas,monospace;
+  --r-sm:6px; --r-md:8px; --r-lg:12px; --r-xl:16px; --r-pill:999px;
+  --shadow-sm:0 2px 6px rgb(16 24 40 / .06); --shadow-md:0 6px 18px -6px rgb(16 24 40 / .12); --shadow-lg:0 16px 40px -12px rgb(16 24 40 / .18);
+  --focus:0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent); --ease:cubic-bezier(.2,0,0,1); --ease-out:cubic-bezier(.16,1,.3,1);
+}
+.dark{
+  --bg:#0E1116; --surface:#161B22; --surface-2:#1C232D; --surface-3:#232B36; --fg:#E6EAF0; --text:#C2C9D4; --muted:#8B95A4; --faint:#6A7382; --border:#262C36; --border-strong:#38414E;
+  --accent:#4B9CF5; --accent-hover:#62A9F7; --accent-press:#3C8AE6; --accent-weak:#17304E; --accent-text:#6FB0F7; --cyan:#43C6E8; --cyan-weak:#16323C; --success-weak:#10261C; --warning-weak:#2A2110; --danger-weak:#2C1517;
+  --shadow-md:0 6px 18px -6px rgb(0 0 0 / .5); --shadow-lg:0 16px 40px -12px rgb(0 0 0 / .6);
+}
+*{box-sizing:border-box} html,body{margin:0; height:100%}
+body{background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:14px; -webkit-font-smoothing:antialiased; transition:background .3s var(--ease), color .3s var(--ease)}
+h1,h2,h3{font-family:var(--font-display); color:var(--fg); margin:0}
+.mono{font-family:var(--font-mono)} .num{font-variant-numeric:tabular-nums}
+
+/* 顶部 + 二级导航 */
+.topnav{position:sticky; top:0; z-index:50; display:flex; align-items:center; gap:30px; height:60px; padding:0 24px; background:var(--surface); border-bottom:1px solid var(--border)}
+.topnav .brand{display:flex; align-items:center; gap:9px; font-family:var(--font-display); font-weight:680; color:var(--fg); font-size:15.5px}
+.topnav .menu{display:flex; gap:26px; align-self:stretch}
+.topnav .menu a{position:relative; display:inline-flex; align-items:center; font-size:14px; font-weight:500; color:var(--text); text-decoration:none; padding:0 2px; cursor:pointer; transition:color .18s var(--ease)}
+.topnav .menu a::after{content:""; position:absolute; left:0; right:0; bottom:0; height:2px; background:transparent; border-radius:2px 2px 0 0; transition:background .18s var(--ease)}
+.topnav .menu a:hover{color:var(--fg)}
+.topnav .menu a.on{color:var(--fg); font-weight:600} .topnav .menu a.on::after{background:var(--accent)}
+.topnav .rt{margin-left:auto; display:flex; align-items:center; gap:8px}
+.icon-btn{width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:var(--r-md); color:var(--muted); cursor:pointer; border:0; background:none; transition:.15s var(--ease)}
+.icon-btn:hover{background:var(--surface-2); color:var(--fg)}
+.lang{font-size:12.5px; color:var(--muted); padding:0 8px; cursor:pointer}
+.avatar{display:flex; align-items:center; gap:8px; padding:5px 8px 5px 6px; border-radius:var(--r-pill); cursor:pointer; text-decoration:none} .avatar:hover{background:var(--surface-2)}
+.avatar .pic{width:28px; height:28px; border-radius:50%; background:var(--accent-weak); color:var(--accent-text); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600}
+.avatar .nm{font-size:13.5px; color:var(--text)}
+.grp{position:relative; display:flex; align-items:center}
+.grp .grp-btn{position:relative; display:inline-flex; align-items:center; gap:5px; height:100%; font:inherit; font-size:14px; font-weight:500; color:var(--text); background:none; border:0; padding:0 2px; cursor:pointer; transition:color .18s var(--ease)}
+.grp .grp-btn .cv{color:var(--faint); transition:transform .18s var(--ease)}
+.grp:hover .grp-btn{color:var(--fg)} .grp:hover .grp-btn .cv{transform:rotate(180deg)}
+.grp .grp-btn::after{content:""; position:absolute; left:0; right:13px; bottom:0; height:2px; background:transparent; border-radius:2px 2px 0 0; transition:background .18s var(--ease)}
+.grp .grp-btn.on{color:var(--fg); font-weight:600} .grp .grp-btn.on::after{background:var(--accent)}
+.topnav .menu .grp-drop{position:absolute; top:100%; left:-8px; min-width:152px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); box-shadow:var(--shadow-md); padding:6px; display:flex; flex-direction:column; opacity:0; visibility:hidden; transform:translateY(4px); transition:opacity .16s var(--ease), transform .16s var(--ease); z-index:60}
+.grp:hover .grp-drop{opacity:1; visibility:visible; transform:translateY(0)}
+.topnav .menu .grp-drop a{display:block; height:auto; font-size:13.5px; font-weight:500; color:var(--text); text-decoration:none; padding:8px 12px; border-radius:var(--r-sm); white-space:nowrap; transition:.12s var(--ease)}
+.topnav .menu .grp-drop a::after{display:none}
+.topnav .menu .grp-drop a:hover{background:var(--surface-2); color:var(--fg)}
+.topnav .menu .grp-drop a.cur{color:var(--accent-text); background:var(--accent-weak); font-weight:550}
+
+/* 页面 + 拆分 */
+.page{max-width:1440px; margin:0 auto; padding:24px}
+.split{display:grid; grid-template-columns:248px 1fr; gap:16px; align-items:start}
+.ctx{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:14px; position:sticky; top:84px}
+.ctx .ctx-h{font-size:13px; font-weight:600; color:var(--text); margin:2px 4px 12px; display:flex; align-items:center; justify-content:space-between}
+.ctx .ctx-h span{font-family:var(--font-mono); font-size:11px; color:var(--faint); font-weight:500}
+.ctx .srch{position:relative; margin-bottom:10px}
+.ctx .srch svg{position:absolute; left:10px; top:9px; color:var(--faint)}
+.ctx .srch input{width:100%; height:34px; font:inherit; font-size:13px; color:var(--fg); background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-md); padding:0 10px 0 32px}
+.ctx .srch input:focus{outline:none; border-color:var(--accent); box-shadow:var(--focus)}
+.tnode{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:var(--r-sm); cursor:pointer; font-size:13.5px; color:var(--text); transition:.12s var(--ease)}
+.tnode:hover:not(.on){background:var(--surface-2)}
+.tnode.on{background:var(--accent-weak); color:var(--accent-text); font-weight:550}
+.tnode .ico{color:var(--faint)} .tnode.on .ico{color:var(--accent)}
+.tnode .ct{margin-left:auto; font-family:var(--font-mono); font-size:11px; color:var(--faint)}
+.tnode.child{padding-left:26px}
+
+.pagemain{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:22px 24px}
+.pm-head{display:flex; align-items:center; gap:14px; margin-bottom:18px; flex-wrap:wrap}
+.pm-head h1{font-size:26px; font-weight:620; letter-spacing:-.012em}
+.batchbar{display:flex; align-items:center; gap:14px; font-size:13.5px; color:var(--muted)}
+.batchbar b{color:var(--accent-text)}
+.pm-head .tools{margin-left:auto; display:flex; align-items:center; gap:10px}
+.search{position:relative}
+.search svg{position:absolute; left:11px; top:9px; color:var(--faint)}
+.search input{height:36px; width:190px; font:inherit; font-size:14px; color:var(--fg); background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-md); padding:0 12px 0 34px}
+.search input:focus{outline:none; border-color:var(--accent); box-shadow:var(--focus)}
+.btn{font:inherit; font-size:14px; font-weight:550; cursor:pointer; border-radius:var(--r-md); padding:8px 14px; border:1px solid transparent; display:inline-flex; align-items:center; gap:7px; transition:.18s var(--ease)}
+.btn:focus-visible{outline:none; box-shadow:var(--focus)}
+.btn-primary{background:var(--accent); color:#fff} .btn-primary:hover{background:var(--accent-hover)} .btn-primary:active{background:var(--accent-press)}
+.btn-secondary{background:var(--surface); color:var(--text); border-color:var(--border-strong)} .btn-secondary:hover{border-color:var(--accent); color:var(--accent-text)}
+.btn-danger{background:var(--danger); color:#fff} .btn-danger:hover{filter:brightness(.94)}
+.btn-warn{background:var(--surface); color:var(--danger); border-color:var(--border-strong)} .btn-warn:hover{border-color:var(--danger); background:var(--danger-weak)}
+.btn-link{background:none; border:0; color:var(--accent-text); cursor:pointer; font:inherit; font-size:13.5px}
+.btn-ghost{background:none;color:var(--muted);border-color:transparent} .btn-ghost:hover{background:var(--surface-2);color:var(--fg)}
+.filter-wrap{position:relative}
+.filter-btn.act{border-color:var(--accent); color:var(--accent-text)}
+.popover{position:absolute; right:0; top:44px; width:300px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-lg); padding:16px; z-index:60; display:none}
+.popover.open{display:block}
+.popover label{display:block; font-size:13px; color:var(--text); margin:0 0 8px; font-weight:500}
+.popover label.mt{margin-top:16px}
+.popover input,.popover select{width:100%; height:34px; font:inherit; font-size:13px; color:var(--fg); background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-md); padding:0 10px}
+.popover input:focus,.popover select:focus{outline:none; border-color:var(--accent); box-shadow:var(--focus)}
+.popover .checks{display:flex; gap:18px}
+.popover .checks label{display:inline-flex; align-items:center; gap:7px; margin:0; font-weight:400}
+.popover .checks input{width:16px; height:16px; accent-color:var(--accent)}
+.popover .pf{display:flex; justify-content:flex-end; gap:8px; margin-top:18px}
+
+.tbl{width:100%; border-collapse:collapse; font-size:14px}
+.tbl th{text-align:left; font-size:13px; font-weight:600; color:var(--text); background:var(--surface-2); padding:13px 16px; border-bottom:1px solid var(--border); white-space:nowrap}
+.tbl th:first-child{border-top-left-radius:var(--r-md)} .tbl th:last-child{border-top-right-radius:var(--r-md)}
+.tbl td{padding:0 16px; height:56px; color:var(--text); border-bottom:1px solid var(--border); vertical-align:middle; white-space:nowrap}
+.tbl tbody tr{position:relative; transition:background .15s var(--ease)} .tbl tbody tr:hover{background:var(--accent-weak)}
+.tbl .uname{font-family:var(--font-mono); color:var(--fg)}
+.tbl .acts{position:absolute; right:16px; top:0; height:100%; display:flex; align-items:center; gap:15px; opacity:0; transition:opacity .15s var(--ease); padding-left:24px; background:linear-gradient(90deg,transparent,var(--accent-weak) 16%)}
+.tbl tbody tr:hover .acts{opacity:1}
+.acts a{font-size:13px; color:var(--accent-text); cursor:pointer} .acts a.del{color:var(--danger)}
+.tag{display:inline-flex; align-items:center; font-size:12.5px; font-weight:550; padding:3px 10px; border-radius:var(--r-pill); color:var(--text); background:var(--surface-2); border:1px solid var(--border)}
+.tag.st{gap:6px; border:0} .tag.st::before{content:""; width:6px; height:6px; border-radius:50%; background:currentColor}
+.tag.on{color:var(--success); background:var(--success-weak)} .tag.off{color:var(--danger); background:var(--danger-weak)}
+.cbx{width:16px; height:16px; cursor:pointer; accent-color:var(--accent)}
+.empty{text-align:center; padding:52px 0; color:var(--muted); display:flex; flex-direction:column; align-items:center}
+.empty .ei{width:60px; height:60px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--faint); margin-bottom:14px}
+.empty h4{font-size:15px; font-weight:600; color:var(--fg); margin:0}
+.empty p{font-size:13px; color:var(--muted); margin:5px 0 0}
+.empty .ea{margin-top:16px}
+.sk-body .sk-row{display:flex; align-items:center; gap:18px; padding:0 16px; height:56px; border-bottom:1px solid var(--border)}
+.sk{position:relative; overflow:hidden; background:var(--surface-2); border-radius:6px; height:12px}
+.sk::after{content:""; position:absolute; inset:0; transform:translateX(-100%); background:linear-gradient(90deg,transparent,color-mix(in oklab,var(--surface) 75%,transparent),transparent); animation:shimmer 1.3s infinite}
+@keyframes shimmer{100%{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){.sk::after{animation:none}}
+.pager{display:flex; align-items:center; justify-content:flex-end; gap:16px; margin-top:18px; color:var(--muted); font-size:13px}
+.pager b{color:var(--fg)} .pager .pg{display:flex; gap:6px}
+.pager .pg span{min-width:30px; height:30px; display:inline-flex; align-items:center; justify-content:center; border-radius:var(--r-sm); border:1px solid var(--border); cursor:pointer; font-size:13px}
+.pager .pg span.on{background:var(--accent); color:#fff; border-color:var(--accent)}
+
+.backdrop{position:fixed; inset:0; background:rgb(16 24 40 / .45); display:flex; opacity:0; visibility:hidden; transition:.2s var(--ease); z-index:100}
+.backdrop.open{opacity:1; visibility:visible}
+.dialog{margin:auto; width:520px; max-width:calc(100vw - 32px); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-lg); transform:translateY(8px); transition:transform .2s var(--ease-out)}
+.backdrop.open .dialog{transform:none}
+.dlg-h{display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--border)} .dlg-h h3{font-size:18px; font-weight:620}
+.dlg-x{width:30px; height:30px; border:0; background:none; color:var(--muted); font-size:20px; cursor:pointer; border-radius:var(--r-sm)} .dlg-x:hover{background:var(--surface-2); color:var(--fg)}
+.dlg-b{padding:22px; display:grid; grid-template-columns:1fr 1fr; gap:18px}
+.dlg-f{display:flex; justify-content:flex-end; gap:10px; padding:16px 22px; border-top:1px solid var(--border)}
+.fld{display:flex; flex-direction:column} .fld.full{grid-column:1 / -1}
+.fld label{font-size:13px; font-weight:550; color:var(--text); margin-bottom:7px} .fld label .req{color:var(--danger)}
+.fld input,.fld select{font:inherit; font-size:14px; color:var(--fg); background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-md); padding:9px 12px}
+.fld input:focus,.fld select:focus{outline:none; border-color:var(--accent); box-shadow:var(--focus)}
+.fld input.err{border-color:var(--danger)} .fld .e{color:var(--danger); font-size:12.5px; margin-top:6px; display:none} .fld .e.show{display:block}
+.switch{display:inline-flex; align-items:center; gap:10px; cursor:pointer}
+.switch input{position:absolute; opacity:0} .switch .track{width:40px; height:22px; border-radius:var(--r-pill); background:var(--border-strong); position:relative; transition:.18s var(--ease)}
+.switch .track::after{content:""; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:.18s var(--ease); box-shadow:var(--shadow-sm)}
+.switch input:checked + .track{background:var(--success)} .switch input:checked + .track::after{transform:translateX(18px)}
+.switch .lab{font-size:13.5px; color:var(--text)}
+.confirm{margin:auto; width:390px; max-width:calc(100vw - 32px); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-lg); padding:24px; text-align:center; transform:translateY(8px); transition:transform .2s var(--ease-out)}
+.backdrop.open .confirm{transform:none}
+.confirm .ic{width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 14px; background:var(--warning-weak); color:var(--warning)}
+.confirm .ic.danger{background:var(--danger-weak); color:var(--danger)}
+.confirm h3{font-size:17px; margin-bottom:8px} .confirm p{color:var(--muted); font-size:13.5px; margin:0 0 22px} .confirm .row2{display:flex; gap:10px} .confirm .row2 .btn{flex:1; justify-content:center}
+.toast{position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(16px); background:var(--fg); color:var(--bg); font-size:13.5px; padding:11px 18px; border-radius:var(--r-pill); box-shadow:var(--shadow-lg); opacity:0; pointer-events:none; transition:.24s var(--ease-out); z-index:200}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+@media (max-width:900px){ .split{grid-template-columns:1fr} .ctx{position:static} .topnav .menu{display:none} .dlg-b{grid-template-columns:1fr} }
+@media (max-width:760px){ .page{padding:16px} }
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+
+<nav class="topnav" data-od-id="topnav">
+  <div class="brand"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19" stroke-linecap="round"/></svg>核心管理平台</div>
+  <div class="menu">
+    <div class="grp"><button type="button" class="grp-btn">系统设置 <svg class="cv" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="grp-drop"><a href="role.html">角色管理</a><a href="online_user.html">在线用户</a><a href="operation_log.html">操作日志</a></div></div>
+    <div class="grp"><button type="button" class="grp-btn on">用户管理 <svg class="cv" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="grp-drop"><a href="user.html" class="cur">用户管理</a><a href="organization.html">组织管理</a></div></div>
+  </div>
+  <div class="rt">
+    <button class="icon-btn" title="搜索"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg></button>
+    <button class="icon-btn" id="themeBtn" title="切换主题"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3a9 9 0 1 0 9 9c-5 0-9-4-9-9z"/></svg></button>
+    <span class="lang">中 / EN</span>
+    <a class="avatar" href="personal.html"><span class="pic">A</span><span class="nm">admin</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round"/></svg></a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="split">
+    <aside class="ctx" data-od-id="org-tree">
+      <div class="ctx-h">组织 / 数据范围 <span id="orgCount"></span></div>
+      <div class="srch"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg><input id="orgSearch" placeholder="输入组织名称"></div>
+      <div id="orgTree"></div>
+    </aside>
+
+    <section class="pagemain" data-od-id="user-list">
+      <div class="pm-head">
+        <h1>用户管理</h1>
+        <div class="batchbar" id="batchbar" style="display:none">
+          <span>已选 <b id="selCount">0</b> 项</span>
+          <button class="btn-link" id="clearSel">取消</button>
+          <button class="btn btn-warn" id="batchDel"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" stroke-linecap="round" stroke-linejoin="round"/></svg>批量删除</button>
+        </div>
+        <div class="tools">
+          <button class="btn btn-primary" id="addBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>新增</button>
+          <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg><input id="kw" placeholder="用户名 / 姓名"></div>
+          <div class="filter-wrap">
+            <button class="btn btn-secondary filter-btn" id="filterBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 5h18l-7 8v6l-4 2v-8z" stroke-linejoin="round"/></svg>筛选</button>
+            <div class="popover" id="pop">
+              <label>状态</label>
+              <div class="checks"><label><input type="checkbox" class="fst" value="on">启用</label><label><input type="checkbox" class="fst" value="off">禁用</label></div>
+              <label class="mt">手机号</label>
+              <input id="fPhone" maxlength="11" placeholder="输入手机号">
+              <label class="mt">角色</label>
+              <select id="fRole"><option value="">全部角色</option><option>组织管理员</option><option>只读审计</option><option>普通成员</option><option>访客</option></select>
+              <div class="pf"><button class="btn btn-ghost" id="fReset">重置</button><button class="btn btn-primary" id="fApply">确定</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr>
+          <th style="width:42px"><input type="checkbox" class="cbx" id="selAll"></th>
+          <th>用户名</th><th>姓名</th><th>组织</th><th>角色</th><th>手机号</th><th>状态</th><th>创建时间</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="pager"><span>共 <b class="num" id="total">0</b> 条</span><span>每页 10 条</span><div class="pg"><span>‹</span><span class="on">1</span><span>›</span></div></div>
+    </section>
+  </div>
+</div>
+
+<!-- 新增/编辑 用户 -->
+<div class="backdrop" id="dlg">
+  <div class="dialog" role="dialog" aria-modal="true">
+    <div class="dlg-h"><h3 id="dlgTitle">新增用户</h3><button class="dlg-x" data-close>×</button></div>
+    <div class="dlg-b">
+      <div class="fld"><label>用户名 <span class="req">*</span></label><input id="fU" placeholder="登录账号"><div class="e" id="fUErr">请输入用户名</div></div>
+      <div class="fld"><label>姓名 <span class="req">*</span></label><input id="fN" placeholder="真实姓名"><div class="e" id="fNErr">请输入姓名</div></div>
+      <div class="fld"><label>组织</label><select id="fO"></select></div>
+      <div class="fld"><label>角色</label><select id="fR"><option>组织管理员</option><option>只读审计</option><option>普通成员</option><option>访客</option></select></div>
+      <div class="fld"><label>手机号</label><input id="fP" maxlength="11" placeholder="11 位手机号"></div>
+      <div class="fld"><label>账号状态</label><label class="switch"><input type="checkbox" id="fS" checked><span class="track"></span><span class="lab" id="fSLab">启用</span></label></div>
+    </div>
+    <div class="dlg-f"><button class="btn btn-secondary" data-close>取消</button><button class="btn btn-primary" id="save">确定</button></div>
+  </div>
+</div>
+
+<!-- 通用确认 -->
+<div class="backdrop" id="confirm">
+  <div class="confirm" role="alertdialog" aria-modal="true">
+    <div class="ic" id="confirmIc"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <h3 id="confirmTitle">提示</h3><p id="confirmText"></p>
+    <div class="row2"><button class="btn btn-secondary" data-close>取消</button><button class="btn btn-primary" id="confirmYes">确定</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ORGS=["成都研发中心","平台运营","外部合作方"];
+let users=[
+  {id:1,u:"chenh",name:"陈航",org:"成都研发中心",role:"组织管理员",phone:"138 0013 ****",on:true,created:"2026-06-25 23:13:30"},
+  {id:2,u:"lina",name:"李娜",org:"平台运营",role:"只读审计",phone:"159 2210 ****",on:true,created:"2026-06-24 09:41:02"},
+  {id:3,u:"zhaoq",name:"赵强",org:"成都研发中心",role:"普通成员",phone:"186 0290 ****",on:true,created:"2026-06-22 14:20:11"},
+  {id:4,u:"wangm",name:"王敏",org:"平台运营",role:"普通成员",phone:"177 6651 ****",on:true,created:"2026-06-21 11:05:48"},
+  {id:5,u:"demo",name:"演示账号",org:"外部合作方",role:"访客",phone:"130 0000 ****",on:false,created:"2026-06-20 16:08:55"}
+];
+let seq=100, curOrg="__all__", editId=null, checked=new Set(), pending=null;
+let filt={st:[],phone:"",role:""};
+
+/* 组织树 */
+const treeEl=document.getElementById('orgTree'),orgSearch=document.getElementById('orgSearch');
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function renderTree(){
+  const q=orgSearch.value.trim();
+  let html=`<div class="tnode ${curOrg==='__all__'?'on':''}" data-org="__all__"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 9l9-6 9 6v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" stroke-linejoin="round"/></svg>数据范围<span class="ct">${users.length}</span></div>`;
+  ORGS.filter(o=>!q||o.includes(q)).forEach(o=>{ const c=users.filter(u=>u.org===o).length;
+    html+=`<div class="tnode child ${curOrg===o?'on':''}" data-org="${o}"><svg class="ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7h6l2 2h10v10H3z" stroke-linejoin="round"/></svg>${o}<span class="ct">${c}</span></div>`; });
+  treeEl.innerHTML=html;
+}
+treeEl.addEventListener('click',e=>{const n=e.target.closest('.tnode'); if(!n)return; curOrg=n.dataset.org; renderTree(); load();});
+orgSearch.addEventListener('input',renderTree);
+
+/* 表格 */
+const rowsEl=document.getElementById('rows'),totalEl=document.getElementById('total'),kw=document.getElementById('kw'),selAll=document.getElementById('selAll');
+const batchbar=document.getElementById('batchbar'),selCount=document.getElementById('selCount');
+function visible(){
+  const q=kw.value.trim();
+  return users.filter(u=>(curOrg==='__all__'||u.org===curOrg)
+    &&(!q||u.u.includes(q)||u.name.includes(q))
+    &&(!filt.st.length||filt.st.includes(u.on?'on':'off'))
+    &&(!filt.phone||u.phone.replace(/\s/g,'').includes(filt.phone))
+    &&(!filt.role||u.role===filt.role));
+}
+let loadT;
+function skeletonHTML(){
+  const bar=w=>`<div class="sk" style="width:${w}"></div>`;
+  const ws=[['22%','12%','18%','10%','20%'],['18%','16%','14%','12%','16%'],['24%','10%','20%','8%','18%'],['16%','14%','16%','12%','22%'],['20%','12%','18%','10%','16%'],['18%','16%','14%','12%','20%']];
+  return `<tr><td colspan="8" style="padding:0;border:0"><div class="sk-body">`+ws.map(r=>`<div class="sk-row">${bar(r[0])}${bar(r[1])}${bar(r[2])}${bar(r[3])}<div style="margin-left:auto">${bar(r[4])}</div></div>`).join('')+`</div></td></tr>`;
+}
+function emptyRow(){
+  const filtering=kw.value.trim()||filt.st.length||filt.phone||filt.role||curOrg!=='__all__';
+  if(filtering) return `<tr><td colspan="8"><div class="empty"><div class="ei"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg></div><h4>没有匹配的用户</h4><p>试试调整关键词或筛选条件。</p><button class="btn btn-secondary ea" data-empty="reset">清空筛选</button></div></td></tr>`;
+  return `<tr><td colspan="8"><div class="empty"><div class="ei"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6" stroke-linecap="round"/></svg></div><h4>暂无用户</h4><p>还没有任何用户，点击「新增」创建第一个。</p><button class="btn btn-primary ea" data-empty="add">+ 新增用户</button></div></td></tr>`;
+}
+function load(){ rowsEl.innerHTML=skeletonHTML(); selAll.checked=false; clearTimeout(loadT); loadT=setTimeout(()=>render(),600); }
+function render(){
+  const list=visible(); totalEl.textContent=list.length;
+  document.getElementById('orgCount').textContent=curOrg==='__all__'?'全部':curOrg;
+  if(!list.length){ rowsEl.innerHTML=emptyRow(); }
+  else { rowsEl.innerHTML=list.map(u=>`<tr data-id="${u.id}">
+    <td><input type="checkbox" class="cbx rowck" ${checked.has(u.id)?'checked':''}></td>
+    <td class="uname">${esc(u.u)}</td><td>${esc(u.name)}</td><td>${esc(u.org)}</td>
+    <td><span class="tag">${esc(u.role)}</span></td>
+    <td class="mono num">${esc(u.phone)}</td>
+    <td><span class="tag st ${u.on?'on':'off'}">${u.on?'启用':'已禁用'}</span></td>
+    <td class="mono num">${esc(u.created)}
+      <div class="acts"><a data-act="edit">编辑</a><a data-act="pwd">重置密码</a><a data-act="del" class="del">删除</a></div>
+    </td></tr>`).join(''); }
+  const ids=list.map(u=>u.id); selAll.checked=ids.length>0&&ids.every(id=>checked.has(id)); syncBatch();
+}
+function syncBatch(){ const n=checked.size; selCount.textContent=n; batchbar.style.display=n?'flex':'none'; }
+kw.addEventListener('input',render);
+selAll.addEventListener('change',()=>{ visible().forEach(u=>selAll.checked?checked.add(u.id):checked.delete(u.id)); render(); });
+rowsEl.addEventListener('change',e=>{ if(e.target.classList.contains('rowck')){ const id=+e.target.closest('tr').dataset.id; e.target.checked?checked.add(id):checked.delete(id); selAll.checked=visible().every(u=>checked.has(u.id)); syncBatch(); } });
+document.getElementById('clearSel').addEventListener('click',()=>{ checked.clear(); render(); });
+
+/* 浮层 */
+function openD(id){document.getElementById(id).classList.add('open');}
+function closeD(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',e=>e.target.closest('.backdrop').classList.remove('open')));
+document.querySelectorAll('.backdrop').forEach(bd=>bd.addEventListener('click',e=>{if(e.target===bd)bd.classList.remove('open');}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.backdrop.open').forEach(b=>b.classList.remove('open'));});
+
+/* 通用确认 */
+const confirmYes=document.getElementById('confirmYes');
+function askConfirm(o){ document.getElementById('confirmTitle').textContent=o.title; document.getElementById('confirmText').innerHTML=o.text;
+  document.getElementById('confirmIc').className='ic'+(o.danger?' danger':''); confirmYes.textContent=o.yes||'确定'; confirmYes.className='btn '+(o.danger?'btn-danger':'btn-primary');
+  confirmYes.onclick=()=>{o.onYes(); closeD('confirm');}; openD('confirm'); }
+
+/* 表单 */
+const fU=document.getElementById('fU'),fN=document.getElementById('fN'),fO=document.getElementById('fO'),fR=document.getElementById('fR'),fP=document.getElementById('fP'),fS=document.getElementById('fS'),fSLab=document.getElementById('fSLab');
+fO.innerHTML=ORGS.map(o=>`<option>${o}</option>`).join('');
+fS.addEventListener('change',()=>fSLab.textContent=fS.checked?'启用':'已禁用');
+function openDlg(mode,u){
+  editId=mode==='edit'?u.id:null; document.getElementById('dlgTitle').textContent=mode==='edit'?'编辑用户':'新增用户';
+  const d=mode==='edit'?u:{u:'',name:'',org:curOrg==='__all__'?ORGS[0]:curOrg,role:'普通成员',phone:'',on:true};
+  fU.value=d.u; fN.value=d.name; fO.value=d.org; fR.value=d.role; fP.value=d.phone&&d.phone!=='—'?d.phone:''; fS.checked=d.on; fSLab.textContent=d.on?'启用':'已禁用';
+  [fU,fN].forEach(el=>el.classList.remove('err')); document.querySelectorAll('#dlg .e').forEach(e=>e.classList.remove('show'));
+  openD('dlg'); setTimeout(()=>fU.focus(),60);
+}
+document.getElementById('addBtn').addEventListener('click',()=>openDlg('add'));
+rowsEl.addEventListener('click',e=>{ const em=e.target.closest('[data-empty]'); if(!em)return;
+  if(em.dataset.empty==='add'){ openDlg('add'); return; }
+  kw.value=''; curOrg='__all__'; filt={st:[],phone:'',role:''};
+  document.querySelectorAll('.fst').forEach(c=>c.checked=false); document.getElementById('fPhone').value=''; document.getElementById('fRole').value=''; filterBtn.classList.remove('act');
+  renderTree(); load();
+});
+rowsEl.addEventListener('click',e=>{
+  const a=e.target.closest('[data-act]'); if(!a)return; const id=+a.closest('tr').dataset.id, act=a.dataset.act, u=users.find(x=>x.id===id);
+  if(act==='edit')openDlg('edit',u);
+  else if(act==='pwd')askConfirm({title:'重置密码',text:`将为「<b>${esc(u.name)}</b>」生成新的初始密码，确定继续吗？`,onYes:()=>toast('已重置「'+u.name+'」的密码')});
+  else if(act==='del')askConfirm({title:'删除用户',danger:true,yes:'删除',text:`确定删除用户「<b>${esc(u.name)}</b>」吗？此操作不可撤销。`,onYes:()=>{users=users.filter(x=>x.id!==id); checked.delete(id); render(); renderTree(); toast('已删除「'+u.name+'」');}});
+});
+document.getElementById('batchDel').addEventListener('click',()=>{ const ids=[...checked]; if(!ids.length)return;
+  askConfirm({title:'批量删除',danger:true,yes:'删除',text:`确定删除选中的 <b>${ids.length}</b> 个用户吗？此操作不可撤销。`,onYes:()=>{users=users.filter(x=>!checked.has(x.id)); checked.clear(); render(); renderTree(); toast(`已删除 ${ids.length} 个用户`);}});
+});
+document.getElementById('save').addEventListener('click',()=>{
+  let ok=true;
+  if(!fU.value.trim()){fU.classList.add('err');document.getElementById('fUErr').classList.add('show');ok=false;}
+  if(!fN.value.trim()){fN.classList.add('err');document.getElementById('fNErr').classList.add('show');ok=false;}
+  if(!ok)return;
+  const d={u:fU.value.trim(),name:fN.value.trim(),org:fO.value,role:fR.value,phone:fP.value.trim()||'—',on:fS.checked};
+  if(editId!==null){Object.assign(users.find(x=>x.id===editId),d); toast('已保存修改');}
+  else{users.unshift({id:++seq,...d,created:nowStr()}); toast('已新增用户');}
+  closeD('dlg'); render(); renderTree();
+});
+[fU,fN].forEach(el=>el.addEventListener('input',()=>{if(el.value.trim()){el.classList.remove('err');el.parentElement.querySelector('.e').classList.remove('show');}}));
+
+/* 筛选弹层 */
+const pop=document.getElementById('pop'),filterBtn=document.getElementById('filterBtn');
+filterBtn.addEventListener('click',e=>{e.stopPropagation(); pop.classList.toggle('open');});
+document.addEventListener('click',e=>{if(!e.target.closest('.filter-wrap'))pop.classList.remove('open');});
+document.getElementById('fApply').addEventListener('click',()=>{
+  filt.st=[...document.querySelectorAll('.fst:checked')].map(c=>c.value); filt.phone=document.getElementById('fPhone').value.trim(); filt.role=document.getElementById('fRole').value;
+  const act=!!(filt.st.length||filt.phone||filt.role); filterBtn.classList.toggle('act',act); pop.classList.remove('open'); load();
+});
+document.getElementById('fReset').addEventListener('click',()=>{
+  document.querySelectorAll('.fst').forEach(c=>c.checked=false); document.getElementById('fPhone').value=''; document.getElementById('fRole').value='';
+  filt={st:[],phone:"",role:""}; filterBtn.classList.remove('act'); pop.classList.remove('open'); load();
+});
+
+document.getElementById('themeBtn').addEventListener('click',()=>document.documentElement.classList.toggle('dark'));
+let tt; function toast(m){const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),1700);}
+function nowStr(){const d=new Date(),p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;}
+
+renderTree(); load();
+</script>
+</body>
+</html>

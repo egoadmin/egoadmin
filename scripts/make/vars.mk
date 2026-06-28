@@ -1,0 +1,59 @@
+APPNAME := egoadmin
+PROJECT := egoadmin
+BUILD_TAG := 0.0.1
+BUILD_VERSION := 0.0.1
+BUILD_USER := $(shell git config user.name)
+BUILD_HOST := $(shell hostname)
+BUILD_TIME := $(shell date +%Y-%m-%d_%H:%M:%S)
+
+LAST_TAG := $(shell git describe --abbrev=0 --tags HEAD^ 2>/dev/null)
+LAST_COMMIT_HASH := $(shell git rev-parse HEAD 2>/dev/null)
+
+MYSQL_HOST := 127.0.0.1
+MYSQL_PORT := 3306
+MYSQL_USER := egoadmin
+MYSQL_PASSWORD := egoadmin
+MYSQL_ROOT_USER := root
+MYSQL_ROOT_PASSWORD := egoadmin
+
+EGO_VERSION := v1.2.2
+ELIB_VERSION := v1.0.0
+WIRE_VERSION := v0.7.0
+ATLAS_VERSION := v1.2.2
+
+LEFTHOOK_VERSION := v1.3.8
+GOJI_VERSION := v0.1.3
+GSEMVER_VERSION := v0.7.1
+GITCZ_VERSION := v1.0.4
+GIT_CHGLOG_VERSION := v0.15.4
+
+GO_GITLINT_VERSION := 1.1.0
+GOIMPORTS_VERSION := v0.28.0
+GOFUMPT_VERSION := v0.6.0
+GOLINT_VERSION := v0.0.0-20210508222113-6edffad5e616
+LINT_VERSION := v1.64.8
+
+BUF_VERSION := v1.71.0
+PROTOC_GEN_GOTAG_VERSION := v1.0.2
+PROTOC_GEN_GO := v1.34.2
+PROTOC_GEN_GO_GRPC := v1.3.0
+PROTOC_GEN_GRPC_GATEWAY := v2.19.1
+PROTOC_GEN_OPENAPIV2_VERSION := v2.22.0
+
+STRUCT2INTEFACE_VERSION := v0.1.5
+
+SERVICES ?= idgen user gateway
+SERVICE ?=
+DOCKER_REGISTRY ?= egoadmin
+DOCKER_TAG ?= latest
+DOCKER_COMPOSE ?= docker compose
+DEV_COMPOSE_PROJECT ?= $(PROJECT)
+E2E_TIMEOUT ?= 20m
+
+GO_TOOL_BIN := $(shell go env GOBIN)
+ifeq ($(GO_TOOL_BIN),)
+GO_TOOL_BIN := $(shell go env GOPATH)/bin
+endif
+export PATH := $(GO_TOOL_BIN):$(shell go env GOPATH)/bin:$(PATH)
+
+MAKE_CMD := $(MAKE)

@@ -1,0 +1,154 @@
+syntax = "proto3";
+
+package user.v1;
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "tagger/tagger.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "日志服务"
+    description: "服务名: user.v1.LogService"
+    version: "1.0"
+    license: {
+      name: "MIT"
+    }
+  }
+  schemes: HTTP
+  consumes: "application/json"
+  produces: "application/json"
+  security_definitions: {
+    security: {
+      key: "BearerAuth"
+      value: {
+        type: TYPE_API_KEY
+        in: IN_HEADER
+        name: "Authorization"
+        description: "JWT 认证头。Swagger UI 中请输入完整值: Bearer <token>"
+      }
+    }
+  }
+};
+
+// LogService 日志服务
+service LogService {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {
+    description: "日志服务,服务名: user.v1.LogService"
+  };
+
+  // GetLogList 获取系统日志列表
+  rpc GetLogList(GetLogListRequest) returns (GetLogListResponse) {
+    option (google.api.http) = {
+      post: "/user.v1.LogService/GetLogList",
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "日志服务,服务名: user.v1.LogService"
+      tags: "LogService"
+      description: "认证: 需要 Authorization: Bearer <token>，并需要接口权限 USER.V1.LOGSERVICE/GETLOGLIST。"
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+}
+
+// GetLogListRequest 获取系统日志列表请求
+message GetLogListRequest {
+  // Page int 页码,值>=1
+  int32 page = 1 [
+    (tagger.tags) = "validate:\"required,gte=1\" label:\"页码\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "页码"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // Limit int 单页数量,值>=1,<=20
+  int32 limit = 2 [
+    (tagger.tags) = "validate:\"required,gte=1,lte=50\" label:\"单页显示数量\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "单页显示数量"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // Sort 排序字段,如name(姓名)
+  string sort = 3 [(tagger.tags) = "validate:\"omitempty,gte=1\" label:\"排序字段\""];
+  // Order 排序方式,值为desc(降序)及asc(升序)
+  string order = 4 [(tagger.tags) = "validate:\"omitempty,oneof=desc asc\" label:\"排序方式\""];
+  // Username 操作用户
+  string username = 5 [(tagger.tags) = "validate:\"omitempty\" label:\"操作用户\""];
+  // Event 事件
+  string event = 6 [(tagger.tags) = "validate:\"omitempty\" label:\"事件\""];
+  // TimeRange 时间范围
+  TimeRange time_range = 7 [(tagger.tags) = "validate:\"omitempty\" label:\"时间范围\""];
+}
+
+// GetLogListResponse 获取系统日志列表响应
+message GetLogListResponse {
+  // Count 日志总数
+  int32 count = 1;
+  // Logs 日志列表
+  repeated SysLog logs = 2;
+}
+
+// SysLog 系统日志
+message SysLog {
+  // Id 用户id
+  uint64 id = 1 [(tagger.tags) = "copier:\"ID\""];
+  // CreatedAt 创建时间
+  google.protobuf.Timestamp created_at = 2 [(tagger.tags) = "copier:\"CreatedAtToRPC\""];
+  // UpdatedAt 修改时间
+  google.protobuf.Timestamp updated_at = 3 [(tagger.tags) = "copier:\"UpdatedAtToRPC\""];
+  // DeletedAt 删除时间
+  google.protobuf.Timestamp deleted_at = 4 [(tagger.tags) = "copier:\"DeletedAtToRPC\""];
+  // UserId 用户id
+  uint64 user_id = 5 [(tagger.tags) = "copier:\"UserIdToRPC\""];
+  // Username 用户名
+  string username = 6;
+  // DeptId 部门id
+  uint64 dept_id = 7 [(tagger.tags) = "copier:\"DeptIdToRPC\""];
+  // DeptName 部门名称
+  string dept_name = 8;
+  // ModuleName 模块名
+  string module_name = 9;
+  // Typ 操作类型
+  string typ = 10;
+  // Title 标题
+  string title = 11;
+  // Url 访问链接
+  string url = 12 [(tagger.tags) = "copier:\"URL\""];
+  // Method 请求方法
+  string method = 13;
+  // ClientIp 客户端ip
+  string client_ip = 14 [(tagger.tags) = "copier:\"ClientIP\""];
+  // Params 请求参数
+  string params = 15;
+  // Remark 备注
+  string remark = 16;
+}
+
+// TimeRange 时间范围
+message TimeRange {
+  // Start 开始时间
+  google.protobuf.Timestamp start = 1 [
+    (tagger.tags) = "validate:\"required\" label:\"开始时间\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "开始时间"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+  // End 结束时间
+  google.protobuf.Timestamp end = 2 [
+    (tagger.tags) = "validate:\"required\" label:\"结束时间\"",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "结束时间"
+    },
+    (google.api.field_behavior) = REQUIRED
+  ];
+}

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# commit-msg use go-gitlint tool, install go-gitlint via `go install github.com/llorllale/go-gitlint/cmd/go-gitlint@latest`
+go-gitlint --msg-file="$1"

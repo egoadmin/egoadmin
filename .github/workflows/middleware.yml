@@ -1,0 +1,44 @@
+name: Mirror Middleware
+
+on:
+  workflow_dispatch:
+
+permissions:
+  packages: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        include:
+          - source: mysql:8.4.5
+            target: ghcr.io/egoadmin/mysql:8.4.5
+          - source: bitnamilegacy/redis:8.0
+            target: ghcr.io/egoadmin/redis:8.0
+          - source: quay.io/coreos/etcd:v3.5.15
+            target: ghcr.io/egoadmin/etcd:v3.5.15
+          - source: minio/minio:RELEASE.2025-02-18T16-25-55Z-cpuv1
+            target: ghcr.io/egoadmin/minio:latest
+          - source: yedf/dtm:1.19.0
+            target: ghcr.io/egoadmin/dtm:1.19.0
+          - source: getmeili/meilisearch:v1.16
+            target: ghcr.io/egoadmin/meilisearch:v1.16
+          - source: jaegertracing/all-in-one:1.40
+            target: ghcr.io/egoadmin/jaeger:1.40
+          - source: shumc/imagor:1.5.15
+            target: ghcr.io/egoadmin/imagor:1.5.15
+    steps:
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Mirror ${{ matrix.source }}
+        run: |
+          docker pull ${{ matrix.source }}
+          docker tag ${{ matrix.source }} ${{ matrix.target }}
+          docker push ${{ matrix.target }}

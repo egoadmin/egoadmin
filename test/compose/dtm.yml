@@ -1,0 +1,46 @@
+services:
+  mysql-dtm:
+    image: mysql:8.4.5
+    user: root
+    privileged: true
+    restart: always
+    ports:
+      - "3309:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: egoadmin
+      MYSQL_DATABASE: egoadmin_dtm
+      MYSQL_USER: egoadmin
+      MYSQL_PASSWORD: egoadmin
+    volumes:
+      - ../data/dtm/mysql:/var/lib/mysql
+      - ./dtm/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$${MYSQL_USER} -p$${MYSQL_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  dtm:
+    image: yedf/dtm:1.19.0
+    user: root
+    privileged: true
+    restart: always
+    network_mode: host
+    volumes:
+      - ./dtm/conf.yml:/app/dtm/conf.yml:ro
+    command: ["-c", "/app/dtm/conf.yml"]
+    depends_on:
+      mysql-dtm:
+        condition: service_healthy
+      etcd:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:36789/api/ping >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s

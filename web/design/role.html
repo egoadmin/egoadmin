@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>角色管理 · 核心管理平台</title>
+<style>
+/* ============================================================
+   EgoAdmin 后台 · 角色管理 — 令牌取自 DESIGN.md（亮/暗双主题）
+   ============================================================ */
+:root{
+  --bg:#FAFBFC; --surface:#FFFFFF; --surface-2:#F4F6F8; --surface-3:#EAEDF1;
+  --fg:#14181F; --text:#3A4250; --muted:#6B7280; --faint:#9AA3B2;
+  --border:#E6E8EC; --border-strong:#D5D9E0;
+  --accent:#1573E6; --accent-hover:#1267CC; --accent-press:#0F58B0; --accent-weak:#E8F1FC; --accent-text:#1166C4;
+  --cyan:#19B6DD; --cyan-weak:#E2F6FC;
+  --success:#17B26A; --success-weak:#E6F7EF; --warning:#F5A623; --warning-weak:#FDF3E2; --danger:#E5484D; --danger-weak:#FCEBEC;
+  --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono","Cascadia Code",ui-monospace,Menlo,Consolas,monospace;
+  --r-sm:6px; --r-md:8px; --r-lg:12px; --r-xl:16px; --r-pill:999px;
+  --shadow-sm:0 2px 6px rgb(16 24 40 / .06); --shadow-md:0 6px 18px -6px rgb(16 24 40 / .12); --shadow-lg:0 16px 40px -12px rgb(16 24 40 / .18);
+  --focus:0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+  --ease:cubic-bezier(.2,0,0,1); --ease-out:cubic-bezier(.16,1,.3,1);
+}
+.dark{
+  --bg:#0E1116; --surface:#161B22; --surface-2:#1C232D; --surface-3:#232B36;
+  --fg:#E6EAF0; --text:#C2C9D4; --muted:#8B95A4; --faint:#6A7382;
+  --border:#262C36; --border-strong:#38414E;
+  --accent:#4B9CF5; --accent-hover:#62A9F7; --accent-press:#3C8AE6; --accent-weak:#17304E; --accent-text:#6FB0F7;
+  --cyan:#43C6E8; --cyan-weak:#16323C; --success-weak:#10261C; --warning-weak:#2A2110; --danger-weak:#2C1517;
+  --shadow-md:0 6px 18px -6px rgb(0 0 0 / .5); --shadow-lg:0 16px 40px -12px rgb(0 0 0 / .6);
+}
+*{box-sizing:border-box}
+html,body{margin:0; height:100%}
+body{background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:14px; -webkit-font-smoothing:antialiased; transition:background .3s var(--ease), color .3s var(--ease)}
+h1,h2,h3{font-family:var(--font-display); color:var(--fg); margin:0}
+.mono{font-family:var(--font-mono)} .num{font-variant-numeric:tabular-nums}
+
+/* ---------- 顶部导航 ---------- */
+.topnav{position:sticky; top:0; z-index:50; display:flex; align-items:center; gap:30px; height:60px; padding:0 24px; background:var(--surface); border-bottom:1px solid var(--border)}
+.topnav .brand{display:flex; align-items:center; gap:9px; font-family:var(--font-display); font-weight:680; color:var(--fg); font-size:15.5px}
+.topnav .menu{display:flex; gap:26px; align-self:stretch}
+.topnav .menu a{position:relative; display:inline-flex; align-items:center; font-size:14px; font-weight:500; color:var(--text); text-decoration:none; padding:0 2px; cursor:pointer; transition:color .18s var(--ease)}
+.topnav .menu a::after{content:""; position:absolute; left:0; right:0; bottom:0; height:2px; background:transparent; border-radius:2px 2px 0 0; transition:background .18s var(--ease)}
+.topnav .menu a:hover{color:var(--fg)}
+.topnav .menu a.on{color:var(--fg); font-weight:600}
+.topnav .menu a.on::after{background:var(--accent)}
+.topnav .rt{margin-left:auto; display:flex; align-items:center; gap:8px}
+.icon-btn{width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:var(--r-md); color:var(--muted); cursor:pointer; border:0; background:none; transition:.15s var(--ease)}
+.icon-btn:hover{background:var(--surface-2); color:var(--fg)}
+.lang{font-size:12.5px; color:var(--muted); padding:0 8px; cursor:pointer}
+.avatar{display:flex; align-items:center; gap:8px; padding:5px 8px 5px 6px; border-radius:var(--r-pill); cursor:pointer; transition:.15s var(--ease)}
+.avatar:hover{background:var(--surface-2)}
+.avatar .pic{width:28px; height:28px; border-radius:50%; background:var(--accent-weak); color:var(--accent-text); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600}
+.avatar .nm{font-size:13.5px; color:var(--text)}
+.grp{position:relative; display:flex; align-items:center}
+.grp .grp-btn{position:relative; display:inline-flex; align-items:center; gap:5px; height:100%; font:inherit; font-size:14px; font-weight:500; color:var(--text); background:none; border:0; padding:0 2px; cursor:pointer; transition:color .18s var(--ease)}
+.grp .grp-btn .cv{color:var(--faint); transition:transform .18s var(--ease)}
+.grp:hover .grp-btn{color:var(--fg)} .grp:hover .grp-btn .cv{transform:rotate(180deg)}
+.grp .grp-btn::after{content:""; position:absolute; left:0; right:13px; bottom:0; height:2px; background:transparent; border-radius:2px 2px 0 0; transition:background .18s var(--ease)}
+.grp .grp-btn.on{color:var(--fg); font-weight:600} .grp .grp-btn.on::after{background:var(--accent)}
+.topnav .menu .grp-drop{position:absolute; top:100%; left:-8px; min-width:152px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); box-shadow:var(--shadow-md); padding:6px; display:flex; flex-direction:column; opacity:0; visibility:hidden; transform:translateY(4px); transition:opacity .16s var(--ease), transform .16s var(--ease); z-index:60}
+.grp:hover .grp-drop{opacity:1; visibility:visible; transform:translateY(0)}
+.topnav .menu .grp-drop a{display:block; height:auto; font-size:13.5px; font-weight:500; color:var(--text); text-decoration:none; padding:8px 12px; border-radius:var(--r-sm); white-space:nowrap; transition:.12s var(--ease)}
+.topnav .menu .grp-drop a::after{display:none}
+.topnav .menu .grp-drop a:hover{background:var(--surface-2); color:var(--fg)}
+.topnav .menu .grp-drop a.cur{color:var(--accent-text); background:var(--accent-weak); font-weight:550}
+
+/* ---------- 页面 + 卡片 ---------- */
+.page{max-width:1440px; margin:0 auto; padding:24px}
+.pagemain{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:22px 24px}
+.pm-head{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; flex-wrap:wrap}
+.pm-head h1{font-size:26px; font-weight:620; letter-spacing:-.012em}
+.pm-head .tools{display:flex; align-items:center; gap:10px}
+.search{position:relative}
+.search svg{position:absolute; left:11px; top:9px; color:var(--faint)}
+.search input{height:36px; width:220px; font:inherit; font-size:14px; color:var(--fg); background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-md); padding:0 12px 0 34px; transition:border-color .18s var(--ease), box-shadow .18s var(--ease)}
+.search input::placeholder{color:var(--faint)}
+.search input:focus{outline:none; border-color:var(--accent); box-shadow:var(--focus)}
+
+/* ---------- 按钮 ---------- */
+.btn{font:inherit; font-size:14px; font-weight:550; cursor:pointer; border-radius:var(--r-md); padding:8px 16px; border:1px solid transparent; display:inline-flex; align-items:center; gap:7px; transition:background .18s var(--ease), border-color .18s var(--ease), color .18s var(--ease), box-shadow .18s var(--ease)}
+.btn:focus-visible{outline:none; box-shadow:var(--focus)}
+.btn-primary{background:var(--accent); color:#fff} .btn-primary:hover{background:var(--accent-hover)} .btn-primary:active{background:var(--accent-press)}
+.btn-secondary{background:var(--surface); color:var(--text); border-color:var(--border-strong)} .btn-secondary:hover{border-color:var(--accent); color:var(--accent-text)}
+.btn-danger{background:var(--danger); color:#fff} .btn-danger:hover{filter:brightness(.94)}
+.btn-sm{padding:6px 12px; font-size:13px}
+
+/* ---------- 表格 ---------- */
+.tbl{width:100%; border-collapse:collapse; font-size:14px}
+.tbl th{text-align:left; font-size:13px; font-weight:600; color:var(--text); background:var(--surface-2); padding:13px 16px; border-bottom:1px solid var(--border); white-space:nowrap}
+.tbl th:first-child{border-top-left-radius:var(--r-md)} .tbl th:last-child{border-top-right-radius:var(--r-md)}
+.tbl td{padding:0 16px; height:56px; color:var(--text); border-bottom:1px solid var(--border); vertical-align:middle}
+.tbl tbody tr{position:relative; transition:background .15s var(--ease)}
+.tbl tbody tr:hover{background:var(--accent-weak)}
+.rname{font-weight:550; color:var(--fg)}
+.tbl .acts{position:absolute; right:16px; top:0; height:100%; display:flex; align-items:center; gap:16px; opacity:0; transition:opacity .15s var(--ease)}
+.tbl tbody tr:hover .acts{opacity:1}
+.acts a{font-size:13px; color:var(--accent-text); cursor:pointer}
+.acts a.del{color:var(--danger)} .acts a.muted{color:var(--faint); cursor:not-allowed}
+.tag{display:inline-flex; align-items:center; font-size:12.5px; font-weight:550; padding:3px 10px; border-radius:var(--r-pill); color:var(--text); background:var(--surface-2); border:1px solid var(--border)}
+.empty{text-align:center; padding:52px 0; color:var(--muted); display:flex; flex-direction:column; align-items:center}
+.empty .ei{width:60px; height:60px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--faint); margin-bottom:14px}
+.empty h4{font-size:15px; font-weight:600; color:var(--fg); margin:0}
+.empty p{font-size:13px; color:var(--muted); margin:5px 0 0}
+.empty .ea{margin-top:16px}
+.sk-body .sk-row{display:flex; align-items:center; gap:18px; padding:0 16px; height:56px; border-bottom:1px solid var(--border)}
+.sk{position:relative; overflow:hidden; background:var(--surface-2); border-radius:6px; height:12px}
+.sk::after{content:""; position:absolute; inset:0; transform:translateX(-100%); background:linear-gradient(90deg,transparent,color-mix(in oklab,var(--surface) 75%,transparent),transparent); animation:shimmer 1.3s infinite}
+@keyframes shimmer{100%{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){.sk::after{animation:none}}
+.pager{display:flex; align-items:center; justify-content:flex-end; gap:16px; margin-top:18px; color:var(--muted); font-size:13px}
+.pager b{color:var(--fg)} .pager .pg{display:flex; gap:6px}
+.pager .pg span{min-width:30px; height:30px; display:inline-flex; align-items:center; justify-content:center; border-radius:var(--r-sm); border:1px solid var(--border); cursor:pointer; font-size:13px; transition:.15s var(--ease)}
+.pager .pg span.on{background:var(--accent); color:#fff; border-color:var(--accent)} .pager .pg span:not(.on):hover{background:var(--surface-2)}
+
+/* ---------- 弹窗 / 抽屉 / 确认 ---------- */
+.backdrop{position:fixed; inset:0; background:rgb(16 24 40 / .45); display:flex; opacity:0; visibility:hidden; transition:opacity .2s var(--ease), visibility .2s var(--ease); z-index:100}
+.backdrop.open{opacity:1; visibility:visible}
+.dialog{margin:auto; width:480px; max-width:calc(100vw - 32px); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-lg); transform:translateY(8px); transition:transform .2s var(--ease-out)}
+.backdrop.open .dialog{transform:none}
+.dlg-h{display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--border)}
+.dlg-h h3{font-size:18px; font-weight:620}
+.dlg-x{width:30px; height:30px; border:0; background:none; color:var(--muted); font-size:20px; cursor:pointer; border-radius:var(--r-sm)}
+.dlg-x:hover{background:var(--surface-2); color:var(--fg)}
+.dlg-b{padding:22px; display:flex; flex-direction:column; gap:18px}
+.dlg-f{display:flex; justify-content:flex-end; gap:10px; padding:16px 22px; border-top:1px solid var(--border)}
+.fld label{display:block; font-size:13px; font-weight:550; color:var(--text); margin-bottom:7px}
+.fld label .req{color:var(--danger)}
+.fld input,.fld textarea,.fld select{width:100%; font:inherit; font-size:14px; color:var(--fg); background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-md); padding:9px 12px; transition:border-color .18s var(--ease), box-shadow .18s var(--ease)}
+.fld textarea{resize:vertical; min-height:64px}
+.fld input:focus,.fld textarea:focus,.fld select:focus{outline:none; border-color:var(--accent); box-shadow:var(--focus)}
+.fld input.err{border-color:var(--danger)}
+.fld .e{color:var(--danger); font-size:12.5px; margin-top:6px; display:none} .fld .e.show{display:block}
+
+/* drawer */
+.drawer{margin-left:auto; width:460px; max-width:calc(100vw - 32px); height:100%; background:var(--surface); border-left:1px solid var(--border); box-shadow:var(--shadow-lg); display:flex; flex-direction:column; transform:translateX(100%); transition:transform .26s var(--ease-out)}
+.backdrop.open .drawer{transform:none}
+.dr-h{padding:18px 22px; border-bottom:1px solid var(--border)}
+.dr-h h3{font-size:18px; font-weight:620} .dr-h p{margin:4px 0 0; font-size:13px; color:var(--muted)}
+.dr-b{flex:1; overflow-y:auto; padding:20px 22px}
+.dr-sec{font-size:12px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin:0 0 12px}
+.dr-sec.mt{margin-top:26px}
+.scope{display:grid; gap:8px}
+.radio{display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:var(--r-md); cursor:pointer; transition:.15s var(--ease)}
+.radio:hover{border-color:var(--border-strong)}
+.radio.on{border-color:var(--accent); background:var(--accent-weak)}
+.radio .dot{width:16px; height:16px; border-radius:50%; border:1.5px solid var(--border-strong); flex:none; display:flex; align-items:center; justify-content:center}
+.radio.on .dot{border-color:var(--accent)} .radio.on .dot::after{content:""; width:8px; height:8px; border-radius:50%; background:var(--accent)}
+.radio .tx b{font-size:14px; color:var(--fg); font-weight:550} .radio .tx span{display:block; font-size:12px; color:var(--muted)}
+.tree{border:1px solid var(--border); border-radius:var(--r-md); overflow:hidden}
+.tgrp{border-bottom:1px solid var(--border)} .tgrp:last-child{border-bottom:0}
+.tgrp > .row{background:var(--surface-2)}
+.tree .row{display:flex; align-items:center; gap:9px; padding:9px 14px; cursor:pointer}
+.tree .kids{padding:4px 0 8px 30px; display:flex; flex-wrap:wrap; gap:6px 18px}
+.cbx{display:inline-flex; align-items:center; gap:8px; cursor:pointer; user-select:none; font-size:13.5px; color:var(--text)}
+.cbx input{position:absolute; opacity:0; width:0; height:0}
+.cbx .b{width:16px; height:16px; border:1.5px solid var(--border-strong); border-radius:4px; display:inline-flex; align-items:center; justify-content:center; flex:none; transition:.12s var(--ease)}
+.cbx input:checked + .b{background:var(--accent); border-color:var(--accent)}
+.cbx input:checked + .b::after{content:""; width:4px; height:8px; border:2px solid #fff; border-top:0; border-left:0; transform:rotate(45deg) translateY(-1px)}
+.cbx .b.ind{background:var(--accent); border-color:var(--accent)} .cbx .b.ind::after{content:""; width:8px; height:2px; background:#fff; border:0; transform:none}
+.cbx.grp{font-weight:600; color:var(--fg)}
+
+.toast{position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(16px); background:var(--fg); color:var(--bg); font-size:13.5px; font-weight:500; padding:11px 18px; border-radius:var(--r-pill); box-shadow:var(--shadow-lg); opacity:0; pointer-events:none; transition:.24s var(--ease-out); z-index:200}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+.confirm{margin:auto; width:380px; max-width:calc(100vw - 32px); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-lg); padding:24px; text-align:center; transform:translateY(8px); transition:transform .2s var(--ease-out)}
+.backdrop.open .confirm{transform:none}
+.confirm .ic{width:44px; height:44px; border-radius:50%; background:var(--danger-weak); color:var(--danger); display:flex; align-items:center; justify-content:center; margin:0 auto 14px}
+.confirm h3{font-size:17px; margin-bottom:8px} .confirm p{color:var(--muted); font-size:13.5px; margin:0 0 22px}
+.confirm .row2{display:flex; gap:10px} .confirm .row2 .btn{flex:1; justify-content:center}
+
+@media (max-width:760px){
+  .topnav .menu{display:none} .page{padding:16px} .search input{width:150px}
+  .pm-head{align-items:flex-start} .tbl .acts{position:static; opacity:1; padding:8px 0 0; height:auto}
+  .tbl td{height:auto; padding:12px 16px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+
+<!-- ===== 顶部导航 ===== -->
+<nav class="topnav" data-od-id="topnav">
+  <div class="brand">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19" stroke-linecap="round"/></svg>
+    核心管理平台
+  </div>
+  <div class="menu">
+    <div class="grp"><button type="button" class="grp-btn on">系统设置 <svg class="cv" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="grp-drop"><a href="role.html" class="cur">角色管理</a><a href="online_user.html">在线用户</a><a href="operation_log.html">操作日志</a></div></div>
+    <div class="grp"><button type="button" class="grp-btn">用户管理 <svg class="cv" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="grp-drop"><a href="user.html">用户管理</a><a href="organization.html">组织管理</a></div></div>
+  </div>
+  <div class="rt">
+    <button class="icon-btn" title="搜索"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg></button>
+    <button class="icon-btn" id="themeBtn" title="切换主题"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3a9 9 0 1 0 9 9c-5 0-9-4-9-9z"/></svg></button>
+    <span class="lang">中 / EN</span>
+    <div class="avatar"><span class="pic">A</span><span class="nm">admin</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round"/></svg></div>
+  </div>
+</nav>
+
+<!-- ===== 页面 ===== -->
+<div class="page">
+  <section class="pagemain" data-od-id="role-list">
+    <div class="pm-head">
+      <h1>角色管理</h1>
+      <div class="tools">
+        <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg><input id="searchInput" placeholder="输入角色名称"></div>
+        <button class="btn btn-primary" id="addBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>新增</button>
+      </div>
+    </div>
+    <table class="tbl">
+      <thead><tr><th style="width:22%">角色名称</th><th>角色描述</th><th style="width:18%">数据范围</th><th style="width:22%">创建时间</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="pager"><span>共 <b class="num" id="total">0</b> 条</span><span>每页 10 条</span><div class="pg"><span>‹</span><span class="on">1</span><span>›</span></div></div>
+  </section>
+</div>
+
+<!-- ===== 新增/编辑 弹窗 ===== -->
+<div class="backdrop" id="dlg">
+  <div class="dialog" role="dialog" aria-modal="true">
+    <div class="dlg-h"><h3 id="dlgTitle">新增角色</h3><button class="dlg-x" data-close>×</button></div>
+    <div class="dlg-b">
+      <div class="fld"><label>角色名称 <span class="req">*</span></label><input id="fName" placeholder="例如：组织管理员"><div class="e" id="fNameErr">请输入角色名称</div></div>
+      <div class="fld"><label>角色描述</label><textarea id="fDesc" placeholder="简述该角色的职责与可见范围"></textarea></div>
+      <div class="fld"><label>数据范围</label>
+        <select id="fScope">
+          <option>全部</option><option>本组织及以下</option><option>本组织</option><option>仅本人</option>
+        </select>
+      </div>
+    </div>
+    <div class="dlg-f"><button class="btn btn-secondary" data-close>取消</button><button class="btn btn-primary" id="dlgSave">确定</button></div>
+  </div>
+</div>
+
+<!-- ===== 授权 抽屉 ===== -->
+<div class="backdrop" id="drawer">
+  <div class="drawer" role="dialog" aria-modal="true">
+    <div class="dr-h"><h3>分配权限</h3><p id="drRole">角色：—</p></div>
+    <div class="dr-b">
+      <p class="dr-sec">数据范围（DataScope）</p>
+      <div class="scope" id="scope">
+        <label class="radio on"><span class="dot"></span><span class="tx"><b>全部</b><span>可见并可操作全部组织数据</span></span></label>
+        <label class="radio"><span class="dot"></span><span class="tx"><b>本组织及以下</b><span>含子组织的数据范围</span></span></label>
+        <label class="radio"><span class="dot"></span><span class="tx"><b>本组织</b><span>仅当前组织</span></span></label>
+        <label class="radio"><span class="dot"></span><span class="tx"><b>仅本人</b><span>仅本人创建或负责的数据</span></span></label>
+      </div>
+      <p class="dr-sec mt">菜单与 API 权限（permission-contract）</p>
+      <div class="tree" id="tree"></div>
+    </div>
+    <div class="dlg-f"><button class="btn btn-secondary" data-close>取消</button><button class="btn btn-primary" id="drSave">保存授权</button></div>
+  </div>
+</div>
+
+<!-- ===== 删除 确认 ===== -->
+<div class="backdrop" id="confirm">
+  <div class="confirm" role="alertdialog" aria-modal="true">
+    <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <h3>删除角色</h3>
+    <p id="confirmText">确定删除该角色吗？此操作不可撤销。</p>
+    <div class="row2"><button class="btn btn-secondary" data-close>取消</button><button class="btn btn-danger" id="confirmYes">删除</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- 数据 ---------- */
+let roles=[
+  {name:"超级管理员", desc:"系统内置，拥有全部菜单、API 与数据权限", scope:"全部", created:"2026-06-25 23:15:24", builtin:true},
+  {name:"组织管理员", desc:"管理本组织及以下的用户与角色", scope:"本组织及以下", created:"2026-06-25 23:12:11"},
+  {name:"只读审计", desc:"仅查看操作日志，不可写", scope:"仅本人", created:"2026-06-24 10:02:46"}
+];
+let editIdx=-1, pendingDel=-1, authIdx=-1;
+
+/* ---------- 渲染表格 ---------- */
+const rowsEl=document.getElementById('rows'), totalEl=document.getElementById('total'), searchEl=document.getElementById('searchInput');
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+let loadT;
+function skeletonHTML(){
+  const bar=w=>`<div class="sk" style="width:${w}"></div>`;
+  const ws=[['22%','40%','14%','18%'],['18%','46%','12%','16%'],['24%','36%','16%','18%'],['16%','44%','12%','20%'],['20%','42%','14%','16%'],['18%','40%','16%','18%']];
+  return `<tr><td colspan="4" style="padding:0;border:0"><div class="sk-body">`+ws.map(r=>`<div class="sk-row">${bar(r[0])}${bar(r[1])}${bar(r[2])}<div style="margin-left:auto">${bar(r[3])}</div></div>`).join('')+`</div></td></tr>`;
+}
+function emptyRow(){
+  const q=searchEl.value.trim();
+  if(q) return `<tr><td colspan="4"><div class="empty"><div class="ei"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg></div><h4>没有匹配的角色</h4><p>试试调整关键词。</p><button class="btn btn-secondary ea" data-empty="reset">清空搜索</button></div></td></tr>`;
+  return `<tr><td colspan="4"><div class="empty"><div class="ei"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 13h5l1.6 2.5h4.8L16 13h5M5 6h14l2 7v5H3v-5z" stroke-linejoin="round"/></svg></div><h4>暂无角色</h4><p>还没有任何角色，点击右上角「新增」创建第一个。</p><button class="btn btn-primary ea" data-empty="add">+ 新增角色</button></div></td></tr>`;
+}
+function load(){ rowsEl.innerHTML=skeletonHTML(); clearTimeout(loadT); loadT=setTimeout(()=>render(),600); }
+function render(){
+  const q=searchEl.value.trim();
+  const list=roles.map((r,i)=>({r,i})).filter(({r})=>!q||r.name.includes(q));
+  totalEl.textContent=list.length;
+  if(!list.length){ rowsEl.innerHTML=emptyRow(); return; }
+  rowsEl.innerHTML=list.map(({r,i})=>`<tr data-i="${i}">
+    <td><span class="rname">${esc(r.name)}</span></td>
+    <td>${esc(r.desc)||'—'}</td>
+    <td><span class="tag">${esc(r.scope)}</span></td>
+    <td class="mono num">${esc(r.created)}
+      <div class="acts">
+        <a data-act="auth">授权</a>
+        <a data-act="edit">编辑</a>
+        ${r.builtin?'<a class="muted" title="内置角色不可删除">删除</a>':'<a class="del" data-act="del">删除</a>'}
+      </div>
+    </td></tr>`).join('');
+}
+searchEl.addEventListener('input',render);
+rowsEl.addEventListener('click',e=>{ const em=e.target.closest('[data-empty]'); if(!em)return; if(em.dataset.empty==='add'){ document.getElementById('addBtn').click(); } else { searchEl.value=''; render(); } });
+
+/* ---------- 通用浮层 ---------- */
+function open(id){document.getElementById(id).classList.add('open');}
+function close(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',e=>e.target.closest('.backdrop').classList.remove('open')));
+document.querySelectorAll('.backdrop').forEach(bd=>bd.addEventListener('click',e=>{if(e.target===bd)bd.classList.remove('open');}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.backdrop.open').forEach(b=>b.classList.remove('open'));});
+
+/* ---------- 新增 / 编辑 ---------- */
+const fName=document.getElementById('fName'), fDesc=document.getElementById('fDesc'), fScope=document.getElementById('fScope'), fNameErr=document.getElementById('fNameErr');
+document.getElementById('addBtn').addEventListener('click',()=>{
+  editIdx=-1; document.getElementById('dlgTitle').textContent='新增角色';
+  fName.value=''; fDesc.value=''; fScope.value='全部'; fName.classList.remove('err'); fNameErr.classList.remove('show');
+  open('dlg'); setTimeout(()=>fName.focus(),60);
+});
+rowsEl.addEventListener('click',e=>{
+  const a=e.target.closest('[data-act]'); if(!a)return;
+  const i=+a.closest('tr').dataset.i, act=a.dataset.act;
+  if(act==='edit'){ editIdx=i; const r=roles[i]; document.getElementById('dlgTitle').textContent='编辑角色';
+    fName.value=r.name; fDesc.value=r.desc; fScope.value=r.scope; fName.classList.remove('err'); fNameErr.classList.remove('show'); open('dlg'); setTimeout(()=>fName.focus(),60); }
+  else if(act==='del'){ pendingDel=i; document.getElementById('confirmText').innerHTML=`确定删除角色「<b>${esc(roles[i].name)}</b>」吗？此操作不可撤销。`; open('confirm'); }
+  else if(act==='auth'){ authIdx=i; document.getElementById('drRole').textContent='角色：'+roles[i].name; syncScope(roles[i].scope); open('drawer'); }
+});
+document.getElementById('dlgSave').addEventListener('click',()=>{
+  const v=fName.value.trim();
+  if(!v){ fName.classList.add('err'); fNameErr.classList.add('show'); fName.focus(); return; }
+  const data={name:v, desc:fDesc.value.trim(), scope:fScope.value};
+  if(editIdx>=0){ roles[editIdx]={...roles[editIdx],...data}; toast('已保存角色修改'); }
+  else { roles.unshift({...data, created:nowStr()}); toast('已新增角色'); }
+  close('dlg'); render();
+});
+fName.addEventListener('input',()=>{if(fName.value.trim()){fName.classList.remove('err');fNameErr.classList.remove('show');}});
+
+/* ---------- 删除 ---------- */
+document.getElementById('confirmYes').addEventListener('click',()=>{
+  if(pendingDel>=0){ const n=roles[pendingDel].name; roles.splice(pendingDel,1); pendingDel=-1; close('confirm'); render(); toast('已删除「'+n+'」'); }
+});
+
+/* ---------- 授权抽屉：数据范围单选 ---------- */
+const scopeEl=document.getElementById('scope');
+function syncScope(val){ scopeEl.querySelectorAll('.radio').forEach(r=>r.classList.toggle('on', r.querySelector('b').textContent===val)); }
+scopeEl.addEventListener('click',e=>{const r=e.target.closest('.radio'); if(!r)return; scopeEl.querySelectorAll('.radio').forEach(x=>x.classList.remove('on')); r.classList.add('on');});
+
+/* ---------- 授权抽屉：权限树 ---------- */
+const TREE=[
+  {g:"系统设置", nodes:[["角色管理",["查看","新增","编辑","删除","授权"]],["在线用户",["查看","强制下线"]],["操作日志",["查看"]]]},
+  {g:"用户管理", nodes:[["用户",["查看","新增","编辑","禁用","重置密码"]],["组织",["查看","新增","编辑","删除"]]]}
+];
+function buildTree(){
+  document.getElementById('tree').innerHTML=TREE.map((grp,gi)=>{
+    const kids=grp.nodes.map((n,ni)=>n[1].map((perm,pi)=>
+      `<label class="cbx"><input type="checkbox" data-g="${gi}" ${gi===0&&ni===0&&pi===0?'checked':''}><span class="b"></span>${n[0]}·${perm}</label>`).join('')).join('');
+    return `<div class="tgrp"><div class="row"><label class="cbx grp"><input type="checkbox" data-grp="${gi}"><span class="b"></span>${grp.g}</label></div><div class="kids">${kids}</div></div>`;
+  }).join('');
+  document.querySelectorAll('#tree .tgrp').forEach(refreshGrp);
+}
+function refreshGrp(tgrp){
+  const grpBox=tgrp.querySelector('[data-grp]').nextElementSibling;
+  const kids=[...tgrp.querySelectorAll('[data-g]')];
+  const on=kids.filter(k=>k.checked).length;
+  grpBox.classList.toggle('ind', on>0 && on<kids.length);
+  tgrp.querySelector('[data-grp]').checked = on===kids.length && on>0;
+  if(on===kids.length||on===0) grpBox.classList.remove('ind');
+}
+document.getElementById('tree').addEventListener('change',e=>{
+  const tgrp=e.target.closest('.tgrp');
+  if(e.target.hasAttribute('data-grp')){ tgrp.querySelectorAll('[data-g]').forEach(k=>k.checked=e.target.checked); }
+  refreshGrp(tgrp);
+});
+document.getElementById('drSave').addEventListener('click',()=>{
+  if(authIdx>=0){ const sc=scopeEl.querySelector('.radio.on b').textContent; roles[authIdx].scope=sc; render(); }
+  close('drawer'); toast('已保存授权');
+});
+
+/* ---------- 主题 / 工具 ---------- */
+document.getElementById('themeBtn').addEventListener('click',()=>document.documentElement.classList.toggle('dark'));
+let tt; function toast(m){const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),1700);}
+function nowStr(){const d=new Date(); const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;}
+
+/* init */
+buildTree(); load();
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+services:
+  meilisearch:
+    image: getmeili/meilisearch:v1.16
+    user: root
+    privileged: true
+    restart: always
+    environment:
+      MEILI_ENV: ${MEILI_ENV:-production}
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-deploy-egoadmin-meili-key}
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_LOG_LEVEL: ${MEILI_LOG_LEVEL:-INFO}
+    ports:
+      - "${MEILI_PORT:-7700}:7700"
+    volumes:
+      - ../data/meilisearch:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s

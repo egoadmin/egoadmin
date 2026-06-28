@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v1.0.0). Leave empty to use current ref."
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Install protoc
+        run: |
+          wget -q https://github.com/protocolbuffers/protobuf/releases/download/v3.20.0/protoc-3.20.0-linux-x86_64.zip -O protoc.zip
+          sudo unzip protoc.zip -d /usr/local && rm protoc.zip
+
+      - name: Install tools
+        run: make install
+
+      - name: Build frontend
+        working-directory: web
+        run: pnpm install && pnpm run build
+
+      - name: Generate code
+        run: make gen
+
+      - name: Create vendor tarball
+        run: |
+          go mod vendor
+          tar -czf vendor.tar.gz vendor/
+          rm -rf vendor
+
+      - name: Create OpenAPI tarball
+        run: tar -czf openapi.tar.gz api/openapi/
+
+      - name: Create tools tarball
+        run: |
+          GOBIN="$(go env GOPATH)/bin"
+          TOOLS_DIR="egoadmin-tools-linux-amd64"
+          mkdir -p "$TOOLS_DIR"
+          # protoc
+          cp /usr/local/bin/protoc "$TOOLS_DIR/"
+          # Go tools — pick only the ones needed for development
+          for tool in buf protoc-gen-go protoc-gen-go-grpc protoc-gen-grpc-gateway \
+                      protoc-gen-openapiv2 protoc-gen-gotag protoc-gen-go-errors \
+                      protoc-gen-go-http protoc-gen-api-catalog protoc-gen-buf-breaking \
+                      protoc-gen-buf-lint wire atlas golangci-lint goimports gofumpt; do
+            [ -f "$GOBIN/$tool" ] && cp "$GOBIN/$tool" "$TOOLS_DIR/"
+          done
+          # include protoc well-known types
+          cp -r /usr/local/include/google "$TOOLS_DIR/include/" 2>/dev/null || true
+          tar -czf "${TOOLS_DIR}.tar.gz" "$TOOLS_DIR"
+          rm -rf "$TOOLS_DIR"
+
+      - name: Determine tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.tag }}" ]; then
+            echo "version=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.version }}
+          name: ${{ steps.tag.outputs.version }}
+          generate_release_notes: true
+          files: |
+            vendor.tar.gz
+            openapi.tar.gz
+            egoadmin-tools-linux-amd64.tar.gz

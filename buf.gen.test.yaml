@@ -1,0 +1,5 @@
+version: v1
+plugins:
+  - name: go-test
+    out: {OUT_PATH}
+    opt: out={INPUT_PATH},paths=source_relative

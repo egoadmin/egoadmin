@@ -1,0 +1,63 @@
+package eredis
+
+import (
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/redis/go-redis/v9"
+)
+
+const PackageName = "component.eredis"
+
+// Component client (cmdable and config)
+type Component struct {
+	config     *config
+	client     redis.Cmdable
+	lockClient *lockClient
+	logger     *elog.Component
+}
+
+// Mode 获取redis模式
+func (r *Component) Mode() string {
+	return r.config.Mode
+}
+
+// Client returns a universal redis client(ClusterClient, StubClient or SentinelClient), it depends on you config.
+func (r *Component) Client() redis.Cmdable {
+	return r.client
+}
+
+// Cluster try to get a redis.ClusterClient
+func (r *Component) Cluster() *redis.ClusterClient {
+	if c, ok := r.client.(*redis.ClusterClient); ok {
+		return c
+	}
+	return nil
+}
+
+// Stub try to get a redis.client
+func (r *Component) Stub() *redis.Client {
+	if c, ok := r.client.(*redis.Client); ok {
+		return c
+	}
+	return nil
+}
+
+// Sentinel try to get a redis Failover Sentinel client
+func (r *Component) Sentinel() *redis.Client {
+	if c, ok := r.client.(*redis.Client); ok {
+		return c
+	}
+	return nil
+}
+
+// Ring try to get a redis.Ring client
+func (r *Component) Ring() *redis.Ring {
+	if c, ok := r.client.(*redis.Ring); ok {
+		return c
+	}
+	return nil
+}
+
+// LockClient gets default distributed Lock client
+func (r *Component) LockClient() *lockClient {
+	return r.lockClient
+}

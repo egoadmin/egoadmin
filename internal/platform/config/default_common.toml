@@ -1,0 +1,187 @@
+# EgoAdmin 公共默认配置。
+# 该文件只包含跨服务通用且不绑定具体业务数据库/Redis 实例的默认项。
+# 环境变量覆盖格式：EGOADMIN_<EnvSuffix>，EnvSuffix 由 TOML path 直接大写拼接。
+# 例如 component.idgen.codec.secret 对应 EGOADMIN_COMPONENT_IDGEN_CODEC_SECRET。
+
+[component.idgen.default]
+# 本地 ID 生成器命名空间。业务服务通过远端 idgen 服务领取号段；多环境必须区分。
+# EnvSuffix: COMPONENT_IDGEN_DEFAULT_NAMESPACE
+namespace = "egoadmin"
+# 本地 ID 生成器实例名，对应远端 idgen 服务中的号段名。
+# EnvSuffix: COMPONENT_IDGEN_DEFAULT_NAME
+name = "default"
+
+[component.idgen.machine]
+# 机器号租约分组。默认通过远端 idgen 服务分配、续租和释放租约。
+# EnvSuffix: COMPONENT_IDGEN_MACHINE_GROUP
+group = "egoadmin"
+# 机器租约 TTL，默认至少保留 5 次续期窗口。
+# EnvSuffix: COMPONENT_IDGEN_MACHINE_TTL
+ttl = "60s"
+# 机器租约续期间隔。
+# EnvSuffix: COMPONENT_IDGEN_MACHINE_RENEWINTERVAL
+renewInterval = "10s"
+# 单次续期/重新申请 RPC 超时，应明显短于续期间隔。
+# EnvSuffix: COMPONENT_IDGEN_MACHINE_RENEWTIMEOUT
+renewTimeout = "5s"
+# 成功续期后至少保留多少次后续续期机会。
+# EnvSuffix: COMPONENT_IDGEN_MACHINE_MINRENEWWINDOWS
+minRenewWindows = 5
+# 重新申请机器号失败后的退避时间。
+# EnvSuffix: COMPONENT_IDGEN_MACHINE_REALLOCATEBACKOFF
+reallocateBackoff = "2s"
+
+[cron.idgen.machine.renew]
+# 机器租约续期任务。任务内部会处理短暂失败、租约丢失与重新申请。
+# EnvSuffix: CRON_IDGEN_MACHINE_RENEW_DELAYEXECTYPE
+delayExecType = "skip"
+# 机器租约是进程级租约，不能使用分布式锁合并多实例任务。
+# EnvSuffix: CRON_IDGEN_MACHINE_RENEW_ENABLEDISTRIBUTEDTASK
+enableDistributedTask = false
+# 启动时已同步申请租约，不需要立即执行续期。
+# EnvSuffix: CRON_IDGEN_MACHINE_RENEW_ENABLEIMMEDIATELYRUN
+enableImmediatelyRun = false
+# 使用秒级 cron 表达式。
+# EnvSuffix: CRON_IDGEN_MACHINE_RENEW_ENABLESECONDS
+enableSeconds = true
+# 与 component.idgen.machine.renewInterval 保持一致。
+# EnvSuffix: CRON_IDGEN_MACHINE_RENEW_SPEC
+spec = "0/10 * * * * ?"
+
+[component.idgen.codec]
+# 可逆公开 ID 编码密钥，生产环境必须通过环境变量覆盖。
+# EnvSuffix: COMPONENT_IDGEN_CODEC_SECRET
+secret = ""
+# 编码算法名称。除非升级 idcodec 实现，否则保持默认。
+# EnvSuffix: COMPONENT_IDGEN_CODEC_ALGORITHM
+algorithm = "feistel-base62"
+# 输出字符集。
+# EnvSuffix: COMPONENT_IDGEN_CODEC_ALPHABET
+alphabet = "base62"
+# 编码后的最短长度。
+# EnvSuffix: COMPONENT_IDGEN_CODEC_MINLENGTH
+minLength = 12
+# 分段显示分隔符。
+# EnvSuffix: COMPONENT_IDGEN_CODEC_SEPARATOR
+separator = "-"
+# 是否暴露 idcodec 指标。
+# EnvSuffix: COMPONENT_IDGEN_CODEC_ENABLEMETRICS
+enableMetrics = true
+
+[etcd]
+# etcd 地址列表，服务注册与发现使用；逗号分隔环境变量值。
+# EnvSuffix: ETCD_ADDRS
+addrs = ["127.0.0.1:2379"]
+# etcd 建连超时。
+# EnvSuffix: ETCD_CONNECTTIMEOUT
+connectTimeout = "1s"
+
+[registry]
+# 服务注册发现后端。默认使用本地 Docker Compose etcd。
+# EnvSuffix: REGISTRY_SCHEME
+scheme = "etcd"
+# 服务注册发现 key 前缀。
+# EnvSuffix: REGISTRY_PREFIX
+prefix = "egoadmin"
+# 服务注册租约时间。
+# EnvSuffix: REGISTRY_SERVICETTL
+serviceTTL = "10s"
+
+[client.jetcache]
+# 缓存组件名。
+# EnvSuffix: CLIENT_JETCACHE_NAME
+name = "default"
+# 远端缓存过期时间。
+# EnvSuffix: CLIENT_JETCACHE_REMOTEEXPIRY
+remoteExpiry = "1h0m0s"
+# 本地缓存最大条目数。
+# EnvSuffix: CLIENT_JETCACHE_LOCALSIZE
+localSize = 256
+# 本地缓存过期时间。
+# EnvSuffix: CLIENT_JETCACHE_LOCALEXPIRY
+localExpiry = "1m0s"
+# 后台刷新间隔。
+# EnvSuffix: CLIENT_JETCACHE_REFRESHDURATION
+refreshDuration = "2m0s"
+# 停止后台刷新的最大空闲时间。
+# EnvSuffix: CLIENT_JETCACHE_STOPREFRESHAFTER
+stopRefreshAfter = "1h0m0s"
+# 空值缓存过期时间。
+# EnvSuffix: CLIENT_JETCACHE_NOTFOUNDEXPIRY
+notFoundExpiry = "1m0s"
+# 是否暴露缓存指标。
+# EnvSuffix: CLIENT_JETCACHE_ENABLEMETRICS
+enableMetrics = true
+# 是否启用本地缓存同步。
+# EnvSuffix: CLIENT_JETCACHE_ENABLESYNCLOCAL
+enableSyncLocal = false
+# 缓存序列化格式。
+# EnvSuffix: CLIENT_JETCACHE_CODEC
+codec = "msgpack"
+
+[component.logincrypto]
+# 登录加密 challenge 有效期。
+# EnvSuffix: COMPONENT_LOGINCRYPTO_CHALLENGETTL
+challengeTTL = "3m0s"
+# 客户端时间戳允许偏差。
+# EnvSuffix: COMPONENT_LOGINCRYPTO_TIMESTAMPSKEW
+timestampSkew = "2m0s"
+# RSA 密钥位数。
+# EnvSuffix: COMPONENT_LOGINCRYPTO_RSAKEYBITS
+rsaKeyBits = 4096
+# 是否暴露登录加密指标。
+# EnvSuffix: COMPONENT_LOGINCRYPTO_ENABLEMETRICS
+enableMetrics = true
+
+[component.etusupload]
+# TUS 上传入口路径。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_BASEPATH
+basePath = "/tus/upload"
+# 单文件最大字节数。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_MAXSIZE
+maxSize = 1073741824
+# TUS 临时数据目录。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_DATADIR
+dataDir = "./data/tus"
+# 文件落盘目录。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_UPLOADDIR
+uploadDir = "./uploads"
+# 是否启用上传校验。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_ENABLEVALIDATION
+enableValidation = true
+# 是否上传前校验。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_VALIDATEBEFOREUPLOAD
+validateBeforeUpload = true
+# 是否上传后校验。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_VALIDATEAFTERUPLOAD
+validateAfterUpload = true
+# 允许的扩展名列表，逗号分隔环境变量值。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_ALLOWEDEXTENSIONS
+allowedExtensions = []
+# 拒绝的扩展名列表，逗号分隔环境变量值。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_REJECTEDEXTENSIONS
+rejectedExtensions = []
+# 允许的 MIME 类型列表，逗号分隔环境变量值。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_ALLOWEDMIMETYPES
+allowedMimeTypes = []
+# 拒绝的 MIME 类型列表，逗号分隔环境变量值。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_REJECTEDMIMETYPES
+rejectedMimeTypes = []
+# 是否记录上传访问日志。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_ENABLEACCESSLOG
+enableAccessLog = false
+# 是否启用上传指标拦截器。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_ENABLEMETRICINTERCEPTOR
+enableMetricInterceptor = true
+# 慢日志阈值。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_SLOWLOGTHRESHOLD
+slowLogThreshold = "1s"
+# 是否启用上传健康检查。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_ENABLEHEALTHCHECK
+enableHealthCheck = true
+# 是否允许任意跨域来源。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_ALLOWALLORIGINS
+allowAllOrigins = true
+# 允许的跨域来源列表，逗号分隔环境变量值。
+# EnvSuffix: COMPONENT_ETUSUPLOAD_ALLOWEDORIGINS
+allowedOrigins = []

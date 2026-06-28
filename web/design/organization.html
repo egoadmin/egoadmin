@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>组织管理 · 核心管理平台</title>
+<style>
+/* EgoAdmin 后台 · 组织管理（树形表格）— 令牌取自 DESIGN.md */
+:root{
+  --bg:#FAFBFC; --surface:#FFFFFF; --surface-2:#F4F6F8; --surface-3:#EAEDF1;
+  --fg:#14181F; --text:#3A4250; --muted:#6B7280; --faint:#9AA3B2;
+  --border:#E6E8EC; --border-strong:#D5D9E0;
+  --accent:#1573E6; --accent-hover:#1267CC; --accent-press:#0F58B0; --accent-weak:#E8F1FC; --accent-text:#1166C4;
+  --cyan:#19B6DD; --cyan-weak:#E2F6FC;
+  --success:#17B26A; --success-weak:#E6F7EF; --warning:#F5A623; --warning-weak:#FDF3E2; --danger:#E5484D; --danger-weak:#FCEBEC;
+  --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono","Cascadia Code",ui-monospace,Menlo,Consolas,monospace;
+  --r-sm:6px; --r-md:8px; --r-lg:12px; --r-xl:16px; --r-pill:999px;
+  --shadow-sm:0 2px 6px rgb(16 24 40 / .06); --shadow-md:0 6px 18px -6px rgb(16 24 40 / .12); --shadow-lg:0 16px 40px -12px rgb(16 24 40 / .18);
+  --focus:0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+  --ease:cubic-bezier(.2,0,0,1); --ease-out:cubic-bezier(.16,1,.3,1);
+}
+.dark{
+  --bg:#0E1116; --surface:#161B22; --surface-2:#1C232D; --surface-3:#232B36;
+  --fg:#E6EAF0; --text:#C2C9D4; --muted:#8B95A4; --faint:#6A7382; --border:#262C36; --border-strong:#38414E;
+  --accent:#4B9CF5; --accent-hover:#62A9F7; --accent-press:#3C8AE6; --accent-weak:#17304E; --accent-text:#6FB0F7;
+  --cyan:#43C6E8; --cyan-weak:#16323C; --success-weak:#10261C; --warning-weak:#2A2110; --danger-weak:#2C1517;
+  --shadow-md:0 6px 18px -6px rgb(0 0 0 / .5); --shadow-lg:0 16px 40px -12px rgb(0 0 0 / .6);
+}
+*{box-sizing:border-box}
+html,body{margin:0; height:100%}
+body{background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:14px; -webkit-font-smoothing:antialiased; transition:background .3s var(--ease), color .3s var(--ease)}
+h1,h2,h3{font-family:var(--font-display); color:var(--fg); margin:0}
+.mono{font-family:var(--font-mono)} .num{font-variant-numeric:tabular-nums}
+
+/* 顶部导航 */
+.topnav{position:sticky; top:0; z-index:50; display:flex; align-items:center; gap:30px; height:60px; padding:0 24px; background:var(--surface); border-bottom:1px solid var(--border)}
+.topnav .brand{display:flex; align-items:center; gap:9px; font-family:var(--font-display); font-weight:680; color:var(--fg); font-size:15.5px}
+.topnav .menu{display:flex; gap:26px; align-self:stretch}
+.topnav .menu a{position:relative; display:inline-flex; align-items:center; font-size:14px; font-weight:500; color:var(--text); text-decoration:none; padding:0 2px; cursor:pointer; transition:color .18s var(--ease)}
+.topnav .menu a::after{content:""; position:absolute; left:0; right:0; bottom:0; height:2px; background:transparent; border-radius:2px 2px 0 0; transition:background .18s var(--ease)}
+.topnav .menu a:hover{color:var(--fg)}
+.topnav .menu a.on{color:var(--fg); font-weight:600} .topnav .menu a.on::after{background:var(--accent)}
+.topnav .rt{margin-left:auto; display:flex; align-items:center; gap:8px}
+.icon-btn{width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:var(--r-md); color:var(--muted); cursor:pointer; border:0; background:none; transition:.15s var(--ease)}
+.icon-btn:hover{background:var(--surface-2); color:var(--fg)}
+.lang{font-size:12.5px; color:var(--muted); padding:0 8px; cursor:pointer}
+.avatar{display:flex; align-items:center; gap:8px; padding:5px 8px 5px 6px; border-radius:var(--r-pill); cursor:pointer} .avatar:hover{background:var(--surface-2)}
+.avatar .pic{width:28px; height:28px; border-radius:50%; background:var(--accent-weak); color:var(--accent-text); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600}
+.avatar .nm{font-size:13.5px; color:var(--text)}
+.grp{position:relative; display:flex; align-items:center}
+.grp .grp-btn{position:relative; display:inline-flex; align-items:center; gap:5px; height:100%; font:inherit; font-size:14px; font-weight:500; color:var(--text); background:none; border:0; padding:0 2px; cursor:pointer; transition:color .18s var(--ease)}
+.grp .grp-btn .cv{color:var(--faint); transition:transform .18s var(--ease)}
+.grp:hover .grp-btn{color:var(--fg)} .grp:hover .grp-btn .cv{transform:rotate(180deg)}
+.grp .grp-btn::after{content:""; position:absolute; left:0; right:13px; bottom:0; height:2px; background:transparent; border-radius:2px 2px 0 0; transition:background .18s var(--ease)}
+.grp .grp-btn.on{color:var(--fg); font-weight:600} .grp .grp-btn.on::after{background:var(--accent)}
+.topnav .menu .grp-drop{position:absolute; top:100%; left:-8px; min-width:152px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); box-shadow:var(--shadow-md); padding:6px; display:flex; flex-direction:column; opacity:0; visibility:hidden; transform:translateY(4px); transition:opacity .16s var(--ease), transform .16s var(--ease); z-index:60}
+.grp:hover .grp-drop{opacity:1; visibility:visible; transform:translateY(0)}
+.topnav .menu .grp-drop a{display:block; height:auto; font-size:13.5px; font-weight:500; color:var(--text); text-decoration:none; padding:8px 12px; border-radius:var(--r-sm); white-space:nowrap; transition:.12s var(--ease)}
+.topnav .menu .grp-drop a::after{display:none}
+.topnav .menu .grp-drop a:hover{background:var(--surface-2); color:var(--fg)}
+.topnav .menu .grp-drop a.cur{color:var(--accent-text); background:var(--accent-weak); font-weight:550}
+
+/* 页面 + 卡片 */
+.page{max-width:1440px; margin:0 auto; padding:24px}
+.pagemain{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:22px 24px}
+.pm-head{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; flex-wrap:wrap}
+.pm-head h1{font-size:26px; font-weight:620; letter-spacing:-.012em}
+.pm-head .sub{font-size:13px; color:var(--muted); margin-top:4px}
+.pm-head .tools{display:flex; align-items:center; gap:10px}
+.search{position:relative}
+.search svg{position:absolute; left:11px; top:9px; color:var(--faint)}
+.search input{height:36px; width:200px; font:inherit; font-size:14px; color:var(--fg); background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-md); padding:0 12px 0 34px}
+.search input:focus{outline:none; border-color:var(--accent); box-shadow:var(--focus)}
+.btn{font:inherit; font-size:14px; font-weight:550; cursor:pointer; border-radius:var(--r-md); padding:8px 16px; border:1px solid transparent; display:inline-flex; align-items:center; gap:7px; transition:background .18s var(--ease), border-color .18s var(--ease), color .18s var(--ease), box-shadow .18s var(--ease)}
+.btn:focus-visible{outline:none; box-shadow:var(--focus)}
+.btn-primary{background:var(--accent); color:#fff} .btn-primary:hover{background:var(--accent-hover)} .btn-primary:active{background:var(--accent-press)}
+.btn-secondary{background:var(--surface); color:var(--text); border-color:var(--border-strong)} .btn-secondary:hover{border-color:var(--accent); color:var(--accent-text)}
+.btn-danger{background:var(--danger); color:#fff} .btn-danger:hover{filter:brightness(.94)}
+.btn-sm{padding:6px 12px; font-size:13px}
+
+/* 树形表格 */
+.tbl{width:100%; border-collapse:collapse; font-size:14px}
+.tbl th{text-align:left; font-size:13px; font-weight:600; color:var(--text); background:var(--surface-2); padding:13px 16px; border-bottom:1px solid var(--border); white-space:nowrap}
+.tbl th:first-child{border-top-left-radius:var(--r-md)} .tbl th:last-child{border-top-right-radius:var(--r-md)}
+.tbl td{padding:0 16px; height:52px; color:var(--text); border-bottom:1px solid var(--border); vertical-align:middle; white-space:nowrap}
+.tbl tbody tr{position:relative; transition:background .15s var(--ease)} .tbl tbody tr:hover{background:var(--accent-weak)}
+.nmcell{display:flex; align-items:center; gap:6px}
+.caret{width:20px; height:20px; flex:none; display:inline-flex; align-items:center; justify-content:center; border-radius:var(--r-sm); color:var(--muted); cursor:pointer; transition:.15s var(--ease)}
+.caret:hover{background:var(--surface-3)} .caret svg{transition:transform .18s var(--ease)} .caret.open svg{transform:rotate(90deg)}
+.caret.leaf{visibility:hidden}
+.oname{font-weight:550; color:var(--fg)}
+.oico{color:var(--faint); flex:none}
+.tag{display:inline-flex; align-items:center; font-size:12.5px; font-weight:550; padding:3px 10px; border-radius:var(--r-pill); color:var(--text); background:var(--surface-2); border:1px solid var(--border)}
+.tag.scope{color:var(--accent-text); background:var(--accent-weak); border:0}
+.tbl .acts{position:absolute; right:16px; top:0; height:100%; display:flex; align-items:center; gap:15px; opacity:0; transition:opacity .15s var(--ease); padding-left:24px; background:linear-gradient(90deg,transparent,var(--accent-weak) 16%)}
+.tbl tbody tr:hover .acts{opacity:1}
+.acts a{font-size:13px; color:var(--accent-text); cursor:pointer} .acts a.del{color:var(--danger)} .acts a.muted{color:var(--faint); cursor:not-allowed}
+
+/* 弹窗 / 确认 */
+.backdrop{position:fixed; inset:0; background:rgb(16 24 40 / .45); display:flex; opacity:0; visibility:hidden; transition:.2s var(--ease); z-index:100}
+.backdrop.open{opacity:1; visibility:visible}
+.dialog{margin:auto; width:480px; max-width:calc(100vw - 32px); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-lg); transform:translateY(8px); transition:transform .2s var(--ease-out)}
+.backdrop.open .dialog{transform:none}
+.dlg-h{display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--border)} .dlg-h h3{font-size:18px; font-weight:620}
+.dlg-x{width:30px; height:30px; border:0; background:none; color:var(--muted); font-size:20px; cursor:pointer; border-radius:var(--r-sm)} .dlg-x:hover{background:var(--surface-2); color:var(--fg)}
+.dlg-b{padding:22px; display:flex; flex-direction:column; gap:18px}
+.dlg-f{display:flex; justify-content:flex-end; gap:10px; padding:16px 22px; border-top:1px solid var(--border)}
+.parent-hint{font-size:13px; color:var(--muted); background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-md); padding:9px 12px}
+.parent-hint b{color:var(--fg)}
+.fld label{display:block; font-size:13px; font-weight:550; color:var(--text); margin-bottom:7px} .fld label .req{color:var(--danger)}
+.fld input,.fld select{width:100%; font:inherit; font-size:14px; color:var(--fg); background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-md); padding:9px 12px}
+.fld input:focus,.fld select:focus{outline:none; border-color:var(--accent); box-shadow:var(--focus)}
+.fld input.err{border-color:var(--danger)} .fld .e{color:var(--danger); font-size:12.5px; margin-top:6px; display:none} .fld .e.show{display:block}
+.confirm{margin:auto; width:400px; max-width:calc(100vw - 32px); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-lg); padding:24px; text-align:center; transform:translateY(8px); transition:transform .2s var(--ease-out)}
+.backdrop.open .confirm{transform:none}
+.confirm .ic{width:44px; height:44px; border-radius:50%; background:var(--danger-weak); color:var(--danger); display:flex; align-items:center; justify-content:center; margin:0 auto 14px}
+.confirm h3{font-size:17px; margin-bottom:8px} .confirm p{color:var(--muted); font-size:13.5px; margin:0 0 22px} .confirm .row2{display:flex; gap:10px} .confirm .row2 .btn{flex:1; justify-content:center}
+.toast{position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(16px); background:var(--fg); color:var(--bg); font-size:13.5px; font-weight:500; padding:11px 18px; border-radius:var(--r-pill); box-shadow:var(--shadow-lg); opacity:0; pointer-events:none; transition:.24s var(--ease-out); z-index:200}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+@media (max-width:760px){ .topnav .menu{display:none} .page{padding:16px} .tbl .scope-col,.tbl .mem-col,.tbl .time-col{display:none} .tbl .acts{position:static;opacity:1;height:auto;padding:8px 0 0;background:none} .tbl td{height:auto;padding:12px 16px} }
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+.empty{text-align:center; padding:52px 0; color:var(--muted); display:flex; flex-direction:column; align-items:center}
+.empty .ei{width:60px; height:60px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--faint); margin-bottom:14px}
+.empty h4{font-size:15px; font-weight:600; color:var(--fg); margin:0}
+.empty p{font-size:13px; color:var(--muted); margin:5px 0 0}
+.empty .ea{margin-top:16px}
+.sk-body .sk-row{display:flex; align-items:center; gap:18px; padding:0 16px; height:52px; border-bottom:1px solid var(--border)}
+.sk{position:relative; overflow:hidden; background:var(--surface-2); border-radius:6px; height:12px}
+.sk::after{content:""; position:absolute; inset:0; transform:translateX(-100%); background:linear-gradient(90deg,transparent,color-mix(in oklab,var(--surface) 75%,transparent),transparent); animation:shimmer 1.3s infinite}
+@keyframes shimmer{100%{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){.sk::after{animation:none}}
+</style>
+</head>
+<body>
+
+<nav class="topnav" data-od-id="topnav">
+  <div class="brand"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19" stroke-linecap="round"/></svg>核心管理平台</div>
+  <div class="menu">
+    <div class="grp"><button type="button" class="grp-btn">系统设置 <svg class="cv" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="grp-drop"><a href="role.html">角色管理</a><a href="online_user.html">在线用户</a><a href="operation_log.html">操作日志</a></div></div>
+    <div class="grp"><button type="button" class="grp-btn on">用户管理 <svg class="cv" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="grp-drop"><a href="user.html">用户管理</a><a href="organization.html" class="cur">组织管理</a></div></div>
+  </div>
+  <div class="rt">
+    <button class="icon-btn" title="搜索"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg></button>
+    <button class="icon-btn" id="themeBtn" title="切换主题"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3a9 9 0 1 0 9 9c-5 0-9-4-9-9z"/></svg></button>
+    <span class="lang">中 / EN</span>
+    <div class="avatar"><span class="pic">A</span><span class="nm">admin</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round"/></svg></div>
+  </div>
+</nav>
+
+<div class="page">
+  <section class="pagemain" data-od-id="org-tree-table">
+    <div class="pm-head">
+      <div><h1>组织管理</h1><div class="sub">组织树是数据范围（DataScope）的基础：成员的数据可见性沿组织层级授予。</div></div>
+      <div class="tools">
+        <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg><input id="kw" placeholder="搜索组织名称"></div>
+        <button class="btn btn-secondary btn-sm" id="toggleAll">展开全部</button>
+        <button class="btn btn-primary" id="addRoot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>新增根组织</button>
+      </div>
+    </div>
+    <table class="tbl">
+      <thead><tr><th style="width:34%">组织名称</th><th style="width:14%">负责人</th><th class="scope-col" style="width:16%">数据范围</th><th class="mem-col" style="width:10%">成员</th><th class="time-col">创建时间</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </section>
+</div>
+
+<!-- 新增/编辑 组织 -->
+<div class="backdrop" id="dlg">
+  <div class="dialog" role="dialog" aria-modal="true">
+    <div class="dlg-h"><h3 id="dlgTitle">新增组织</h3><button class="dlg-x" data-close>×</button></div>
+    <div class="dlg-b">
+      <div class="parent-hint" id="parentHint">上级组织：<b>—</b></div>
+      <div class="fld"><label>组织名称 <span class="req">*</span></label><input id="fName" placeholder="例如：后端组"><div class="e" id="fNameErr">请输入组织名称</div></div>
+      <div class="fld"><label>负责人</label><input id="fOwner" placeholder="组织负责人姓名"></div>
+      <div class="fld"><label>数据范围</label><select id="fScope"><option>全部</option><option>本组织及以下</option><option>本组织</option><option>仅本人</option></select></div>
+    </div>
+    <div class="dlg-f"><button class="btn btn-secondary" data-close>取消</button><button class="btn btn-primary" id="save">确定</button></div>
+  </div>
+</div>
+
+<!-- 删除 确认 -->
+<div class="backdrop" id="confirm">
+  <div class="confirm" role="alertdialog" aria-modal="true">
+    <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <h3>删除组织</h3><p id="confirmText">确定删除该组织吗？</p>
+    <div class="row2"><button class="btn btn-secondary" data-close>取消</button><button class="btn btn-danger" id="confirmYes">删除</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* 数据：扁平存储 + parent 引用 */
+let seq=100;
+let orgs=[
+  {id:1,parent:null,name:"数据范围",owner:"平台管理员",scope:"全部",members:12,created:"2026-06-01 09:00:00",root:true},
+  {id:2,parent:1,name:"成都研发中心",owner:"陈航",scope:"本组织及以下",members:8,created:"2026-06-02 10:12:00"},
+  {id:4,parent:2,name:"前端组",owner:"李娜",scope:"本组织",members:3,created:"2026-06-03 11:30:00"},
+  {id:5,parent:2,name:"后端组",owner:"赵强",scope:"本组织",members:5,created:"2026-06-03 11:32:00"},
+  {id:3,parent:1,name:"平台运营",owner:"王敏",scope:"本组织",members:3,created:"2026-06-02 14:05:00"},
+  {id:6,parent:1,name:"外部合作方",owner:"—",scope:"仅本人",members:1,created:"2026-06-05 16:20:00"}
+];
+let expanded=new Set([1,2]); let editId=null, addParent=null, pendingDel=null;
+const childrenOf=id=>orgs.filter(o=>o.parent===id);
+const depthOf=o=>{let d=0,p=o.parent; while(p!==null){d++; p=(orgs.find(x=>x.id===p)||{}).parent ?? null;} return d;};
+
+/* 渲染 */
+const rowsEl=document.getElementById('rows'), kw=document.getElementById('kw');
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function collectVisible(){
+  const q=kw.value.trim();
+  if(q){ // 搜索：命中节点 + 其所有祖先，全部展开
+    const show=new Set();
+    orgs.forEach(o=>{ if(o.name.includes(q)){ let p=o; while(p){show.add(p.id); p=orgs.find(x=>x.id===p.parent);} } });
+    return orderPre().filter(o=>show.has(o.id));
+  }
+  const out=[];
+  (function walk(pid){ childrenOf(pid).forEach(o=>{ out.push(o); if(expanded.has(o.id)) walk(o.id); }); })(null);
+  return out;
+}
+function orderPre(){ const out=[]; (function walk(pid){ childrenOf(pid).forEach(o=>{out.push(o); walk(o.id);}); })(null); return out; }
+let loadT;
+function skeletonHTML(){
+  const bar=w=>`<div class="sk" style="width:${w}"></div>`;
+  const ws=[['26%','16%','14%','10%'],['30%','14%','12%','9%'],['22%','18%','14%','10%'],['28%','15%','12%','9%'],['24%','16%','14%','10%'],['30%','14%','12%','9%']];
+  return `<tr><td colspan="5" style="padding:0;border:0"><div class="sk-body">`+ws.map(r=>`<div class="sk-row">${bar(r[0])}${bar(r[1])}${bar(r[2])}<div style="margin-left:auto">${bar(r[3])}</div></div>`).join('')+`</div></td></tr>`;
+}
+function emptyRow(){
+  const q=kw.value.trim();
+  if(q) return `<tr><td colspan="5"><div class="empty"><div class="ei"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg></div><h4>没有匹配的组织</h4><p>试试调整组织名称关键词。</p><button class="btn btn-secondary ea" data-empty="reset">清空搜索</button></div></td></tr>`;
+  return `<tr><td colspan="5"><div class="empty"><div class="ei"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-6 9 6v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" stroke-linejoin="round"/></svg></div><h4>暂无组织</h4><p>还没有任何组织，点击右上角「新增根组织」创建。</p><button class="btn btn-primary ea" data-empty="add">+ 新增根组织</button></div></td></tr>`;
+}
+function load(){ rowsEl.innerHTML=skeletonHTML(); clearTimeout(loadT); loadT=setTimeout(()=>render(),600); }
+function render(){
+  const list=collectVisible(), q=kw.value.trim();
+  if(!list.length){ rowsEl.innerHTML=emptyRow(); return; }
+  rowsEl.innerHTML=list.map(o=>{
+    const d=depthOf(o), hasKids=childrenOf(o.id).length>0, open=expanded.has(o.id)||!!q;
+    const caret=hasKids?`<span class="caret ${open?'open':''}" data-caret="${o.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:`<span class="caret leaf"></span>`;
+    const ico=`<svg class="oico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">${o.root?'<path d="M3 9l9-6 9 6v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" stroke-linejoin="round"/>':'<path d="M3 7h6l2 2h10v10H3z" stroke-linejoin="round"/>'}</svg>`;
+    return `<tr data-id="${o.id}">
+      <td><div class="nmcell" style="padding-left:${d*22}px">${caret}${ico}<span class="oname">${esc(o.name)}</span></div></td>
+      <td>${esc(o.owner)}</td>
+      <td class="scope-col"><span class="tag scope">${esc(o.scope)}</span></td>
+      <td class="mem-col mono num">${o.members}</td>
+      <td class="time-col mono num">${esc(o.created)}
+        <div class="acts"><a data-act="add">新增子级</a><a data-act="edit">编辑</a>${o.root?'<a class="muted" title="根组织不可删除">删除</a>':'<a class="del" data-act="del">删除</a>'}</div>
+      </td></tr>`;
+  }).join('');
+}
+kw.addEventListener('input',render);
+
+/* 展开/收起 */
+rowsEl.addEventListener('click',e=>{
+  const em=e.target.closest('[data-empty]');
+  if(em){ if(em.dataset.empty==='add'){ document.getElementById('addRoot').click(); } else { kw.value=''; render(); } return; }
+  const c=e.target.closest('[data-caret]');
+  if(c){ const id=+c.dataset.caret; expanded.has(id)?expanded.delete(id):expanded.add(id); render(); return; }
+  const a=e.target.closest('[data-act]'); if(!a)return;
+  const id=+a.closest('tr').dataset.id, act=a.dataset.act, o=orgs.find(x=>x.id===id);
+  if(act==='add') openDlg('add',o);
+  else if(act==='edit') openDlg('edit',o);
+  else if(act==='del'){ const n=childrenOf(id).length; pendingDel=id; document.getElementById('confirmText').innerHTML=`确定删除组织「<b>${esc(o.name)}</b>」吗？`+(n?`其下 <b>${n}</b> 个子组织也将一并删除。`:'此操作不可撤销。'); document.getElementById('confirm').classList.add('open'); }
+});
+document.getElementById('toggleAll').addEventListener('click',e=>{
+  const allIds=orgs.filter(o=>childrenOf(o.id).length).map(o=>o.id);
+  const allOpen=allIds.every(id=>expanded.has(id));
+  if(allOpen){ expanded.clear(); e.target.textContent='展开全部'; } else { allIds.forEach(id=>expanded.add(id)); e.target.textContent='收起全部'; }
+  render();
+});
+
+/* 浮层 */
+function close(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',e=>e.target.closest('.backdrop').classList.remove('open')));
+document.querySelectorAll('.backdrop').forEach(bd=>bd.addEventListener('click',e=>{if(e.target===bd)bd.classList.remove('open');}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.backdrop.open').forEach(b=>b.classList.remove('open'));});
+
+/* 新增/编辑 */
+const fName=document.getElementById('fName'),fOwner=document.getElementById('fOwner'),fScope=document.getElementById('fScope'),fNameErr=document.getElementById('fNameErr'),parentHint=document.getElementById('parentHint');
+function openDlg(mode,o){
+  if(mode==='edit'){ editId=o.id; addParent=null; document.getElementById('dlgTitle').textContent='编辑组织';
+    parentHint.style.display=o.root?'none':'block'; const p=orgs.find(x=>x.id===o.parent); parentHint.innerHTML='上级组织：<b>'+(p?esc(p.name):'—')+'</b>';
+    fName.value=o.name; fOwner.value=o.owner==='—'?'':o.owner; fScope.value=o.scope;
+  } else { editId=null; addParent=o.id; document.getElementById('dlgTitle').textContent='新增子组织';
+    parentHint.style.display='block'; parentHint.innerHTML='上级组织：<b>'+esc(o.name)+'</b>';
+    fName.value=''; fOwner.value=''; fScope.value='本组织'; }
+  fName.classList.remove('err'); fNameErr.classList.remove('show');
+  document.getElementById('dlg').classList.add('open'); setTimeout(()=>fName.focus(),60);
+}
+document.getElementById('addRoot').addEventListener('click',()=>{
+  editId=null; addParent='ROOT'; document.getElementById('dlgTitle').textContent='新增根组织';
+  parentHint.style.display='none'; fName.value=''; fOwner.value=''; fScope.value='全部';
+  fName.classList.remove('err'); fNameErr.classList.remove('show'); document.getElementById('dlg').classList.add('open'); setTimeout(()=>fName.focus(),60);
+});
+document.getElementById('save').addEventListener('click',()=>{
+  if(!fName.value.trim()){ fName.classList.add('err'); fNameErr.classList.add('show'); fName.focus(); return; }
+  const d={name:fName.value.trim(), owner:fOwner.value.trim()||'—', scope:fScope.value};
+  if(editId!==null){ Object.assign(orgs.find(x=>x.id===editId),d); toast('已保存组织修改'); }
+  else { const id=++seq; const parent=addParent==='ROOT'?null:addParent; orgs.push({id,parent,...d,members:0,created:nowStr(),root:parent===null}); if(parent!==null)expanded.add(parent); toast('已新增组织'); }
+  close('dlg'); render();
+});
+fName.addEventListener('input',()=>{if(fName.value.trim()){fName.classList.remove('err');fNameErr.classList.remove('show');}});
+
+/* 删除（含子树） */
+document.getElementById('confirmYes').addEventListener('click',()=>{
+  if(pendingDel===null)return;
+  const kill=new Set([pendingDel]); let grow=true;
+  while(grow){ grow=false; orgs.forEach(o=>{ if(o.parent!==null&&kill.has(o.parent)&&!kill.has(o.id)){kill.add(o.id);grow=true;} }); }
+  const n=orgs.find(x=>x.id===pendingDel).name;
+  orgs=orgs.filter(o=>!kill.has(o.id)); kill.forEach(id=>expanded.delete(id)); pendingDel=null;
+  close('confirm'); render(); toast('已删除「'+n+'」');
+});
+
+/* 工具 */
+document.getElementById('themeBtn').addEventListener('click',()=>document.documentElement.classList.toggle('dark'));
+let tt; function toast(m){const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),1700);}
+function nowStr(){const d=new Date(),p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;}
+
+load();
+</script>
+</body>
+</html>

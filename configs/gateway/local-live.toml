@@ -1,0 +1,169 @@
+# local-live.toml 用于 e2e 测试和本地联调，配合 test/docker-compose.yml 使用。
+# 本文件必须只依赖本机 Docker Compose 暴露的中间件，不依赖共享服务器。
+
+[app.web]
+apiBaseUrl = ""
+fileBaseUrl = ""
+offlineOnPageLeave = false
+
+[app.service]
+autoMigrate = false
+name = "egoadmin-gateway"
+platformName = "核心管理平台"
+webPath = "/tmp/egoadmin/core/frontend/html"
+skipPermissionContractCheck = false
+bucketName = "egoadmin"
+
+[app.dbMigration]
+enabled = true
+driver = "atlas"
+url = "mysql://egoadmin:egoadmin@127.0.0.1:3306/egoadmin_gateway?charset=utf8mb4&parseTime=True&loc=Local"
+dir = "file://atlas/migrations/gateway"
+bin = "atlas"
+
+[server.http]
+enableAccessInterceptorReq = false
+enableAccessInterceptorRes = false
+enableMetricInterceptor = false
+enableTraceInterceptor = true
+enableURLPathTrans = true
+host = "0.0.0.0"
+mode = "release"
+port = 9001
+accessControlAllowCredentials = true
+accessControlAllowOrigin = ["*"]
+enableCors = true
+ginRelativePath = "/api/*action"
+grpcEndpoint = "127.0.0.1:9002"
+incomingHeaders = ["X-User-Id"]
+stripPrefix = "/api"
+
+[server.grpc]
+host = "127.0.0.1"
+port = 9002
+
+[server.governor]
+host = "0.0.0.0"
+port = 9003
+
+[client.http]
+addr = "http://127.0.0.1:9001"
+debug = true
+
+[client.grpc]
+addr = "127.0.0.1:9002"
+debug = true
+
+[client.grpc.user]
+addr = "etcd:///egoadmin-user"
+debug = true
+readTimeout = "3s"
+dialTimeout = "3s"
+
+[client.grpc.idgen]
+addr = "etcd:///egoadmin-idgen"
+debug = true
+readTimeout = "3s"
+dialTimeout = "5s"
+
+[client.mysql]
+debug = true
+dsn = "egoadmin:egoadmin@tcp(127.0.0.1:3306)/egoadmin_gateway?charset=utf8mb4&parseTime=True&loc=Local&readTimeout=1s&timeout=1s&writeTimeout=3s"
+
+[client.redis]
+addr = "127.0.0.1:6379"
+debug = true
+mode = "stub"
+password = "egoadmin"
+
+[client.jetcache]
+name = "default"
+remoteExpiry = "1h0m0s"
+localSize = 256
+localExpiry = "1m0s"
+refreshDuration = "2m0s"
+stopRefreshAfter = "1h0m0s"
+notFoundExpiry = "1m0s"
+enableMetrics = true
+enableSyncLocal = false
+codec = "msgpack"
+
+[component.idgen.default]
+namespace = "egoadmin-local"
+name = "default"
+
+[component.idgen.machine]
+group = "egoadmin-local"
+
+[component.idgen.codec]
+secret = "local-stable-idcodec-secret"
+
+[client.asyncq]
+redisAddr = "127.0.0.1:6379"
+redisPassword = "egoadmin"
+redisDB = 0
+enableClient = true
+enableServer = false
+concurrency = 10
+queues = { critical = 6, default = 3, low = 1 }
+maxRetry = 3
+retryDelayFunc = "exponential"
+taskTimeout = "30s"
+enableAccessLog = false
+slowLogThreshold = "1s"
+enableHealthCheck = false
+
+[client.meili]
+host = "http://127.0.0.1:7700"
+apiKey = ""
+timeout = "5s"
+enableHealth = true
+ensureOnBuild = false
+enableAccessLog = false
+slowLog = "1s"
+
+[component.upload]
+multipartPath = "/upload"
+defaultTTL = "24h"
+
+[component.upload.tus]
+enabled = false
+path = "/tus/upload"
+temporaryDirectory = "./data/tus-tmp"
+objectPrefix = "files"
+metadataPrefix = "tus-meta"
+partSize = 33554432
+maxBufferedParts = 4
+maxConcurrentUploads = 8
+maxTempDirSize = 2147483648
+localTempTTL = "24h"
+
+[cron.gateway.upload.cleanup]
+delayExecType = "skip"
+enableDistributedTask = false
+enableImmediatelyRun = false
+enableSeconds = true
+spec = "0 0/10 * * * ?"
+
+[client.minio]
+endpoint = "127.0.0.1:9000"
+accessKeyID = "egoadmin"
+secretAccessKey = "egoadmin123"
+ssl = false
+
+[etcd]
+addrs = ["127.0.0.1:2379"]
+connectTimeout = "1s"
+
+[registry]
+scheme = "etcd"
+prefix = "egoadmin"
+serviceTTL = "10s"
+
+[trace]
+ServiceName = "egoadmin-gateway-local"
+OtelType = "otlp"
+Fraction = 1.00
+
+[trace.otlp]
+Endpoint = "127.0.0.1:4317"

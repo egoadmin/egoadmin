@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package user.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// InternalAuthService 提供后台服务间鉴权与权限判断能力。
+service InternalAuthService {
+  // ValidateAccessToken 校验访问令牌并返回可传递给下游业务的认证上下文。
+  rpc ValidateAccessToken(ValidateAccessTokenRequest) returns (ValidateAccessTokenResponse);
+  // CheckPermission 校验认证主体是否具备指定 gRPC 服务方法权限。
+  rpc CheckPermission(CheckPermissionRequest) returns (CheckPermissionResponse);
+  // DeletePermissionPolicies 删除指定接口对应的权限策略。
+  rpc DeletePermissionPolicies(DeletePermissionPoliciesRequest) returns (DeletePermissionPoliciesResponse);
+}
+
+// ValidateAccessTokenRequest 访问令牌校验请求。
+message ValidateAccessTokenRequest {
+  // AccessToken Bearer 访问令牌内容，不包含 Bearer 前缀。
+  string access_token = 1;
+}
+
+// ValidateAccessTokenResponse 访问令牌校验结果。
+message ValidateAccessTokenResponse {
+  // Auth 校验成功后得到的认证上下文。
+  AuthContext auth = 1;
+}
+
+// CheckPermissionRequest 权限校验请求。
+message CheckPermissionRequest {
+  // Auth 已通过访问令牌校验得到的认证上下文。
+  AuthContext auth = 1;
+  // Service gRPC 完整服务名，例如 user.v1.UserService。
+  string service = 2;
+  // Method gRPC 方法名，例如 AddUser。
+  string method = 3;
+}
+
+// CheckPermissionResponse 权限校验结果。
+message CheckPermissionResponse {
+  // Allowed 表示主体是否允许访问指定接口。
+  bool allowed = 1;
+}
+
+// DeletePermissionPoliciesRequest 权限策略删除请求。
+message DeletePermissionPoliciesRequest {
+  // Policies 需要删除的接口权限策略列表。
+  repeated PermissionPolicy policies = 1;
+}
+
+// DeletePermissionPoliciesResponse 权限策略删除结果。
+message DeletePermissionPoliciesResponse {}
+
+// PermissionPolicy 表示一个 gRPC 接口权限策略。
+message PermissionPolicy {
+  // Service gRPC 完整服务名，例如 user.v1.UserService。
+  string service = 1;
+  // Method gRPC 方法名，例如 AddUser。
+  string method = 2;
+}
+
+// AuthContext 是 authsession.AuthContext 的跨服务传输形态。
+message AuthContext {
+  // UserId 当前登录用户 ID。
+  uint64 user_id = 1;
+  // Username 当前登录用户名。
+  string username = 2;
+  // UserType 当前登录用户类型。
+  int32 user_type = 3;
+  // Ua 当前登录会话的用户代理标识。
+  string ua = 4;
+  // SessionId 当前登录会话 ID。
+  string session_id = 5;
+  // TokenId 当前访问令牌 ID。
+  string token_id = 6;
+  // WorkspaceId 当前工作空间 ID，未启用工作空间时为 0。
+  uint64 workspace_id = 7;
+  // WorkspaceMemberId 当前工作空间成员 ID，未启用工作空间时为 0。
+  uint64 workspace_member_id = 8;
+  // IsBuiltinAdmin 表示当前主体是否为内置管理员。
+  bool is_builtin_admin = 9;
+  // Subject Casbin 权限主体，通常为用户名。
+  string subject = 10;
+  // IssuedAt 访问令牌签发时间。
+  google.protobuf.Timestamp issued_at = 11;
+  // ExpiresAt 访问令牌过期时间。
+  google.protobuf.Timestamp expires_at = 12;
+  // DeptId 当前登录用户所属组织 ID。
+  uint64 dept_id = 13;
+}

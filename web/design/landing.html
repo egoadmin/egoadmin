@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EgoAdmin · 开箱即用的微服务后台开发底座</title>
+<style>
+/* ============================================================
+   EgoAdmin 落地页  ·  令牌取自 DESIGN.md（现代极简 / 亮色 / 电光蓝 + Go 青）
+   ============================================================ */
+:root{
+  --bg:#FAFBFC; --surface:#FFFFFF; --surface-2:#F4F6F8; --surface-3:#EAEDF1;
+  --fg:#14181F; --text:#3A4250; --muted:#6B7280; --faint:#9AA3B2;
+  --border:#E6E8EC; --border-strong:#D5D9E0;
+  --accent:#1573E6; --accent-hover:#1267CC; --accent-press:#0F58B0;
+  --accent-weak:#E8F1FC; --accent-text:#1166C4; --on-accent:#fff;
+  --cyan:#19B6DD; --cyan-weak:#E2F6FC;
+  --success:#17B26A; --success-weak:#E6F7EF;
+  --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono","Cascadia Code",ui-monospace,"Roboto Mono",Menlo,Consolas,monospace;
+  --r-sm:6px; --r-md:8px; --r-lg:12px; --r-xl:16px; --r-pill:999px;
+  --shadow-sm:0 2px 6px rgb(16 24 40 / .06);
+  --shadow-md:0 6px 18px -6px rgb(16 24 40 / .12);
+  --shadow-lg:0 16px 40px -12px rgb(16 24 40 / .18);
+  --focus:0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+  --ease:cubic-bezier(.2,0,0,1); --ease-out:cubic-bezier(.16,1,.3,1);
+  --maxw:1180px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:80px}
+body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--font-display); color:var(--fg); margin:0; text-wrap:balance}
+p{text-wrap:pretty}
+.mono{font-family:var(--font-mono)} .num{font-variant-numeric:tabular-nums}
+a{color:var(--accent-text); text-decoration:none}
+::selection{background:var(--accent-weak)}
+.eyebrow{font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--accent-text)}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 28px}
+section{padding:88px 0}
+.sec-head{max-width:64ch; margin-bottom:44px}
+.sec-head h2{font-size:clamp(28px,3vw,38px); font-weight:660; letter-spacing:-.018em; line-height:1.14; margin:10px 0 12px}
+.sec-head p{color:var(--muted); font-size:16px; margin:0}
+
+/* ---------- buttons ---------- */
+.btn{font:inherit; font-size:14px; font-weight:550; cursor:pointer; border-radius:var(--r-md); padding:9px 18px; border:1px solid transparent; display:inline-flex; align-items:center; gap:8px; transition:background .18s var(--ease), border-color .18s var(--ease), color .18s var(--ease), box-shadow .18s var(--ease)}
+.btn:focus-visible{outline:none; box-shadow:var(--focus)}
+.btn-primary{background:var(--accent); color:var(--on-accent)}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-primary:active{background:var(--accent-press)}
+.btn-secondary{background:var(--surface); color:var(--text); border-color:var(--border-strong)}
+.btn-secondary:hover{border-color:var(--accent); color:var(--accent-text)}
+.btn-lg{padding:12px 24px; font-size:16px}
+
+/* ---------- top nav ---------- */
+.nav{position:sticky; top:0; z-index:100; height:64px; display:flex; align-items:center; gap:32px; padding:0 28px; background:color-mix(in oklab,var(--bg) 82%,transparent); backdrop-filter:saturate(1.4) blur(10px); border-bottom:1px solid var(--border)}
+.nav .brand{display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-weight:680; color:var(--fg); letter-spacing:-.01em; font-size:16px}
+.nav .brand small{font-family:var(--font-mono); font-size:11px; color:var(--muted); font-weight:500}
+.nav .links{display:flex; gap:6px; margin-left:6px}
+.nav .links a{font-size:14px; font-weight:500; color:var(--muted); padding:8px 12px; border-radius:var(--r-md); transition:color .18s var(--ease), background .18s var(--ease)}
+.nav .links a:hover{color:var(--fg); background:var(--surface-2)}
+.nav .links a.on{color:var(--accent-text)}
+.nav .spacer{flex:1}
+
+/* ---------- hero ---------- */
+.hero{position:relative; padding:80px 0 64px; overflow:hidden}
+.hero .grid-bg{position:absolute; inset:-40px 0 auto 0; height:520px; z-index:0;
+  background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:34px 34px; opacity:.6; -webkit-mask-image:radial-gradient(120% 70% at 22% 0%,#000,transparent 72%); mask-image:radial-gradient(120% 70% at 22% 0%,#000,transparent 72%)}
+.hero .inner{position:relative; z-index:1; display:grid; grid-template-columns:1.04fr .96fr; gap:52px; align-items:center}
+.hero h1{font-family:var(--font-display); font-size:clamp(38px,4.6vw,60px); font-weight:680; letter-spacing:-.024em; line-height:1.05; color:var(--fg); margin:16px 0 18px}
+.hero .lede{font-size:17px; color:var(--muted); max-width:48ch}
+.hero .cta{margin-top:28px; display:flex; gap:12px; flex-wrap:wrap}
+.hero .meta{margin-top:22px; font-family:var(--font-mono); font-size:12.5px; color:var(--faint)}
+.hero .meta b{color:var(--text); font-weight:600}
+
+/* ---------- code window ---------- */
+.codewin{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-xl); overflow:hidden; box-shadow:var(--shadow-md)}
+.codewin .bar{display:flex; align-items:center; gap:8px; padding:13px 16px; border-bottom:1px solid var(--border)}
+.codewin .dot{width:11px; height:11px; border-radius:50%}
+.codewin .dot.r{background:#ED6A5E} .codewin .dot.y{background:#F5C14E} .codewin .dot.g{background:#61C554}
+.codewin .file{font-family:var(--font-mono); font-size:12.5px; color:var(--muted); margin-left:6px}
+.codewin .badge{margin-left:auto; font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--cyan); background:var(--cyan-weak); padding:3px 9px; border-radius:var(--r-pill)}
+.codewin pre{margin:0; padding:20px; font-family:var(--font-mono); font-size:13px; line-height:1.75; color:var(--text); overflow:auto}
+.codewin .hl{display:block; background:linear-gradient(90deg,var(--cyan-weak),transparent); margin:0 -20px; padding:0 20px}
+.k{color:var(--accent-text); font-weight:600} .s{color:var(--success)} .c{color:var(--faint)} .t{color:var(--cyan)}
+.caret{display:inline-block; width:8px; height:15px; background:var(--accent); vertical-align:-2px; animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* ---------- capability strip ---------- */
+.cap{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden}
+.cap > div{background:var(--surface); padding:20px 22px}
+.cap .lbl{font-size:13px; color:var(--muted)}
+.cap .val{font-family:var(--font-mono); font-size:16px; font-weight:600; color:var(--fg); margin-top:6px; letter-spacing:-.01em}
+
+/* ---------- propositions ---------- */
+.props{display:grid; grid-template-columns:repeat(3,1fr); gap:28px}
+.prop{padding-top:22px; border-top:2px solid var(--accent)}
+.prop:nth-child(2){border-color:var(--cyan)} .prop:nth-child(3){border-color:var(--accent)}
+.prop h3{font-size:19px; font-weight:620; margin-bottom:10px}
+.prop p{color:var(--muted); font-size:14.5px; margin:0}
+
+/* ---------- feature cards ---------- */
+.feats{display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
+.feat{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:24px; transition:border-color .18s var(--ease), box-shadow .18s var(--ease), transform .18s var(--ease)}
+.feat:hover{border-color:var(--border-strong); box-shadow:var(--shadow-sm); transform:translateY(-2px)}
+.feat .k{font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--cyan); letter-spacing:.06em}
+.feat h3{font-size:18px; font-weight:620; margin:10px 0 8px}
+.feat > p{color:var(--muted); font-size:14px; margin:0 0 16px}
+.feat ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px}
+.feat li{position:relative; padding-left:20px; font-size:13px; color:var(--text); line-height:1.55}
+.feat li::before{content:""; position:absolute; left:2px; top:8px; width:6px; height:6px; border-radius:1px; background:var(--border-strong); transform:rotate(45deg)}
+.feat li .mono{color:var(--text); font-weight:500}
+
+/* ---------- pipeline ---------- */
+.pipe{display:grid; grid-template-columns:repeat(5,1fr); gap:0; counter-reset:s}
+.pipe .step{position:relative; padding:0 18px}
+.pipe .step::before{counter-increment:s; content:counter(s); display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; background:var(--surface); border:1.5px solid var(--accent); color:var(--accent-text); font-family:var(--font-mono); font-weight:600; font-size:14px; margin-bottom:16px}
+.pipe .step::after{content:""; position:absolute; top:16px; left:52px; right:-1px; height:2px; background:linear-gradient(90deg,var(--cyan),var(--cyan-weak)); opacity:.7}
+.pipe .step:last-child::after{display:none}
+.pipe .step b{display:block; font-family:var(--font-mono); font-size:14px; color:var(--fg); margin-bottom:6px}
+.pipe .step p{font-size:13px; color:var(--muted); margin:0}
+
+/* ---------- quickstart terminal ---------- */
+.qs{display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center}
+.term{background:#0E1116; border:1px solid #20262F; border-radius:var(--r-xl); overflow:hidden; box-shadow:var(--shadow-lg)}
+.term .bar{display:flex; align-items:center; gap:8px; padding:13px 16px; border-bottom:1px solid #20262F}
+.term .file{font-family:var(--font-mono); font-size:12px; color:#8B95A4; margin-left:6px}
+.term .body{padding:8px 6px}
+.cmd{display:flex; align-items:center; gap:10px; padding:8px 14px; border-radius:var(--r-md); cursor:pointer; transition:background .15s var(--ease)}
+.cmd:hover{background:#1A212B}
+.cmd .pr{color:var(--cyan); font-family:var(--font-mono); font-size:13px}
+.cmd code{font-family:var(--font-mono); font-size:13px; color:#E6EAF0; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.cmd .cp{font-size:11px; color:#6A7382; font-family:var(--font-mono); opacity:0; transition:opacity .15s var(--ease)}
+.cmd:hover .cp{opacity:1}
+.cmd.done .cp{opacity:1; color:var(--success)}
+
+/* ---------- explore ---------- */
+.explore{display:grid; grid-template-columns:repeat(4,1fr); gap:18px}
+.ecard{display:flex; flex-direction:column; gap:8px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:22px; transition:border-color .18s var(--ease), box-shadow .18s var(--ease), transform .18s var(--ease)}
+.ecard:hover{border-color:var(--accent); box-shadow:var(--shadow-sm); transform:translateY(-2px)}
+.ecard h3{font-size:17px; font-weight:620; color:var(--fg); display:flex; align-items:center; justify-content:space-between}
+.ecard h3 .arr{color:var(--accent); transition:transform .18s var(--ease)}
+.ecard:hover h3 .arr{transform:translateX(3px)}
+.ecard p{font-size:13px; color:var(--muted); margin:0}
+.ecard .path{font-family:var(--font-mono); font-size:11px; color:var(--faint); margin-top:auto; padding-top:8px}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--border); padding:40px 0; color:var(--muted); font-size:13px}
+footer .wrap{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap}
+footer .flinks{display:flex; gap:20px}
+footer a{color:var(--muted)} footer a:hover{color:var(--fg)}
+
+/* ---------- reveal ---------- */
+.rv{opacity:0; transform:translateY(14px); transition:opacity .5s var(--ease-out), transform .5s var(--ease-out)}
+.rv.in{opacity:1; transform:none}
+
+/* ---------- responsive ---------- */
+@media (max-width:920px){
+  .hero .inner{grid-template-columns:1fr; gap:36px} .qs{grid-template-columns:1fr; gap:28px}
+  .feats{grid-template-columns:1fr 1fr} .pipe{grid-template-columns:1fr 1fr; gap:24px}
+  .pipe .step::after{display:none} .explore{grid-template-columns:1fr 1fr}
+  .nav .links{display:none}
+}
+@media (max-width:600px){
+  section{padding:60px 0} .cap{grid-template-columns:1fr 1fr} .props{grid-template-columns:1fr}
+  .feats{grid-template-columns:1fr} .explore{grid-template-columns:1fr} .pipe{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important} .rv{opacity:1; transform:none}}
+</style>
+</head>
+<body>
+
+<!-- ============================ NAV ============================ -->
+<nav class="nav">
+  <div class="brand">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19" stroke-linecap="round"/></svg>
+    核心管理平台 <small>EgoAdmin</small>
+  </div>
+  <div class="links" id="navlinks">
+    <a href="#abilities">设计能力</a>
+    <a href="#pipeline">开发流水线</a>
+    <a href="#quickstart">快速开始</a>
+    <a href="#explore">继续探索</a>
+  </div>
+  <div class="spacer"></div>
+  <a class="btn btn-secondary" href="#quickstart">文档</a>
+  <a class="btn btn-primary" href="#quickstart">快速开始</a>
+</nav>
+
+<!-- ============================ HERO ============================ -->
+<header class="hero" data-od-id="hero">
+  <div class="grid-bg"></div>
+  <div class="wrap inner">
+    <div>
+      <div class="eyebrow">READY-TO-RUN · GO 微服务后台开发底座</div>
+      <h1>少写后台基础设施，<br>把业务系统快速跑起来</h1>
+      <p class="lede">EgoAdmin 不是只带登录和 CRUD 的后台模板，而是一套面向 Go 微服务的开发底座。它用 Proto First 串起接口、验证、文档、权限和响应映射，同时沉淀统一文件能力、契约化权限、分布式 ID、认证会话、数据库迁移和 AI 友好的工程规则。</p>
+      <div class="cta">
+        <a class="btn btn-primary btn-lg" href="#quickstart">快速开始</a>
+        <a class="btn btn-secondary btn-lg" href="#abilities">查看设计能力</a>
+      </div>
+      <div class="meta">默认服务 <b>gateway · user · idgen</b>　│　存储 <b>MySQL · Redis · MinIO</b></div>
+    </div>
+    <div class="codewin">
+      <div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="file">api/proto/user/v1/role.proto</span><span class="badge">Proto First</span></div>
+<pre><span class="c">// 定义 proto，就完成半个接口工程</span>
+<span class="k">service</span> <span class="t">RoleService</span> {
+  <span class="k">rpc</span> AddRole(AddRoleRequest)
+      <span class="k">returns</span> (AddRoleResponse) {
+    <span class="hl">    option (google.api.http) = { post: <span class="s">"/user.v1.RoleService/AddRole"</span> };</span>
+  }
+}
+<span class="k">message</span> <span class="t">Role</span> {
+  <span class="k">string</span> name = 1 [(validate) = <span class="s">"required"</span>, (label) = <span class="s">"角色名称"</span>];<span class="caret"></span>
+}
+<span class="c">→ 继续生成 gRPC / HTTP 双栈 · 校验 · OpenAPI · 权限标识</span></pre>
+    </div>
+  </div>
+</header>
+
+<!-- ============================ CAPABILITY STRIP ============================ -->
+<section style="padding-top:24px" data-od-id="cap">
+  <div class="wrap">
+    <div class="cap rv">
+      <div><div class="lbl">开发契约</div><div class="val">Proto First</div></div>
+      <div><div class="lbl">协议入口</div><div class="val">HTTP + gRPC</div></div>
+      <div><div class="lbl">默认服务</div><div class="val">gateway·user·idgen</div></div>
+      <div><div class="lbl">基础存储</div><div class="val">MySQL·Redis·MinIO</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ PROPOSITIONS ============================ -->
+<section data-od-id="props">
+  <div class="wrap">
+    <div class="props">
+      <div class="prop rv"><h3>定义 proto，就完成半个接口工程</h3><p>service、rpc、request、response 和字段标签会继续生成 HTTP/gRPC 双栈入口、参数验证、OpenAPI 文档、API manifest、权限标识和响应映射依据。</p></div>
+      <div class="prop rv"><h3>文件能力不是一个上传接口</h3><p>统一处理 multipart、TUS 断点续传、秒传、对象存储、file_reference、Range 下载和图片动态处理，业务只需要绑定 referenceId。</p></div>
+      <div class="prop rv"><h3>权限简单，但边界完整</h3><p>接口契约、routeMenu、permission-contract、Casbin 和角色授权形成闭环，开发前中期不用在业务代码里到处补权限胶水。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ DESIGN ABILITIES ============================ -->
+<section id="abilities" data-od-id="abilities">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div class="eyebrow">设计能力</div>
+      <h2>EgoAdmin 提前沉淀的后台系统基础设施</h2>
+      <p>把派生项目里反复重写、最容易出错的底层能力，固化为契约驱动、边界清晰的工程底座。</p>
+    </div>
+    <div class="feats">
+      <div class="feat rv"><div class="k">CONTRACT</div><h3>Proto First 契约驱动</h3><p>业务接口从 proto 开始，而不是从临时 HTTP handler 或页面按钮开始，减少多处重复定义造成的不一致。</p>
+        <ul><li>同一 RPC 同时生成 <span class="mono">gRPC</span> 服务和 <span class="mono">POST HTTP</span> 兼容路径</li><li><span class="mono">validate</span>、<span class="mono">label</span>、<span class="mono">field_behavior</span> 和 OpenAPI 注解共同描述请求约束</li><li><span class="mono">copier</span> 标签和转换方法明确 ORM/model 到响应结构的映射</li></ul></div>
+      <div class="feat rv"><div class="k">FILE</div><h3>统一上传、下载和图片处理</h3><p>把后台项目最容易散落的文件生命周期收进 gateway 和 upload/cdn 组件。</p>
+        <ul><li>multipart、TUS 断点续传、秒传预检和对象存储直写</li><li><span class="mono">/cdn/file/</span> 支持认证、签名、inline 和 Range 下载</li><li><span class="mono">file_object</span>、<span class="mono">file_reference</span>、<span class="mono">upload_session</span> 管理临时、绑定、释放和清理</li></ul></div>
+      <div class="feat rv"><div class="k">RBAC</div><h3>契约化权限和数据范围</h3><p>权限不靠散落的字符串和人工记忆维护，而是由接口、菜单、按钮和角色授权链路约束。</p>
+        <ul><li>API catalog、routeMenu 和 permission-contract 约束角色可授权边界</li><li><span class="mono">DataScope</span> 支持全部、本组织及以下、本组织、仅本人等数据范围</li><li>普通管理员不能创建或授予超出自身范围的角色权限</li></ul></div>
+      <div class="feat rv"><div class="k">IDGEN</div><h3>稳定高效的分布式 ID</h3><p>内置 idgen 服务，避免每个派生项目重复处理 Snowflake、号段、机器号和 ID 外露问题。</p>
+        <ul><li>号段模式提供高性能全局 ID 分配</li><li>机器号租约和关闭释放适合多服务部署</li><li><span class="mono">idcodec</span> 支持内部数字 ID 到外部字符串 ID 的可逆编码</li></ul></div>
+      <div class="feat rv"><div class="k">BASE</div><h3>微服务工程底座</h3><p>默认 gateway、user、idgen 三个服务，保留真实微服务项目需要的启动、治理和迁移链路。</p>
+        <ul><li>gateway 统一承接 HTTP 兼容、前端内嵌、上传下载和 API 聚合</li><li><span class="mono">Atlas + GORM</span> model 按服务数据库边界生成版本化迁移</li><li>readiness、health check、graceful shutdown 和资源关闭顺序已内置</li></ul></div>
+      <div class="feat rv"><div class="k">AI</div><h3>AI 编程友好</h3><p>项目把容易出错的开发顺序写成稳定规则，让 AI 更容易按正确层次扩展业务。</p>
+        <ul><li>EgoAdmin skill 固化 proto、权限、迁移、上传和验证规则</li><li>新增能力按 <span class="mono">proto → 生成 → 实现 → 权限 → 验证</span> 推进</li><li><span class="mono">make gen</span>、前端 build、service check 和 e2e 让改动可验证</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ PIPELINE ============================ -->
+<section id="pipeline" style="background:var(--surface-2); border-top:1px solid var(--border); border-bottom:1px solid var(--border)" data-od-id="pipeline">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div class="eyebrow">开发流水线</div>
+      <h2>新增业务能力时的默认路径</h2>
+      <p>每一步都落在正确的层，改动始终可生成、可授权、可验证。</p>
+    </div>
+    <div class="pipe">
+      <div class="step rv"><b>定义 proto</b><p>接口、请求响应、校验标签、OpenAPI 说明和 copier 映射一起设计。</p></div>
+      <div class="step rv"><b>make gen</b><p>生成 gRPC/HTTP 兼容代码、OpenAPI、API catalog 和前端 API manifest。</p></div>
+      <div class="step rv"><b>实现三层</b><p>controller、service、store：业务规则、事务、数据权限和响应转换留在正确层。</p></div>
+      <div class="step rv"><b>绑定 routeMenu</b><p>页面、按钮和 API 权限进入 permission-contract，角色授权受契约约束。</p></div>
+      <div class="step rv"><b>运行验证</b><p>前端构建、服务测试、迁移校验和 gateway e2e 覆盖完整链路。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ QUICKSTART ============================ -->
+<section id="quickstart" data-od-id="quickstart">
+  <div class="wrap">
+    <div class="qs">
+      <div class="rv">
+        <div class="eyebrow">快速开始</div>
+        <h2 style="font-size:clamp(28px,3vw,38px); font-weight:660; letter-spacing:-.018em; margin:10px 0 12px">本地开发常用命令</h2>
+        <p style="color:var(--muted); font-size:16px; margin:0 0 20px">从安装依赖到端到端验证，一组 make 命令贯穿日常开发循环。点击任意命令即可复制。</p>
+        <a class="btn btn-primary btn-lg" href="#explore">查看后台能力</a>
+      </div>
+      <div class="term rv">
+        <div class="bar"><span class="dot r" style="background:#ED6A5E"></span><span class="dot y" style="background:#F5C14E"></span><span class="dot g" style="background:#61C554"></span><span class="file">~/egoadmin — make</span></div>
+        <div class="body" id="cmds">
+          <div class="cmd"><span class="pr">$</span><code>make install</code><span class="cp">复制</span></div>
+          <div class="cmd"><span class="pr">$</span><code>make dev-up</code><span class="cp">复制</span></div>
+          <div class="cmd"><span class="pr">$</span><code>make gen</code><span class="cp">复制</span></div>
+          <div class="cmd"><span class="pr">$</span><code>make run</code><span class="cp">复制</span></div>
+          <div class="cmd"><span class="pr">$</span><code>make e2e</code><span class="cp">复制</span></div>
+          <div class="cmd"><span class="pr">$</span><code>make migrate.new SERVICE=user NAME=add_field</code><span class="cp">复制</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ EXPLORE ============================ -->
+<section id="explore" style="background:var(--surface-2); border-top:1px solid var(--border)" data-od-id="explore">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div class="eyebrow">继续探索</div>
+      <h2>从这些后台能力开始查看</h2>
+      <p>这些是底座默认带起的后台模块，体现契约化权限与数据范围在真实页面中的样子。</p>
+    </div>
+    <div class="explore">
+      <a class="ecard rv" href="/system/role"><h3>角色管理 <span class="arr">→</span></h3><p>查看菜单、API 和数据权限如何授权。</p><div class="path">/system/role</div></a>
+      <a class="ecard rv" href="/user_management/user"><h3>用户管理 <span class="arr">→</span></h3><p>查看账号、角色和组织关系。</p><div class="path">/user_management/user</div></a>
+      <a class="ecard rv" href="/user_management/organization"><h3>组织管理 <span class="arr">→</span></h3><p>查看组织树和数据范围基础。</p><div class="path">/user_management/organization</div></a>
+      <a class="ecard rv" href="/system/operation_log"><h3>操作日志 <span class="arr">→</span></h3><p>查看网关到用户服务的操作审计。</p><div class="path">/system/operation_log</div></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ FOOTER ============================ -->
+<footer>
+  <div class="wrap">
+    <div>EgoAdmin · 开箱即用的微服务后台开发底座</div>
+    <div class="flinks">
+      <a href="#abilities">设计能力</a>
+      <a href="#pipeline">开发流水线</a>
+      <a href="#quickstart">快速开始</a>
+      <a href="#explore">继续探索</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ---------- scroll reveal ---------- */
+const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in'); io.unobserve(e.target)}})},{threshold:.12, rootMargin:'0px 0px -8% 0px'});
+document.querySelectorAll('.rv').forEach((el,i)=>{el.style.transitionDelay=(Math.min(i,6)*40)+'ms'; io.observe(el)});
+
+/* ---------- copy command ---------- */
+document.getElementById('cmds').addEventListener('click',e=>{
+  const row=e.target.closest('.cmd'); if(!row)return;
+  const txt=row.querySelector('code').textContent;
+  navigator.clipboard&&navigator.clipboard.writeText(txt).catch(()=>{});
+  const cp=row.querySelector('.cp'); const old=cp.textContent;
+  row.classList.add('done'); cp.textContent='已复制 ✓';
+  setTimeout(()=>{row.classList.remove('done'); cp.textContent=old},1400);
+});
+
+/* ---------- nav active on scroll ---------- */
+const secs=['abilities','pipeline','quickstart','explore'].map(id=>document.getElementById(id));
+const navmap={}; document.querySelectorAll('#navlinks a').forEach(a=>navmap[a.getAttribute('href').slice(1)]=a);
+const sio=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){
+  Object.values(navmap).forEach(a=>a.classList.remove('on'));
+  navmap[e.target.id]&&navmap[e.target.id].classList.add('on');
+}})},{rootMargin:'-45% 0px -50% 0px'});
+secs.forEach(s=>s&&sio.observe(s));
+</script>
+</body>
+</html>
