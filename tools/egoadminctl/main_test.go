@@ -31,7 +31,7 @@ func TestApplyReplacementsLongestFirst(t *testing.T) {
 		`dsn = "coreadmin:coreadmin@tcp(127.0.0.1:3306)/coreadmin_gateway"`,
 		`env = "COREADMIN_ATLAS_MIGRATED"`,
 	}, "\n"))
-	got, count := applyReplacements(input, replacements)
+	got, count := applyReplacements(input, replacements, nil)
 	if count == 0 {
 		t.Fatal("expected replacements")
 	}
@@ -54,6 +54,50 @@ func TestApplyReplacementsLongestFirst(t *testing.T) {
 		if !strings.Contains(text, expected) {
 			t.Fatalf("result missing %q:\n%s", expected, text)
 		}
+	}
+}
+
+func TestExternalDepsProtected(t *testing.T) {
+	from := identity{Name: "EgoAdmin", Slug: "egoadmin", Module: "github.com/egoadmin/egoadmin", EnvPrefix: "EGOADMIN", GoPackage: "egoadmin"}
+	to := identity{Name: "MyProject", Slug: "myproject", Module: "github.com/acme/myproject", EnvPrefix: "MYPROJECT", GoPackage: "myproject"}
+	replacements := buildReplacements(from, to, []string{"gateway", "user"}, nil)
+
+	externals := []string{"github.com/egoadmin/elib", "github.com/egoadmin/eminio", "github.com/egoadmin/xgin"}
+
+	input := []byte(strings.Join([]string{
+		`require (`,
+		`	github.com/egoadmin/egoadmin v1.0.0`,
+		`	github.com/egoadmin/elib v1.0.0`,
+		`	github.com/egoadmin/eminio v1.0.0`,
+		`	github.com/egoadmin/xgin v1.0.0`,
+		`)`,
+		`import "github.com/egoadmin/elib/pkg/util/xorm"`,
+		`name = "egoadmin-gateway"`,
+	}, "\n"))
+
+	got, _ := applyReplacements(input, replacements, externals)
+	text := string(got)
+
+	// Main module should be renamed
+	if !strings.Contains(text, "github.com/acme/myproject") {
+		t.Fatal("main module should be renamed")
+	}
+	// External deps must NOT be renamed
+	for _, ext := range externals {
+		if !strings.Contains(text, ext) {
+			t.Fatalf("external dep %q should be preserved, got:\n%s", ext, text)
+		}
+	}
+	// elib subpath must be preserved
+	if !strings.Contains(text, "github.com/egoadmin/elib/pkg/util/xorm") {
+		t.Fatal("elib subpath should be preserved")
+	}
+	// Service name should be renamed
+	if strings.Contains(text, "egoadmin-gateway") {
+		t.Fatal("service name should be renamed")
+	}
+	if !strings.Contains(text, "myproject-gateway") {
+		t.Fatal("service name should use new slug")
 	}
 }
 

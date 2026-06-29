@@ -269,8 +269,9 @@ func renameProject(opts renameOptions) ([]fileChange, error) {
 	}
 
 	replacements := buildReplacements(opts.From, opts.To, opts.Services, opts.Extra)
+	externals := scanExternalDeps(root, opts.From.Module)
 
-	changes, err := rewriteFiles(root, replacements, opts)
+	changes, err := rewriteFiles(root, replacements, opts, externals)
 	if err != nil {
 		return nil, err
 	}
@@ -404,7 +405,7 @@ func dedupeReplacements(items []replacement) []replacement {
 	return result
 }
 
-func rewriteFiles(root string, replacements []replacement, opts renameOptions) ([]fileChange, error) {
+func rewriteFiles(root string, replacements []replacement, opts renameOptions, externals []string) ([]fileChange, error) {
 	var changes []fileChange
 	err := filepath.WalkDir(root, func(path string, entry fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
@@ -441,7 +442,7 @@ func rewriteFiles(root string, replacements []replacement, opts renameOptions) (
 		if !isText(data) {
 			return nil
 		}
-		next, count := applyReplacements(data, replacements)
+		next, count := applyReplacements(data, replacements, externals)
 		if count == 0 {
 			return nil
 		}
@@ -456,8 +457,25 @@ func rewriteFiles(root string, replacements []replacement, opts renameOptions) (
 	return changes, err
 }
 
-func applyReplacements(data []byte, replacements []replacement) ([]byte, int) {
+func applyReplacements(data []byte, replacements []replacement, externals []string) ([]byte, int) {
+	// Build per-path sentinels so each external dep gets a unique marker.
+	type shield struct {
+		path     []byte
+		sentinel []byte
+	}
+	var shields []shield
 	next := data
+	for i, ext := range externals {
+		extBytes := []byte(ext)
+		if bytes.Count(next, extBytes) == 0 {
+			continue
+		}
+		marker := fmt.Sprintf("\x00XEC%dX\x00", i)
+		sh := shield{path: extBytes, sentinel: []byte(marker)}
+		next = bytes.ReplaceAll(next, sh.path, sh.sentinel)
+		shields = append(shields, sh)
+	}
+
 	count := 0
 	for _, item := range replacements {
 		oldBytes := []byte(item.Old)
@@ -468,6 +486,12 @@ func applyReplacements(data []byte, replacements []replacement) ([]byte, int) {
 		next = bytes.ReplaceAll(next, oldBytes, []byte(item.New))
 		count += occurrences
 	}
+
+	// Restore protected paths.
+	for _, sh := range shields {
+		next = bytes.ReplaceAll(next, sh.sentinel, sh.path)
+	}
+
 	return next, count
 }
 
@@ -621,6 +645,42 @@ func ensureDestinationAvailable(dest string) error {
 		return fmt.Errorf("destination directory is not empty: %s", dest)
 	}
 	return nil
+}
+
+// scanExternalDeps reads go.mod at root and returns import paths under
+// github.com/egoadmin/* that are NOT the main module. These paths must be
+// protected from the generic slug replacement (e.g. egoadmin → myproject
+// should not turn github.com/egoadmin/elib into github.com/myproject/elib).
+func scanExternalDeps(root, mainModule string) []string {
+	data, err := os.ReadFile(filepath.Join(root, "go.mod"))
+	if err != nil {
+		return nil
+	}
+	var deps []string
+	seen := make(map[string]bool)
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		// Match require lines: "github.com/egoadmin/elib v1.0.0"
+		if strings.HasPrefix(line, "//") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			continue
+		}
+		path := fields[0]
+		if !strings.HasPrefix(path, "github.com/egoadmin/") {
+			continue
+		}
+		if path == mainModule {
+			continue
+		}
+		if !seen[path] {
+			seen[path] = true
+			deps = append(deps, path)
+		}
+	}
+	return deps
 }
 
 func sanitizeGoPackage(slug string) string {
