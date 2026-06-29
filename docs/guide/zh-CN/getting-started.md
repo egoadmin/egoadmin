@@ -21,6 +21,75 @@
 执行 `make install` 会安装项目需要的开发工具，包括 Buf、Wire、Atlas、protoc 插件等。普通开发不建议手动逐个安装。
 :::
 
+## 快速创建新项目
+
+使用 `egoadminctl` 工具可以一键基于 EgoAdmin 模板初始化你自己的项目，自动完成仓库克隆、模块名替换、环境变量前缀替换、服务名替换等所有重命名操作。
+
+### 安装
+
+```bash
+go install github.com/egoadmin/egoadmin/tools/egoadminctl@latest
+```
+
+### 一键初始化
+
+```bash
+egoadminctl init \
+  --dest ./myproject \
+  --name "我的管理平台" \
+  --slug myproject \
+  --module github.com/yourorg/myproject
+```
+
+执行后工具会：
+
+1. 克隆 EgoAdmin 模板仓库到 `./myproject`
+2. 将所有 `github.com/egoadmin/egoadmin` 替换为 `github.com/yourorg/myproject`
+3. 将环境变量前缀 `EGOADMIN` 替换为 `MYPROJECT`
+4. 将服务名 `egoadmin-gateway`、`egoadmin-user`、`egoadmin-idgen` 替换为 `myproject-gateway` 等
+5. 更新 `.egoadmin/template.json` 配置
+
+初始化完成后：
+
+```bash
+cd myproject
+go mod tidy
+make gen
+```
+
+### 可用参数
+
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| `--dest` | 目标目录（必填） | — |
+| `--name` | 项目显示名称 | 读取模板配置 |
+| `--slug` | 项目标识（小写，用于服务名和凭证前缀） | 读取模板配置 |
+| `--module` | Go 模块路径 | 读取模板配置 |
+| `--env-prefix` | 环境变量前缀（默认从 slug 自动生成大写形式） | 自动 |
+| `--branch` | 克隆指定分支或 tag | 默认分支 |
+| `--services` | 自定义服务列表，逗号分隔 | `gateway,user` |
+| `--dry-run` | 仅预览，不实际执行 | `false` |
+| `--keep-git` | 保留克隆的 `.git` 目录 | `false` |
+
+### 在已有项目中重命名
+
+如果你已经克隆了模板仓库，可以在项目根目录执行 `rename` 子命令进行原地重命名：
+
+```bash
+cd egoadmin
+egoadminctl rename \
+  --name "我的管理平台" \
+  --slug myproject \
+  --module github.com/yourorg/myproject \
+  --write
+```
+
+不加 `--write` 参数时默认为 dry-run 模式，只输出变更预览。
+
+::: warning
+重命名操作会修改项目中的所有源码文件（跳过 `.git`、`vendor`、`web/node_modules`、`api/gen` 等目录）。建议在新分支上操作，并在完成后运行 `go mod tidy && make gen` 验证。
+:::
+
 ## 一键部署
 
 完整部署会启动 gateway、user、idgen 和 MySQL、Redis、etcd、MinIO、DTM、Jaeger、Meilisearch 等中间件。

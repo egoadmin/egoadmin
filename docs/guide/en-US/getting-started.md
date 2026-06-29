@@ -17,6 +17,75 @@ This guide helps you start the full EgoAdmin stack locally and understand the da
 Run `make install` to install project tools such as Buf, Wire, Atlas and protobuf plugins.
 :::
 
+## Quick Project Creation
+
+Use the `egoadminctl` CLI to bootstrap a new project from the EgoAdmin template. It automatically clones the repo and renames the module, environment prefix, service names, and package identifiers.
+
+### Install
+
+```bash
+go install github.com/egoadmin/egoadmin/tools/egoadminctl@latest
+```
+
+### One-Command Init
+
+```bash
+egoadminctl init \
+  --dest ./myproject \
+  --name "My Admin Platform" \
+  --slug myproject \
+  --module github.com/yourorg/myproject
+```
+
+This will:
+
+1. Clone the EgoAdmin template into `./myproject`
+2. Replace all `github.com/egoadmin/egoadmin` with `github.com/yourorg/myproject`
+3. Replace env prefix `EGOADMIN` with `MYPROJECT`
+4. Replace service names `egoadmin-gateway` → `myproject-gateway`, etc.
+5. Update `.egoadmin/template.json`
+
+After initialization:
+
+```bash
+cd myproject
+go mod tidy
+make gen
+```
+
+### Available Flags
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--dest` | Target directory (required) | — |
+| `--name` | Project display name | from template config |
+| `--slug` | Project slug (lowercase, used in service names) | from template config |
+| `--module` | Go module path | from template config |
+| `--env-prefix` | Env var prefix (auto-derived from slug if omitted) | auto |
+| `--branch` | Clone a specific branch or tag | default branch |
+| `--services` | Comma-separated service list | `gateway,user` |
+| `--dry-run` | Preview only | `false` |
+| `--keep-git` | Keep the cloned `.git` directory | `false` |
+
+### Rename an Existing Clone
+
+If you already cloned the template, use the `rename` subcommand to rename in place:
+
+```bash
+cd egoadmin
+egoadminctl rename \
+  --name "My Admin Platform" \
+  --slug myproject \
+  --module github.com/yourorg/myproject \
+  --write
+```
+
+Without `--write`, it runs in dry-run mode and only prints a preview.
+
+::: warning
+The rename operation modifies all source files in the project (skipping `.git`, `vendor`, `web/node_modules`, `api/gen`, etc.). Work on a new branch and run `go mod tidy && make gen` afterwards to verify.
+:::
+
 ## One-Command Deployment
 
 ```bash
