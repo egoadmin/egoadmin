@@ -15,6 +15,8 @@ hero:
     - theme: alt
       text: 设计资源
       link: /design/
+      target: _blank
+      rel: noopener noreferrer
     - theme: alt
       text: GitHub
       link: https://github.com/egoadmin/egoadmin

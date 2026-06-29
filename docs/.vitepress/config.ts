@@ -104,7 +104,7 @@ export default defineConfig({
           { text: '快速开始', link: '/guide/getting-started' },
           { text: '核心功能', link: '/guide/features' },
           { text: '架构', link: '/guide/architecture' },
-          { text: '设计资源', link: '/design/' },
+          { text: '设计资源', link: '/design/', target: '_blank', rel: 'noopener noreferrer' },
           { text: 'GitHub', link: 'https://github.com/egoadmin/egoadmin' },
         ],
         sidebar: {
@@ -143,7 +143,7 @@ export default defineConfig({
           { text: 'Getting Started', link: '/en-US/guide/getting-started' },
           { text: 'Features', link: '/en-US/guide/features' },
           { text: 'Architecture', link: '/en-US/guide/architecture' },
-          { text: 'Design Assets', link: '/design/' },
+          { text: 'Design Assets', link: '/design/', target: '_blank', rel: 'noopener noreferrer' },
           { text: 'GitHub', link: 'https://github.com/egoadmin/egoadmin' },
         ],
         sidebar: {

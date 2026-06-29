@@ -18,6 +18,8 @@ hero:
     - theme: alt
       text: Design Assets
       link: /design/
+      target: _blank
+      rel: noopener noreferrer
     - theme: alt
       text: GitHub
       link: https://github.com/egoadmin/egoadmin
