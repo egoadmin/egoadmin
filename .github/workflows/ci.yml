@@ -93,6 +93,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
       - uses: pnpm/action-setup@v4
         with:
           version: 11
@@ -103,9 +107,17 @@ jobs:
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
 
+      - name: Install protoc
+        run: |
+          wget -q https://github.com/protocolbuffers/protobuf/releases/download/v3.20.0/protoc-3.20.0-linux-x86_64.zip -O protoc.zip
+          sudo unzip protoc.zip -d /usr/local && rm protoc.zip
+
       - name: Build frontend
         working-directory: web
         run: pnpm install && pnpm run build
+
+      - name: Generate code
+        run: make install && make gen
 
       - name: Build Docker image
         run: |
