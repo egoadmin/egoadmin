@@ -275,6 +275,11 @@ func renameProject(opts renameOptions) ([]fileChange, error) {
 	if err != nil {
 		return nil, err
 	}
+	if opts.Write {
+		if change, err := injectProjectOrigin(root, opts.To); err == nil && change != nil {
+			changes = append(changes, *change)
+		}
+	}
 	if opts.UpdateConfig {
 		configChange, err := updateTemplateConfig(root, opts.To, opts.Services, opts.Write)
 		if err != nil {
@@ -495,6 +500,32 @@ func applyReplacements(data []byte, replacements []replacement, externals []stri
 	return next, count
 }
 
+// injectProjectOrigin prepends a project-origin header to AGENTS.md so that
+// AI assistants know this project is based on EgoAdmin and can locate the
+// ego-admin skill for development guidance.
+func injectProjectOrigin(root string, to identity) (*fileChange, error) {
+	agentsPath := filepath.Join(root, "AGENTS.md")
+	data, err := os.ReadFile(agentsPath)
+	if err != nil {
+		return nil, nil // no AGENTS.md, nothing to do
+	}
+
+	header := fmt.Sprintf("> **Based on [EgoAdmin](https://github.com/egoadmin/egoadmin)** — %s is built on the EgoAdmin microservice template.\n"+
+		"> For development guidance, architecture details, and coding conventions, use the **ego-admin** skill (`/ego-admin`).\n"+
+		"> See also: [EgoAdmin Documentation](https://egoadmin.github.io/egoadmin/)\n\n", to.Name)
+
+	// Only inject if not already present.
+	if strings.Contains(string(data), "Based on [EgoAdmin]") {
+		return nil, nil
+	}
+
+	next := append([]byte(header), data...)
+	if err := os.WriteFile(agentsPath, next, 0o644); err != nil {
+		return nil, err
+	}
+	return &fileChange{Path: "AGENTS.md", Occurrences: 1}, nil
+}
+
 func shouldSkipDir(rel string, includeAgents bool) bool {
 	if rel == ".git" || rel == ".idea" || rel == ".vscode" {
 		return true
@@ -530,6 +561,10 @@ func shouldSkipDir(rel string, includeAgents bool) bool {
 
 func shouldSkipFile(rel string) bool {
 	if rel == configPath {
+		return true
+	}
+	// Preserve AGENTS.md and CLAUDE.md so AI skill references survive rename.
+	if rel == "AGENTS.md" || rel == "CLAUDE.md" {
 		return true
 	}
 	return false

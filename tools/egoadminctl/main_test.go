@@ -101,6 +101,45 @@ func TestExternalDepsProtected(t *testing.T) {
 	}
 }
 
+func TestAgentsMdPreservedWithOriginHeader(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, root, "go.mod", "module github.com/egoadmin/egoadmin\nrequire github.com/egoadmin/elib v1.0.0\n")
+	writeFile(t, root, ".egoadmin/template.json", `{"name":"EgoAdmin","slug":"egoadmin","module":"github.com/egoadmin/egoadmin","envPrefix":"EGOADMIN","goPackage":"egoadmin","services":["gateway","user"]}`+"\n")
+	writeFile(t, root, "AGENTS.md", "# Repository Guidelines\nUse ego-admin skill.\n")
+
+	opts := renameOptions{
+		Root:   root,
+		From:   identity{Name: "EgoAdmin", Slug: "egoadmin", Module: "github.com/egoadmin/egoadmin", EnvPrefix: "EGOADMIN", GoPackage: "egoadmin"},
+		To:     identity{Name: "MyApp", Slug: "myapp", Module: "github.com/acme/myapp", EnvPrefix: "MYAPP", GoPackage: "myapp"},
+		Write:  true,
+	}
+	_, err := renameProject(opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(root, "AGENTS.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(data)
+
+	// AGENTS.md content must NOT be renamed
+	if !strings.Contains(text, "ego-admin") {
+		t.Fatal("AGENTS.md should still reference ego-admin skill")
+	}
+	if !strings.Contains(text, "# Repository Guidelines") {
+		t.Fatal("AGENTS.md original content should be preserved")
+	}
+	// Origin header should be injected
+	if !strings.Contains(text, "Based on [EgoAdmin]") {
+		t.Fatal("AGENTS.md should have origin header")
+	}
+	if !strings.Contains(text, "MyApp") {
+		t.Fatal("origin header should use new project name")
+	}
+}
+
 func TestRenameProjectDryRunDoesNotWrite(t *testing.T) {
 	root := t.TempDir()
 	writeFile(t, root, "go.mod", "module github.com/acme/coreadmin\n")
