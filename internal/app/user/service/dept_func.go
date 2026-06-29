@@ -9,6 +9,8 @@ import (
 
 // findDeptSubs 找到所有子组织id
 // 定义一个函数，用于查找组织的下属组织
+//
+//nolint:unused // 预留:递归查找子部门，供后续部门树计算使用
 func findDeptSubs(depts []*store.DeptModel, nItem *store.DeptModel) (subs []uint64) {
 	// 初始化下属组织列表
 	subs = make([]uint64, 0)

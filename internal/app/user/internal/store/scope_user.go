@@ -3,6 +3,8 @@ package store
 import "gorm.io/gorm"
 
 // userScopeIds id筛选.
+//
+//nolint:unused // 预留:按 ID 列表过滤用户的 scope
 func userScopeIds(ids []uint64) func(*gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if len(ids) == 0 {

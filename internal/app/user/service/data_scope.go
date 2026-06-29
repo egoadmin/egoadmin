@@ -429,6 +429,9 @@ func (s DataScope) EnforceAssignableDataPerm(ctx context.Context, level int32) e
 	return platformi18n.ErrorAccessDenied(ctx, "DataPermissionOutOfScope", nil)
 }
 
+// 预留:从部门模型列表提取去重后的部门 ID，供后续数据权限计算使用。
+//
+//nolint:unused // 预留:部门 ID 提取与去重
 func deptIDsFromStore(depts []*store.DeptModel) []uint64 {
 	ids := make([]uint64, 0, len(depts))
 	seen := make(map[uint64]struct{}, len(depts))

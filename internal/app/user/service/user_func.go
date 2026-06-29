@@ -153,6 +153,8 @@ func (s *UserService) delCheck(ctx context.Context, users []*store.UserModel) (e
 }
 
 // updateCheck 修改检查
+//
+//nolint:unused // 预留:用户更新前的业务校验
 func (s *UserService) updateCheck(ctx context.Context, id uint64, user *store.UserModel) (err error) {
 	// 用户名不能是内置超级管理员
 	if user.Username == store.UserModelUsernameRoot || user.Username == store.UserModelUsernameAdmin {

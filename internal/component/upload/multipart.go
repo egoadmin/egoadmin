@@ -309,6 +309,9 @@ func contains(items []string, target string) bool {
 	return false
 }
 
+// 预留:拼接对象访问 URL，供后续直连 objectKey 访问场景使用。
+//
+//nolint:unused // 预留:对象访问 URL 拼接
 func joinURL(baseURL, objectKey string) string {
 	if baseURL == "" {
 		return ""
@@ -316,6 +319,9 @@ func joinURL(baseURL, objectKey string) string {
 	return strings.TrimRight(baseURL, "/") + "/" + strings.TrimLeft(objectKey, "/")
 }
 
+// 预留:按 referenceID 生成访问 URL，供后续文件访问入口使用。
+//
+//nolint:unused // 预留:按引用 ID 生成访问 URL
 func (c *Component) accessURL(profile string, referenceID uint64) string {
 	if referenceID == 0 {
 		return ""

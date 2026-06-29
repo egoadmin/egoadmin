@@ -130,6 +130,9 @@ func roleStorePermissionPolicies(in []*userv1.RolePermissionPolicy) []store.Role
 	return policies
 }
 
+// 预留:proto 权限策略转领域模型，供后续角色权限写入使用。
+//
+//nolint:unused // 预留:权限策略 proto→domain 转换
 func rolePermissionPolicies(in []*userv1.RolePermissionPolicy) []roledomain.PermissionPolicy {
 	policies := make([]roledomain.PermissionPolicy, 0, len(in))
 	for _, policy := range in {

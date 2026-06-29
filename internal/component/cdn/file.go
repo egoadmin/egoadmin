@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	dispositionInline    = "inline"
+	dispositionInline     = "inline"
 	dispositionAttachment = "attachment"
 )
 
@@ -110,6 +110,9 @@ func (c *Component) serveFileObject(ctx *gin.Context, object *upload.DownloadObj
 	http.ServeContent(ctx.Writer, ctx.Request, fileName, modTime, reader)
 }
 
+// 预留:签名有效性快捷判断，供后续访问控制分支使用。
+//
+//nolint:unused // 预留:签名有效性判断
 func (c *Component) hasValidSignature(ctx *gin.Context, material string, now time.Time) bool {
 	return c.verifySignature(ctx, material, now) == nil
 }

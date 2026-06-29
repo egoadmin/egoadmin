@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+//nolint:unused // 预留:统一的登录失败提示文案
 const loginFailedMessage = "用户名或密码错误"
 
 type LoginCryptoInterface interface {
