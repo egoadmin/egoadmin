@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	"github.com/egoadmin/egoadmin/internal/platform/defaults"
 	"github.com/coocood/freecache"
+	"github.com/egoadmin/egoadmin/internal/platform/defaults"
 	"github.com/google/wire"
 )
 

@@ -31,31 +31,40 @@ func (r *offlineUserRepo) Save(context.Context, *userdomain.User) error { return
 func (r *offlineUserRepo) Update(context.Context, uint64, *userdomain.User) error {
 	return nil
 }
+
 func (r *offlineUserRepo) FindByID(context.Context, uint64) (*userdomain.User, error) {
 	return nil, userdomain.ErrNotFound
 }
+
 func (r *offlineUserRepo) FindByUsername(context.Context, string) (*userdomain.User, error) {
 	return nil, userdomain.ErrNotFound
 }
+
 func (r *offlineUserRepo) FindByPhone(context.Context, string) (*userdomain.User, error) {
 	return nil, userdomain.ErrNotFound
 }
+
 func (r *offlineUserRepo) List(context.Context, userdomain.ListQuery) ([]*userdomain.User, int64, error) {
 	return nil, 0, nil
 }
+
 func (r *offlineUserRepo) UpdatePassword(context.Context, uint64, string) error {
 	return nil
 }
+
 func (r *offlineUserRepo) MarkLoggedIn(context.Context, uint64, time.Time, string) error {
 	return nil
 }
+
 func (r *offlineUserRepo) MarkOnline(context.Context, uint64, time.Time) error {
 	return nil
 }
+
 func (r *offlineUserRepo) MarkOffline(_ context.Context, ids []uint64) error {
 	r.offlineIDs = append([]uint64(nil), ids...)
 	return nil
 }
+
 func (r *offlineUserRepo) FindHeartbeatExpiredIDs(_ context.Context, before time.Time) ([]uint64, error) {
 	r.expiredBefore = before
 	return append([]uint64(nil), r.expiredIDs...), nil
@@ -75,6 +84,7 @@ func (s offlineUserStore) UpdateBase(context.Context, uint64, *store.UserModel) 
 func (s offlineUserStore) UpdateBaseWithoutHook(context.Context, uint64, *store.UserModel) error {
 	return nil
 }
+
 func (s offlineUserStore) UpdateBaseWithoutHookAndTx(context.Context, uint64, *store.UserModel) error {
 	return nil
 }
@@ -88,21 +98,27 @@ func (s offlineUserStore) Get(context.Context, uint64) (*store.UserModel, error)
 		Roles:      []store.RoleModel{{DataPerm: store.RoleModelDataPermAll}},
 	}, nil
 }
+
 func (s offlineUserStore) GetAuthSnapshot(context.Context, uint64) (*store.UserAuthSnapshot, error) {
 	return nil, nil
 }
+
 func (s offlineUserStore) GetByUsername(context.Context, string) (*store.UserModel, error) {
 	return nil, nil
 }
+
 func (s offlineUserStore) GetByPhone(context.Context, string) (*store.UserModel, error) {
 	return nil, nil
 }
+
 func (s offlineUserStore) GetList(context.Context, store.UserModelGetListOption, ...func(*gorm.DB) *gorm.DB) ([]*store.UserModel, int64, error) {
 	return nil, 0, nil
 }
+
 func (s offlineUserStore) GetByIds(context.Context, []uint64) ([]*store.UserModel, error) {
 	return s.users, nil
 }
+
 func (s offlineUserStore) GetByDeptIds(context.Context, []uint64) ([]*store.UserModel, error) {
 	return nil, nil
 }
@@ -110,12 +126,15 @@ func (s offlineUserStore) CountByDeptIds(context.Context, []uint64) (int64, erro
 func (s offlineUserStore) GetByUsernames(context.Context, []string) ([]*store.UserModel, error) {
 	return nil, nil
 }
+
 func (s offlineUserStore) GetByNames(context.Context, []string) ([]*store.UserModel, error) {
 	return nil, nil
 }
+
 func (s offlineUserStore) GetByPhones(context.Context, []string) ([]*store.UserModel, error) {
 	return nil, nil
 }
+
 func (s offlineUserStore) GetHeartbeatExpiredUids(context.Context, int64) ([]uint64, error) {
 	return nil, nil
 }
@@ -137,18 +156,23 @@ type offlineAuthSession struct {
 func (s *offlineAuthSession) Issue(context.Context, authsession.IssueRequest) (*authsession.IssueResult, error) {
 	return nil, errors.New("not implemented")
 }
+
 func (s *offlineAuthSession) Refresh(context.Context, authsession.RefreshRequest) (*authsession.IssueResult, error) {
 	return nil, errors.New("not implemented")
 }
+
 func (s *offlineAuthSession) ValidateAccessToken(context.Context, string) (*authsession.AuthContext, error) {
 	return nil, errors.New("not implemented")
 }
+
 func (s *offlineAuthSession) Logout(context.Context, *authsession.AuthContext) error {
 	return errors.New("not implemented")
 }
+
 func (s *offlineAuthSession) RevokeSession(context.Context, string, authsession.Status) error {
 	return errors.New("not implemented")
 }
+
 func (s *offlineAuthSession) RevokeUser(_ context.Context, userID uint64, reason authsession.Status) error {
 	if reason != authsession.StatusKicked {
 		return errors.New("unexpected revoke reason")
@@ -156,6 +180,7 @@ func (s *offlineAuthSession) RevokeUser(_ context.Context, userID uint64, reason
 	s.revoked = append(s.revoked, userID)
 	return s.err
 }
+
 func (s *offlineAuthSession) RevokeUserWorkspace(context.Context, uint64, uint64, authsession.Status) error {
 	return errors.New("not implemented")
 }

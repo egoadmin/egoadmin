@@ -15,9 +15,11 @@ type UserLocks struct {
 	locks usercache.UserInterface
 }
 
-var _ application.UserLocks = (*UserLocks)(nil)
-var _ application.RoleLocks = (*UserLocks)(nil)
-var _ application.DeptLocks = (*UserLocks)(nil)
+var (
+	_ application.UserLocks = (*UserLocks)(nil)
+	_ application.RoleLocks = (*UserLocks)(nil)
+	_ application.DeptLocks = (*UserLocks)(nil)
+)
 
 // NewUserLocks creates a user write-lock adapter.
 func NewUserLocks(locks usercache.UserInterface) *UserLocks {

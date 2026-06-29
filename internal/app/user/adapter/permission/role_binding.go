@@ -14,8 +14,10 @@ type RoleBinding struct {
 	casbin *perm.Casbin
 }
 
-var _ application.RoleBinding = (*RoleBinding)(nil)
-var _ application.RolePermissionBinding = (*RoleBinding)(nil)
+var (
+	_ application.RoleBinding           = (*RoleBinding)(nil)
+	_ application.RolePermissionBinding = (*RoleBinding)(nil)
+)
 
 // NewRoleBinding creates a Casbin-backed role binding adapter.
 func NewRoleBinding(casbin *perm.Casbin) *RoleBinding {

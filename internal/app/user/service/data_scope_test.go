@@ -283,6 +283,7 @@ func (s *dataScopeUserStore) UpdateBase(context.Context, uint64, *store.UserMode
 func (s *dataScopeUserStore) UpdateBaseWithoutHook(context.Context, uint64, *store.UserModel) error {
 	return nil
 }
+
 func (s *dataScopeUserStore) UpdateBaseWithoutHookAndTx(context.Context, uint64, *store.UserModel) error {
 	return nil
 }
@@ -290,21 +291,27 @@ func (s *dataScopeUserStore) UpdatePass(context.Context, uint64, string) error {
 func (s *dataScopeUserStore) Get(context.Context, uint64) (*store.UserModel, error) {
 	return s.user, nil
 }
+
 func (s *dataScopeUserStore) GetAuthSnapshot(context.Context, uint64) (*store.UserAuthSnapshot, error) {
 	return nil, nil
 }
+
 func (s *dataScopeUserStore) GetByUsername(context.Context, string) (*store.UserModel, error) {
 	return nil, nil
 }
+
 func (s *dataScopeUserStore) GetByPhone(context.Context, string) (*store.UserModel, error) {
 	return nil, nil
 }
+
 func (s *dataScopeUserStore) GetList(context.Context, store.UserModelGetListOption, ...func(*gorm.DB) *gorm.DB) ([]*store.UserModel, int64, error) {
 	return nil, 0, nil
 }
+
 func (s *dataScopeUserStore) GetByIds(context.Context, []uint64) ([]*store.UserModel, error) {
 	return nil, nil
 }
+
 func (s *dataScopeUserStore) GetByDeptIds(context.Context, []uint64) ([]*store.UserModel, error) {
 	return nil, nil
 }
@@ -312,12 +319,15 @@ func (s *dataScopeUserStore) CountByDeptIds(context.Context, []uint64) (int64, e
 func (s *dataScopeUserStore) GetByUsernames(context.Context, []string) ([]*store.UserModel, error) {
 	return nil, nil
 }
+
 func (s *dataScopeUserStore) GetByNames(context.Context, []string) ([]*store.UserModel, error) {
 	return nil, nil
 }
+
 func (s *dataScopeUserStore) GetByPhones(context.Context, []string) ([]*store.UserModel, error) {
 	return nil, nil
 }
+
 func (s *dataScopeUserStore) GetHeartbeatExpiredUids(context.Context, int64) ([]uint64, error) {
 	return nil, nil
 }
@@ -340,27 +350,35 @@ func (dataScopeDeptStore) Update(context.Context, uint64, string) error { return
 func (dataScopeDeptStore) UpdatePriority(context.Context, []store.DeptModel) error {
 	return nil
 }
+
 func (dataScopeDeptStore) GetSelf(context.Context, uint64) (*store.DeptModel, error) {
 	return nil, nil
 }
+
 func (dataScopeDeptStore) Get(context.Context, uint64) (*store.DeptModel, error) {
 	return nil, nil
 }
+
 func (dataScopeDeptStore) GetByName(context.Context, string) ([]*store.DeptModel, error) {
 	return nil, nil
 }
+
 func (dataScopeDeptStore) GetByID(context.Context, uint64) ([]*store.DeptModel, error) {
 	return nil, nil
 }
+
 func (dataScopeDeptStore) GetByIDs(context.Context, []uint64) ([]*store.DeptModel, error) {
 	return nil, nil
 }
+
 func (dataScopeDeptStore) GetByCode(context.Context, string) ([]*store.DeptModel, error) {
 	return nil, nil
 }
+
 func (dataScopeDeptStore) GetSubtreeIDs(context.Context, uint64) ([]uint64, error) {
 	return nil, nil
 }
+
 func (dataScopeDeptStore) GetAncestorIDs(context.Context, uint64) ([]uint64, error) {
 	return nil, nil
 }
@@ -368,9 +386,11 @@ func (dataScopeDeptStore) GetAll(context.Context) ([]*store.DeptModel, error) { 
 func (dataScopeDeptStore) GetTopAll(context.Context) ([]*store.DeptModel, error) {
 	return nil, nil
 }
+
 func (dataScopeDeptStore) GetChilds(context.Context, uint64) ([]*store.DeptModel, error) {
 	return nil, nil
 }
+
 func (dataScopeDeptStore) CountByOption(context.Context, ...func(*gorm.DB) *gorm.DB) (int64, error) {
 	return 0, nil
 }

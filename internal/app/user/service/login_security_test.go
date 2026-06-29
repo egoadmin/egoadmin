@@ -101,6 +101,7 @@ func (s loginUserStore) CountByOption(context.Context, func(*gorm.DB) *gorm.DB) 
 func (s loginUserStore) CountByRole(context.Context, uint64) (int64, error) {
 	return 0, nil
 }
+
 func (s loginUserStore) GetByRoleID(context.Context, uint64) ([]*store.UserModel, error) {
 	return nil, nil
 }

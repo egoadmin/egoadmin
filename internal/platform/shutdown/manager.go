@@ -77,7 +77,8 @@ func (m *Manager) RegisterRegistry(reg eregistry.Registry) {
 
 func (m *Manager) RegisterDB(name string, db interface {
 	DB() (*sql.DB, error)
-}) {
+},
+) {
 	if m == nil || db == nil {
 		return
 	}

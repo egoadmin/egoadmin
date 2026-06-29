@@ -1,8 +1,8 @@
 package store
 
 import (
-	"github.com/egoadmin/egoadmin/internal/platform/database/mysql"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
+	"github.com/egoadmin/egoadmin/internal/platform/database/mysql"
 	"github.com/google/wire"
 )
 

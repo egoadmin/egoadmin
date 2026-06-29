@@ -11,9 +11,11 @@ import (
 	"github.com/gotomicro/ego/task/ecron"
 )
 
-const machineCleanupCronName = "cron.idgen.machine.cleanup"
-const defaultMachineCleanupLimit = 1000
-const defaultMachineCleanupRetention = 7 * 24 * time.Hour
+const (
+	machineCleanupCronName         = "cron.idgen.machine.cleanup"
+	defaultMachineCleanupLimit     = 1000
+	defaultMachineCleanupRetention = 7 * 24 * time.Hour
+)
 
 func newMachineLeaseCleanupCron(conf *config.Config, usecase *application.MachineLeaseUseCase) ecron.Ecron {
 	return ecron.Load(machineCleanupCronName).Build(

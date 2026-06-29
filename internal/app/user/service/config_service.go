@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/coocood/freecache"
 	store "github.com/egoadmin/egoadmin/internal/app/user/internal/store"
 	"github.com/egoadmin/elib/pkg/util/xorm"
-	"github.com/coocood/freecache"
 )
 
 // ConfigService 系统设置服务

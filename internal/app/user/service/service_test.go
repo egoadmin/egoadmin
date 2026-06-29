@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/BurntSushi/toml"
 	store "github.com/egoadmin/egoadmin/internal/app/user/internal/store"
 	"github.com/egoadmin/egoadmin/internal/component/logincrypto"
 	"github.com/egoadmin/elib/pkg/util/xorm"
-	"github.com/BurntSushi/toml"
 	"github.com/gotomicro/ego/core/econf"
 	"gorm.io/gorm"
 )
@@ -166,6 +166,7 @@ func (s fakeDeptStore) Update(context.Context, uint64, string) error { return ni
 func (s fakeDeptStore) UpdatePriority(context.Context, []store.DeptModel) error {
 	return nil
 }
+
 func (s fakeDeptStore) GetSelf(_ context.Context, id uint64) (*store.DeptModel, error) {
 	dept, ok := s.depts[id]
 	if !ok {
@@ -173,6 +174,7 @@ func (s fakeDeptStore) GetSelf(_ context.Context, id uint64) (*store.DeptModel, 
 	}
 	return dept, nil
 }
+
 func (s fakeDeptStore) Get(ctx context.Context, id uint64) (*store.DeptModel, error) {
 	dept, ok := s.depts[id]
 	if !ok {
@@ -181,6 +183,7 @@ func (s fakeDeptStore) Get(ctx context.Context, id uint64) (*store.DeptModel, er
 	node := s.subtree(dept)
 	return &node, nil
 }
+
 func (s fakeDeptStore) GetByName(_ context.Context, name string) ([]*store.DeptModel, error) {
 	out := make([]*store.DeptModel, 0)
 	for _, dept := range s.depts {
@@ -190,9 +193,11 @@ func (s fakeDeptStore) GetByName(_ context.Context, name string) ([]*store.DeptM
 	}
 	return out, nil
 }
+
 func (s fakeDeptStore) GetByID(context.Context, uint64) ([]*store.DeptModel, error) {
 	return nil, nil
 }
+
 func (s fakeDeptStore) GetByIDs(_ context.Context, ids []uint64) ([]*store.DeptModel, error) {
 	out := make([]*store.DeptModel, 0, len(ids))
 	seen := make(map[uint64]struct{}, len(ids))
@@ -207,6 +212,7 @@ func (s fakeDeptStore) GetByIDs(_ context.Context, ids []uint64) ([]*store.DeptM
 	}
 	return out, nil
 }
+
 func (s fakeDeptStore) GetByCode(_ context.Context, code string) ([]*store.DeptModel, error) {
 	out := make([]*store.DeptModel, 0)
 	for _, dept := range s.depts {
@@ -216,6 +222,7 @@ func (s fakeDeptStore) GetByCode(_ context.Context, code string) ([]*store.DeptM
 	}
 	return out, nil
 }
+
 func (s fakeDeptStore) GetSubtreeIDs(ctx context.Context, id uint64) ([]uint64, error) {
 	dept, err := s.GetSelf(ctx, id)
 	if err != nil {
@@ -233,6 +240,7 @@ func (s fakeDeptStore) GetSubtreeIDs(ctx context.Context, id uint64) ([]uint64, 
 	}
 	return ids, nil
 }
+
 func (s fakeDeptStore) GetAncestorIDs(ctx context.Context, id uint64) ([]uint64, error) {
 	dept, err := s.GetSelf(ctx, id)
 	if err != nil {
@@ -254,9 +262,11 @@ func (s fakeDeptStore) GetTopAll(context.Context) ([]*store.DeptModel, error) {
 	}
 	return out, nil
 }
+
 func (s fakeDeptStore) GetChilds(context.Context, uint64) ([]*store.DeptModel, error) {
 	return nil, nil
 }
+
 func (s fakeDeptStore) CountByOption(context.Context, ...func(*gorm.DB) *gorm.DB) (int64, error) {
 	return 0, nil
 }

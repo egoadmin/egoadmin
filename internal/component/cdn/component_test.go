@@ -335,42 +335,54 @@ type fakeDownloadStore struct {
 func (s *fakeDownloadStore) CreateMultipart(context.Context, upload.CreateMultipartCommand) (*upload.CreateMultipartResult, error) {
 	return nil, nil
 }
+
 func (s *fakeDownloadStore) CreateTus(context.Context, upload.CreateTusCommand) (*upload.CreateTusResult, error) {
 	return nil, nil
 }
+
 func (s *fakeDownloadStore) CreateInstantReference(context.Context, upload.CreateInstantReferenceCommand) (*upload.CreateInstantReferenceResult, error) {
 	return nil, nil
 }
+
 func (s *fakeDownloadStore) CommitReference(context.Context, upload.CommitReferenceCommand) (*upload.ReferenceDetail, error) {
 	return nil, nil
 }
+
 func (s *fakeDownloadStore) ReleasePreviousReferences(context.Context, upload.ReleasePreviousReferencesCommand) error {
 	return nil
 }
+
 func (s *fakeDownloadStore) GetReference(context.Context, uint64, uint64) (*upload.ReferenceDetail, error) {
 	return nil, nil
 }
+
 func (s *fakeDownloadStore) GetBoundReference(context.Context, upload.GetBoundReferenceCommand) (*upload.ReferenceDetail, error) {
 	return nil, upload.ErrReferenceNotFound
 }
+
 func (s *fakeDownloadStore) GetDownloadReference(context.Context, uint64) (*upload.DownloadObject, error) {
 	if s.object == nil {
 		return nil, upload.ErrReferenceNotFound
 	}
 	return s.object, nil
 }
+
 func (s *fakeDownloadStore) GetDownloadReferenceForOwner(context.Context, uint64, uint64) (*upload.DownloadObject, error) {
 	return s.GetDownloadReference(context.Background(), 0)
 }
+
 func (s *fakeDownloadStore) ReleaseReference(context.Context, upload.ReleaseReferenceCommand) error {
 	return nil
 }
+
 func (s *fakeDownloadStore) ExpireTemporaryReferences(context.Context, time.Time, int) ([]upload.ExpiredReference, error) {
 	return nil, nil
 }
+
 func (s *fakeDownloadStore) FindUnreferencedObjects(context.Context, int) ([]upload.UnreferencedObject, error) {
 	return nil, nil
 }
+
 func (s *fakeDownloadStore) MarkObjectDeleting(context.Context, uint64) (bool, error) {
 	return false, nil
 }
@@ -384,9 +396,11 @@ func (s *fakeDownloadStore) MarkUploadFailed(context.Context, uint64) error    {
 func (s *fakeDownloadStore) MarkTusUploadFinished(context.Context, upload.MarkTusUploadFinishedCommand) (*upload.TusUploadDetail, error) {
 	return nil, nil
 }
+
 func (s *fakeDownloadStore) MarkTusUploadCreated(context.Context, upload.MarkTusUploadCreatedCommand) error {
 	return nil
 }
+
 func (s *fakeDownloadStore) FindExpiredTusUploads(context.Context, time.Time, int) ([]upload.ExpiredTusUpload, error) {
 	return nil, nil
 }
@@ -394,6 +408,7 @@ func (s *fakeDownloadStore) MarkTusUploadAborted(context.Context, uint64) error 
 func (s *fakeDownloadStore) FindTusMetadataForCleanup(context.Context, int) ([]upload.TusMetadataObject, error) {
 	return nil, nil
 }
+
 func (s *fakeDownloadStore) MarkTusMetadataCleaning(context.Context, uint64) (bool, error) {
 	return false, nil
 }
@@ -407,6 +422,7 @@ type fakeObjectStore struct {
 func (s *fakeObjectStore) Put(context.Context, string, io.Reader, int64, upload.PutOptions) error {
 	return nil
 }
+
 func (s *fakeObjectStore) Get(_ context.Context, key string) (upload.ObjectReader, error) {
 	return &fakeObjectReader{
 		Reader: bytes.NewReader(s.data),
