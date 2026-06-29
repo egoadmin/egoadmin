@@ -1,7 +1,13 @@
-name: Design Preview Pages
+name: Pages
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'web/design/**'
+      - '.github/workflows/pages.yml'
 
 # 允许向 GitHub Pages 部署
 permissions:
@@ -22,14 +28,37 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Install docs dependencies
+        run: npm --prefix docs ci
+
+      - name: Build VitePress docs
+        run: npm --prefix docs run build
+        env:
+          DOCS_BASE: /${{ github.event.repository.name }}/
+
+      - name: Compose Pages artifact
+        run: |
+          rm -rf .pages
+          mkdir -p .pages/design
+          cp -R docs/.vitepress/dist/. .pages/
+          cp -R web/design/. .pages/design/
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload design preview
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: web/design
+          path: .pages
 
       - name: Deploy to GitHub Pages
         id: deployment
