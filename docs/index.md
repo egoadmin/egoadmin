@@ -27,7 +27,7 @@ features:
     details: 内置结构化 AI skill 文档，覆盖 proto 契约、权限、分布式事务、数据权限、迁移、停机等关键链路，让 AI 按项目约定读对参考、改对位置。
   - icon: 📋
     title: Proto 优先的 API 契约
-    details: 所有业务接口始于 .proto 文件，gRPC + grpc-gateway 双协议，HTTP 作为 gRPC compatibility，POST body 请求。
+    details: 所有业务接口始于 .proto 文件，gRPC + protoc-gen-go-http 双协议，同一套 Controller 处理 HTTP 和 gRPC，POST body 请求。
   - icon: 🎨
     title: 内嵌 Vue3 管理后台
     details: 同仓 web/ 目录，Vue3 + Element Plus + Pinia + Vue Router，构建产物 dist 通过 go:embed 打包进 gateway 单进程分发。
@@ -62,7 +62,7 @@ features:
 |------|------|
 | 语言 | Go 1.26 |
 | 框架 | EGO (github.com/gotomicro/ego) |
-| HTTP 引擎 | Gin + grpc-gateway |
+| HTTP 引擎 | Gin + protoc-gen-go-http |
 | 服务通信 | gRPC（内部）、HTTP POST（外部兼容） |
 | 服务发现 | etcd |
 | 持久化 | MySQL + GORM |
