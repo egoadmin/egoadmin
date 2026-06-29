@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EgoAdmin · 设计稿预览与框架价值</title>
+<meta name="description" content="EgoAdmin —— Agent First / Proto First / 契约化权限的 Go 微服务后台开发底座。设计稿预览。">
+<style>
+/* ============================================================
+   EgoAdmin 设计稿索引  ·  令牌取自 DESIGN.md（现代极简 / 亮色 / 电光蓝 + Go 青）
+   ============================================================ */
+:root{
+  --bg:#FAFBFC; --surface:#FFFFFF; --surface-2:#F4F6F8; --surface-3:#EAEDF1;
+  --fg:#14181F; --text:#3A4250; --muted:#6B7280; --faint:#9AA3B2;
+  --border:#E6E8EC; --border-strong:#D5D9E0;
+  --accent:#1573E6; --accent-hover:#1267CC; --accent-press:#0F58B0;
+  --accent-weak:#E8F1FC; --accent-text:#1166C4; --on-accent:#fff;
+  --cyan:#19B6DD; --cyan-weak:#E2F6FC;
+  --success:#17B26A; --success-weak:#E6F7EF;
+  --amber:#F5A623; --amber-weak:#FDF3E2;
+  --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono","Cascadia Code",ui-monospace,"Roboto Mono",Menlo,Consolas,monospace;
+  --r-sm:6px; --r-md:8px; --r-lg:12px; --r-xl:16px; --r-pill:999px;
+  --shadow-sm:0 2px 6px rgb(16 24 40 / .06);
+  --shadow-md:0 6px 18px -6px rgb(16 24 40 / .12);
+  --shadow-lg:0 16px 40px -12px rgb(16 24 40 / .18);
+  --focus:0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+  --ease:cubic-bezier(.2,0,0,1); --ease-out:cubic-bezier(.16,1,.3,1);
+  --maxw:1180px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:80px}
+body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--font-display); color:var(--fg); margin:0; text-wrap:balance}
+p{text-wrap:pretty; margin:0}
+.mono{font-family:var(--font-mono)}
+a{color:var(--accent-text); text-decoration:none}
+::selection{background:var(--accent-weak)}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 28px}
+.eyebrow{font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--accent-text)}
+
+/* ---------- nav ---------- */
+.nav{position:sticky; top:0; z-index:100; height:64px; display:flex; align-items:center; gap:24px; padding:0 28px; background:color-mix(in oklab,var(--bg) 82%,transparent); backdrop-filter:saturate(1.4) blur(10px); border-bottom:1px solid var(--border)}
+.nav .brand{display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-weight:680; color:var(--fg); letter-spacing:-.01em; font-size:16px}
+.nav .brand .logo{width:26px; height:26px; border-radius:7px; background:linear-gradient(135deg,var(--accent),var(--cyan)); display:grid; place-items:center; color:#fff; font-weight:800; font-size:14px}
+.nav .brand small{font-family:var(--font-mono); font-size:11px; color:var(--muted); font-weight:500}
+.nav .spacer{flex:1}
+.nav .links{display:flex; gap:6px}
+.nav .links a{font-size:14px; font-weight:500; color:var(--muted); padding:8px 12px; border-radius:var(--r-md); transition:color .18s var(--ease), background .18s var(--ease)}
+.nav .links a:hover{color:var(--fg); background:var(--surface-2)}
+
+/* ---------- buttons ---------- */
+.btn{font:inherit; font-size:14px; font-weight:550; cursor:pointer; border-radius:var(--r-md); padding:9px 18px; border:1px solid transparent; display:inline-flex; align-items:center; gap:8px; transition:background .18s var(--ease), border-color .18s var(--ease), color .18s var(--ease), box-shadow .18s var(--ease)}
+.btn:focus-visible{outline:none; box-shadow:var(--focus)}
+.btn-primary{background:var(--accent); color:var(--on-accent)}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-secondary{background:var(--surface); color:var(--text); border-color:var(--border-strong)}
+.btn-secondary:hover{border-color:var(--accent); color:var(--accent-text)}
+
+/* ---------- hero ---------- */
+.hero{position:relative; overflow:hidden; background:
+  radial-gradient(900px 420px at 78% -8%, color-mix(in oklab,var(--cyan) 16%,transparent), transparent 60%),
+  radial-gradient(820px 460px at 10% 0%, color-mix(in oklab,var(--accent) 16%,transparent), transparent 58%),
+  var(--bg);
+  border-bottom:1px solid var(--border)}
+.hero .wrap{padding-top:72px; padding-bottom:60px}
+.hero .eyebrow{margin-bottom:16px}
+.hero h1{font-size:clamp(34px,4.6vw,56px); font-weight:700; letter-spacing:-.028em; line-height:1.08; max-width:18ch}
+.hero .sub{margin-top:18px; max-width:60ch; font-size:clamp(16px,1.7vw,19px); color:var(--muted)}
+.hero .cta{margin-top:30px; display:flex; gap:12px; flex-wrap:wrap}
+.hero .svc{margin-top:24px; display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.chip{font-family:var(--font-mono); font-size:12px; font-weight:600; padding:5px 11px; border-radius:var(--r-pill); background:var(--surface); border:1px solid var(--border-strong); color:var(--text)}
+.chip.dot::before{content:""; display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--success); margin-right:7px; vertical-align:middle}
+
+/* ---------- pillars ---------- */
+section{padding:64px 0}
+.sec-head{max-width:64ch; margin-bottom:32px}
+.sec-head h2{font-size:clamp(24px,2.8vw,34px); font-weight:660; letter-spacing:-.018em; line-height:1.16; margin:8px 0 10px}
+.sec-head p{color:var(--muted); font-size:16px}
+
+.pillars{display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
+.pillar{position:relative; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-xl); padding:26px 24px; box-shadow:var(--shadow-sm); transition:transform .2s var(--ease-out), box-shadow .2s var(--ease-out), border-color .2s var(--ease)}
+.pillar:hover{transform:translateY(-3px); box-shadow:var(--shadow-md); border-color:var(--border-strong)}
+.pillar .ic{width:42px; height:42px; border-radius:11px; display:grid; place-items:center; margin-bottom:16px}
+.pillar .ic svg{width:22px; height:22px; stroke-width:1.8}
+.pillar.p1 .ic{background:var(--accent-weak); color:var(--accent)}
+.pillar.p2 .ic{background:var(--cyan-weak); color:var(--cyan)}
+.pillar.p3 .ic{background:var(--amber-weak); color:var(--amber)}
+.pillar .tag{font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--faint)}
+.pillar h3{font-size:21px; font-weight:660; letter-spacing:-.01em; margin:4px 0 10px}
+.pillar p{color:var(--muted); font-size:14.5px}
+.pillar .so{margin-top:14px; padding-top:14px; border-top:1px dashed var(--border-strong); font-size:13.5px; color:var(--text)}
+.pillar .so b{color:var(--fg); font-weight:620}
+
+/* ---------- capability strip ---------- */
+.caps{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+.cap{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:24px; box-shadow:var(--shadow-sm)}
+.cap h3{font-size:18px; font-weight:640; margin-bottom:14px; display:flex; align-items:center; gap:10px}
+.cap h3 .ic{width:30px;height:30px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;color:var(--accent)}
+.cap h3 .ic svg{width:17px;height:17px;stroke-width:1.8}
+.cap ul{list-style:none; margin:0; padding:0; display:grid; gap:10px}
+.cap li{position:relative; padding-left:22px; font-size:14px; color:var(--text)}
+.cap li::before{content:""; position:absolute; left:2px; top:8px; width:6px; height:6px; border-radius:50%; background:var(--cyan)}
+.cap li b{color:var(--fg); font-weight:600}
+
+/* ---------- design gallery ---------- */
+.group{margin-top:8px}
+.group + .group{margin-top:40px}
+.group-title{display:flex; align-items:center; gap:12px; margin-bottom:18px}
+.group-title h3{font-size:16px; font-weight:640; color:var(--fg)}
+.group-title .ln{flex:1; height:1px; background:var(--border)}
+.group-title .cnt{font-family:var(--font-mono); font-size:12px; color:var(--faint)}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(248px,1fr)); gap:16px}
+.card{position:relative; display:block; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:20px; box-shadow:var(--shadow-sm); color:inherit; transition:transform .18s var(--ease-out), box-shadow .18s var(--ease-out), border-color .18s var(--ease)}
+.card:hover{transform:translateY(-3px); box-shadow:var(--shadow-md); border-color:var(--accent)}
+.card .top{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px}
+.card . thumb{}
+.card .thumb{width:44px; height:44px; border-radius:11px; background:var(--surface-2); display:grid; place-items:center; color:var(--accent); border:1px solid var(--border)}
+.card .thumb svg{width:23px; height:23px; stroke-width:1.7}
+.card.star .thumb{background:var(--amber-weak); color:var(--amber); border-color:color-mix(in oklab,var(--amber) 35%,transparent)}
+.card h4{font-size:16px; font-weight:620; letter-spacing:-.01em; margin-bottom:6px; display:flex; align-items:center; gap:8px}
+.card .badge{font-family:var(--font-mono); font-size:10px; font-weight:700; letter-spacing:.05em; padding:2px 7px; border-radius:var(--r-pill); background:var(--amber-weak); color:#9a6a12; text-transform:uppercase}
+.card p{font-size:13.5px; color:var(--muted); line-height:1.55}
+.card .go{margin-top:14px; font-family:var(--font-mono); font-size:12.5px; font-weight:600; color:var(--accent-text); display:inline-flex; align-items:center; gap:6px; transition:gap .18s var(--ease)}
+.card:hover .go{gap:10px}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--border); background:var(--surface); margin-top:64px}
+footer .wrap{padding:36px 28px; display:flex; flex-wrap:wrap; gap:18px; align-items:center; justify-content:space-between}
+footer .note{font-size:13px; color:var(--faint); max-width:62ch}
+footer .note b{color:var(--muted); font-weight:600}
+footer .links{display:flex; gap:18px; font-size:14px}
+
+@media (max-width:880px){
+  .pillars{grid-template-columns:1fr}
+  .caps{grid-template-columns:1fr}
+  .nav .links{display:none}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="brand"><span class="logo">E</span>EgoAdmin <small>设计稿预览</small></span>
+  <span class="spacer"></span>
+  <span class="links">
+    <a href="#pillars">核心理念</a>
+    <a href="#caps">能力底座</a>
+    <a href="#gallery">设计稿</a>
+  </span>
+  <a class="btn btn-secondary" href="https://github.com/egoadmin/egoadmin" target="_blank" rel="noopener">GitHub</a>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">READY-TO-RUN · GO 微服务后台开发底座</div>
+    <h1>为 AI 协作而生的<br>微服务后台开发底座</h1>
+    <p class="sub">一份 proto 驱动全栈，一套契约统一权限，一组 skill 让 AI 在正确的层写正确的代码。开箱即用的认证、数据权限、分布式事务、分布式 ID、文件能力与优雅停机，让你专注业务，而非脚手架。</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="landing.html">查看产品落地页 →</a>
+      <a class="btn btn-secondary" href="#gallery">浏览全部设计稿</a>
+    </div>
+    <div class="svc">
+      <span class="chip dot">gateway</span>
+      <span class="chip dot">user</span>
+      <span class="chip dot">idgen</span>
+      <span class="chip">HTTP + gRPC 双栈</span>
+      <span class="chip">etcd 服务发现</span>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 三大核心理念 ============ -->
+<section id="pillars">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">为什么不一样</div>
+      <h2>三个让它与众不同的设计前提</h2>
+      <p>不是又一个后台脚手架。它把 AI 协作、接口契约、权限模型当作第一性原则来设计。</p>
+    </div>
+    <div class="pillars">
+
+      <article class="pillar p1">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="2"/><path d="M12 8V5M9 4h6"/><circle cx="9" cy="13" r="1"/><circle cx="15" cy="13" r="1"/><path d="M9 16h6"/></svg>
+        </div>
+        <div class="tag">Principle 01</div>
+        <h3>Agent First</h3>
+        <p>框架自带一套结构化 AI skill 文档，覆盖 proto 契约、权限、分布式事务、数据权限、迁移、停机等每一层。AI 不靠猜你的架构，而是按既定约定读对参考、改对链路。</p>
+        <div class="so"><b>解决：</b>AI 在陌生框架里乱写、跨层污染、破坏约定。你和 AI 共享同一套事实来源。</div>
+      </article>
+
+      <article class="pillar p2">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><path d="M9 4a3 3 0 0 1 6 0"/><path d="M8 11h8M8 15h5"/></svg>
+        </div>
+        <div class="tag">Principle 02</div>
+        <h3>Proto First</h3>
+        <p><span class="mono">.proto</span> 是唯一事实来源。<span class="mono">make gen</span> 一条命令，从 proto 生成 gRPC + HTTP 双栈、参数校验、OpenAPI 文档、API catalog、业务错误码、响应映射与前端类型。</p>
+        <div class="so"><b>解决：</b>接口、文档、校验、前端类型各写一遍还对不上。这里全部从 proto 推导，天然一致。</div>
+      </article>
+
+      <article class="pillar p3">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9.2 12l2 2 3.6-3.8"/></svg>
+        </div>
+        <div class="tag">Principle 03</div>
+        <h3>契约化权限</h3>
+        <p>权限契约（<span class="mono">permission-contract</span>）由代码自动生成，不需要人工维护菜单表、权限码、按钮配置。路由即菜单，API 标识即权限点；前端勾选必须落在契约内，后端按契约强制校验边界，契约可 diff、可审计。</p>
+        <div class="so"><b>解决：</b>传统后台手工配菜单树 + 权限码，易错、难审计、易越权。这里一切基于契约，还内建防越权授权。</div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ 能力底座 ============ -->
+<section id="caps" style="background:var(--surface-2); border-block:1px solid var(--border)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">不止于理念</div>
+      <h2>生产级能力，开箱即用</h2>
+      <p>这些通常要你自己造的轮子，框架已经接好并经过 e2e 验证。</p>
+    </div>
+    <div class="caps">
+
+      <div class="cap">
+        <h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a14 14 0 0 0 0 18M12 3a14 14 0 0 1 0 18M3.5 9h17M3.5 15h17"/></svg></span>真·微服务底座</h3>
+        <ul>
+          <li><b>三服务拆分</b>：gateway / user / idgen 独立进程、独立配置，gRPC + etcd 服务发现，跨服务调用强制走 client 封装</li>
+          <li><b>DTM 分布式事务</b>：Saga / TCC / 事务消息预接好，跨服务写一致性 + 幂等屏障表</li>
+          <li><b>优雅停机</b>：readiness 摘流 + 反序关闭资源，K8s 滚动更新零丢请求</li>
+          <li><b>按库迁移</b>：每服务独立 Atlas 版本化迁移，可审计的 schema 演进，拒绝生产 AutoMigrate</li>
+        </ul>
+      </div>
+
+      <div class="cap">
+        <h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4z"/><path d="M4 12l8 4 8-4M4 17l8 4 8-4"/></svg></span>省掉重复造的轮子</h3>
+        <ul>
+          <li><b>加密登录</b>：RSA-OAEP 密文传输，无明文/MD5 密码，挑战一次性防重放；真会话生命周期（强制下线 / 吊销）</li>
+          <li><b>行级数据权限</b>：DataScope 组织树可见性（全部 / 本部门及子级 / 仅本部门 / 仅本人）+ 防越权授权</li>
+          <li><b>分布式 ID</b>：idgen 号段分配 + idcodec 可逆公开 ID，不暴露自增主键</li>
+          <li><b>文件与前端</b>：TUS 断点续传 + MinIO + 签名 CDN 图片处理；单二进制内嵌 SPA；端到端 i18n 错误消息跨服务不丢</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ 设计稿画廊 ============ -->
+<section id="gallery">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">DESIGN PREVIEW</div>
+      <h2>设计稿一览</h2>
+      <p>统一的设计系统下，覆盖登录、用户、组织、角色、审计与状态规范的高保真页面。</p>
+    </div>
+
+    <!-- 基础体验 -->
+    <div class="group">
+      <div class="group-title"><h3>基础体验</h3><span class="ln"></span><span class="cnt">3</span></div>
+      <div class="grid">
+        <a class="card" href="landing.html">
+          <div class="top"><span class="thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 21V12h6v9"/></svg></span></div>
+          <h4>落地页</h4>
+          <p>框架理念与能力总览，Proto First 串起接口 / 验证 / 文档 / 权限。</p>
+          <span class="go">查看 landing.html →</span>
+        </a>
+        <a class="card" href="login.html">
+          <div class="top"><span class="thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15" r="1.3"/></svg></span></div>
+          <h4>登录</h4>
+          <p>RSA-OAEP 加密传输，无明文密码，挑战防重放，含验证码。</p>
+          <span class="go">查看 login.html →</span>
+        </a>
+        <a class="card" href="personal.html">
+          <div class="top"><span class="thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 20c0-3.3 3.1-6 7-6s7 2.7 7 6"/></svg></span></div>
+          <h4>个人中心</h4>
+          <p>会话管理、多端登录控制、强制下线与安全设置。</p>
+          <span class="go">查看 personal.html →</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- 核心管理 -->
+    <div class="group">
+      <div class="group-title"><h3>核心管理</h3><span class="ln"></span><span class="cnt">3</span></div>
+      <div class="grid">
+        <a class="card" href="user.html">
+          <div class="top"><span class="thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c0-3 2.7-5 6-5s6 2 6 5"/><path d="M16 8.5a3 3 0 0 1 0 5M18 19c0-2.2-1-3.7-2.5-4.6"/></svg></span></div>
+          <h4>用户管理</h4>
+          <p>行级数据权限（DataScope）控制可见范围，按组织边界过滤。</p>
+          <span class="go">查看 user.html →</span>
+        </a>
+        <a class="card" href="organization.html">
+          <div class="top"><span class="thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-2h12v2"/></svg></span></div>
+          <h4>组织管理</h4>
+          <p>部门树维护，配合数据权限形成可见性边界。</p>
+          <span class="go">查看 organization.html →</span>
+        </a>
+        <a class="card star" href="role.html">
+          <div class="top"><span class="thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9.2 12l2 2 3.6-3.8"/></svg></span></div>
+          <h4>角色管理 <span class="badge">核心</span></h4>
+          <p>契约化权限授权 —— 基于 permission-contract 勾选，后端按契约强制边界。框架最核心的一页。</p>
+          <span class="go">查看 role.html →</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- 运营审计 -->
+    <div class="group">
+      <div class="group-title"><h3>运营审计</h3><span class="ln"></span><span class="cnt">2</span></div>
+      <div class="grid">
+        <a class="card" href="operation_log.html">
+          <div class="top"><span class="thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg></span></div>
+          <h4>操作日志</h4>
+          <p>全量审计追踪，结合数据权限控制日志可见范围。</p>
+          <span class="go">查看 operation_log.html →</span>
+        </a>
+        <a class="card" href="online_user.html">
+          <div class="top"><span class="thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span></div>
+          <h4>在线用户</h4>
+          <p>实时会话视图，心跳离线检测与强制下线。</p>
+          <span class="go">查看 online_user.html →</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- 设计规范 -->
+    <div class="group">
+      <div class="group-title"><h3>设计规范</h3><span class="ln"></span><span class="cnt">2</span></div>
+      <div class="grid">
+        <a class="card" href="design-system.html">
+          <div class="top"><span class="thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="13" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="14" r="2.5"/><path d="M12 21a3 3 0 0 0 0-6 3 3 0 0 0 0 6z"/></svg></span></div>
+          <h4>设计系统</h4>
+          <p>活样式指南：色彩、排版、组件与交互令牌一处定义。</p>
+          <span class="go">查看 design-system.html →</span>
+        </a>
+        <a class="card" href="states.html">
+          <div class="top"><span class="thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="12" cy="14.5" r="2.5"/></svg></span></div>
+          <h4>状态预览</h4>
+          <p>空态 / 加载 / 错误的统一状态规范，覆盖列表与详情。</p>
+          <span class="go">查看 states.html →</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="note"><b>关于本预览：</b>这是 EgoAdmin 的高保真设计稿静态预览。页面内指向真实应用路由（如 <span class="mono">/system/role</span>）的链接在静态环境中不可点击，属预期行为。</p>
+    <div class="links">
+      <a href="https://github.com/egoadmin/egoadmin" target="_blank" rel="noopener">GitHub</a>
+      <a href="landing.html">产品落地页</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
