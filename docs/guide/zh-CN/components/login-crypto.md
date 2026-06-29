@@ -345,7 +345,7 @@ err = s.user.UpdateUserPassword(ctx, auth.UserID, payload.OldPassword, payload.N
 
 可通过以下 PromQL 查询错误率：
 
-```promql
+```text
 sum(rate(logincrypto_handle_total{code="Error"}[5m])) by (operation)
 / sum(rate(logincrypto_handle_total[5m])) by (operation)
 ```

@@ -102,7 +102,7 @@ USER.V1.DEPTSERVICE/DELETEDEPT
 
 Casbin 使用 PERM 模型（Policy, Effect, Request, Matchers）描述权限规则。EgoAdmin 采用 RBAC with resource roles 模型：
 
-```conf
+```ini
 [request_definition]
 r = sub, obj, act
 

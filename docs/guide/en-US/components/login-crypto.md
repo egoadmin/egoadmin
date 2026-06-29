@@ -345,7 +345,7 @@ With `enableMetrics = true`, the component exposes these Prometheus metrics:
 
 Query error rate with PromQL:
 
-```promql
+```text
 sum(rate(logincrypto_handle_total{code="Error"}[5m])) by (operation)
 / sum(rate(logincrypto_handle_total[5m])) by (operation)
 ```

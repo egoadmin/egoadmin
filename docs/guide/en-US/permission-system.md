@@ -37,7 +37,7 @@ Do not use HTTP paths, frontend route paths or menu IDs as backend permission ID
 
 EgoAdmin uses an RBAC model with resource roles described by a PERM (Policy, Effect, Request, Matchers) model:
 
-```conf
+```ini
 [request_definition]
 r = sub, obj, act
 
