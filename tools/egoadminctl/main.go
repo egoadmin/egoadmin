@@ -468,7 +468,7 @@ func applyReplacements(data []byte, replacements []replacement, externals []stri
 		path     []byte
 		sentinel []byte
 	}
-	var shields []shield
+	shields := make([]shield, 0, len(externals))
 	next := data
 	for i, ext := range externals {
 		extBytes := []byte(ext)
@@ -520,7 +520,11 @@ func injectProjectOrigin(root string, to identity) (*fileChange, error) {
 	}
 
 	next := append([]byte(header), data...)
-	if err := os.WriteFile(agentsPath, next, 0o644); err != nil {
+	info, err := os.Stat(agentsPath)
+	if err != nil {
+		return nil, err
+	}
+	if err := os.WriteFile(agentsPath, next, info.Mode().Perm()); err != nil {
 		return nil, err
 	}
 	return &fileChange{Path: "AGENTS.md", Occurrences: 1}, nil
