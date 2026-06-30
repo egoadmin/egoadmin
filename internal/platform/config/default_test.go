@@ -81,6 +81,8 @@ func TestDefaultConfigDocumentIncludesEnvSuffixGuidance(t *testing.T) {
 				"EnvSuffix: TRACE_SERVICENAME",
 				"EnvSuffix: TRACE_OTLP_ENDPOINT",
 				"EnvSuffix: COMPONENT_IDGEN_CODEC_SECRET",
+				"EnvSuffix: CLIENT_JETCACHE_NAME",
+				"EnvSuffix: COMPONENT_LOGINCRYPTO_CHALLENGETTL",
 				"EnvSuffix: CRON_USER_LOGIN_OFFLINE_SPEC",
 			},
 		},
@@ -115,6 +117,154 @@ func TestDefaultConfigDocumentIncludesEnvSuffixGuidance(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDefaultTOMLTemplatesAreValid(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		service Service
+	}{
+		{name: "gateway", service: ServiceGateway},
+		{name: "user", service: ServiceUser},
+		{name: "idgen", service: ServiceIDGen},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			content, err := defaultTOML(tt.service)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var raw map[string]any
+			if _, err := toml.Decode(content, &raw); err != nil {
+				t.Fatalf("default %s toml is invalid: %v", tt.name, err)
+			}
+		})
+	}
+}
+
+func TestDefaultCommonConfigOnlyContainsApprovedSharedSections(t *testing.T) {
+	t.Parallel()
+
+	approved := map[string]bool{
+		"component.idgen.default":  true,
+		"component.idgen.machine":  true,
+		"cron.idgen.machine.renew": true,
+		"component.idgen.codec":    true,
+		"etcd":                     true,
+		"registry":                 true,
+	}
+	var raw map[string]any
+	if _, err := toml.Decode(defaultCommonConfigContent, &raw); err != nil {
+		t.Fatal(err)
+	}
+	for _, section := range flattenConfigSections(raw, "") {
+		if !approved[section] {
+			t.Fatalf("default_common.toml contains non-shared section %q", section)
+		}
+	}
+}
+
+func TestDefaultCommonConfigDoesNotContainServiceOnlyComponents(t *testing.T) {
+	t.Parallel()
+
+	for _, forbidden := range []string{
+		"[client.jetcache]",
+		"[component.logincrypto]",
+		"[component.etusupload]",
+	} {
+		if strings.Contains(defaultCommonConfigContent, forbidden) {
+			t.Fatalf("default_common.toml should not contain service-only config %s", forbidden)
+		}
+	}
+}
+
+func TestDefaultUserConfigIncludesUserOnlyComponents(t *testing.T) {
+	t.Parallel()
+
+	for _, want := range []string{
+		"[client.jetcache]",
+		"[component.logincrypto]",
+		"EnvSuffix: CLIENT_JETCACHE_NAME",
+		"EnvSuffix: COMPONENT_LOGINCRYPTO_CHALLENGETTL",
+	} {
+		if !strings.Contains(defaultUserConfigContent, want) {
+			t.Fatalf("default_user.toml missing user-only config %q", want)
+		}
+	}
+}
+
+func flattenConfigSections(node map[string]any, prefix string) []string {
+	var sections []string
+	for key, value := range node {
+		next := key
+		if prefix != "" {
+			next = prefix + "." + key
+		}
+		child, ok := value.(map[string]any)
+		if !ok {
+			continue
+		}
+		if containsScalarValue(child) {
+			sections = append(sections, next)
+			continue
+		}
+		sections = append(sections, flattenConfigSections(child, next)...)
+	}
+	return sections
+}
+
+func containsScalarValue(node map[string]any) bool {
+	for _, value := range node {
+		if _, ok := value.(map[string]any); !ok {
+			return true
+		}
+	}
+	return false
+}
+
+func TestDefaultTOMLSectionsDoNotOverlapCommonSections(t *testing.T) {
+	t.Parallel()
+
+	commonSections := sectionSet(t, defaultCommonConfigContent)
+	tests := []struct {
+		name    string
+		content string
+	}{
+		{name: "gateway", content: defaultGatewayConfigContent},
+		{name: "user", content: defaultUserConfigContent},
+		{name: "idgen", content: defaultIDGenConfigContent},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			for section := range sectionSet(t, tt.content) {
+				if commonSections[section] {
+					t.Fatalf("default_%s.toml duplicates common section %q", tt.name, section)
+				}
+			}
+		})
+	}
+}
+
+func sectionSet(t *testing.T, content string) map[string]bool {
+	t.Helper()
+
+	var raw map[string]any
+	if _, err := toml.Decode(content, &raw); err != nil {
+		t.Fatal(err)
+	}
+	out := make(map[string]bool)
+	for _, section := range flattenConfigSections(raw, "") {
+		out[section] = true
+	}
+	return out
 }
 
 func TestDefaultGatewayUserClientReadTimeoutAllowsColdStart(t *testing.T) {

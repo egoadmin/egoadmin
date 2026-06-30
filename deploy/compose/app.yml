@@ -27,7 +27,8 @@ services:
       - "${IDGEN_GRPC_PORT:-9202}:9202"
       - "${IDGEN_GOVERNOR_PORT:-9203}:9203"
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9201/readyz >/dev/null"]
+      test:
+        ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9201/readyz >/dev/null"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -76,7 +77,8 @@ services:
       - "${USER_GRPC_PORT:-9102}:9102"
       - "${USER_GOVERNOR_PORT:-9103}:9103"
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9101/readyz >/dev/null"]
+      test:
+        ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9101/readyz >/dev/null"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -92,6 +94,7 @@ services:
       EGOADMIN_SERVER_GRPC_HOST: gateway
       EGOADMIN_SERVER_GOVERNOR_NAME: egoadmin-gateway
       EGOADMIN_SERVER_HTTP_NAME: egoadmin-gateway
+      EGOADMIN_SERVER_HTTP_GRPCENDPOINT: gateway:9002
       ATLAS_URL: mysql://${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@mysql-gateway:3306/${MYSQL_GATEWAY_DATABASE:-egoadmin_gateway}?charset=utf8mb4&parseTime=True&loc=Local
       EGOADMIN_APP_DBMIGRATION_URL: mysql://${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@mysql-gateway:3306/${MYSQL_GATEWAY_DATABASE:-egoadmin_gateway}?charset=utf8mb4&parseTime=True&loc=Local
       EGOADMIN_CLIENT_MYSQL_DSN: ${MYSQL_USER:-egoadmin}:${MYSQL_PASSWORD:-egoadmin}@tcp(mysql-gateway:3306)/${MYSQL_GATEWAY_DATABASE:-egoadmin_gateway}?charset=utf8mb4&parseTime=True&loc=Local&readTimeout=1s&timeout=1s&writeTimeout=3s
@@ -131,7 +134,8 @@ services:
       - "${GATEWAY_GRPC_PORT:-9002}:9002"
       - "${GATEWAY_GOVERNOR_PORT:-9003}:9003"
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9001/readyz >/dev/null"]
+      test:
+        ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9001/readyz >/dev/null"]
       interval: 10s
       timeout: 5s
       retries: 12

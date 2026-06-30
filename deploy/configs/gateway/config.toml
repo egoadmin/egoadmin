@@ -13,7 +13,7 @@
 # HTTP 兼容层需要回连 gateway 自己的 gRPC 服务。
 # 本地默认值是 127.0.0.1:9002；容器部署中 gRPC 服务会监听容器网卡 IP，
 # 因此使用 Docker DNS，避免回连 loopback 失败。
-grpcEndpoint = "gateway:9002"
+# grpcEndpoint = "gateway:9002"
 
 [server.grpc]
 # 默认本地配置使用 127.0.0.1，只适合宿主机开发。

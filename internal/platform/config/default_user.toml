@@ -166,6 +166,52 @@ mode = "stub"
 # EnvSuffix: CLIENT_REDIS_PASSWORD
 password = ""
 
+[client.jetcache]
+# 缓存组件名。
+# EnvSuffix: CLIENT_JETCACHE_NAME
+name = "default"
+# 远端缓存过期时间。
+# EnvSuffix: CLIENT_JETCACHE_REMOTEEXPIRY
+remoteExpiry = "1h0m0s"
+# 本地缓存最大条目数。
+# EnvSuffix: CLIENT_JETCACHE_LOCALSIZE
+localSize = 256
+# 本地缓存过期时间。
+# EnvSuffix: CLIENT_JETCACHE_LOCALEXPIRY
+localExpiry = "1m0s"
+# 后台刷新间隔。
+# EnvSuffix: CLIENT_JETCACHE_REFRESHDURATION
+refreshDuration = "2m0s"
+# 停止后台刷新的最大空闲时间。
+# EnvSuffix: CLIENT_JETCACHE_STOPREFRESHAFTER
+stopRefreshAfter = "1h0m0s"
+# 空值缓存过期时间。
+# EnvSuffix: CLIENT_JETCACHE_NOTFOUNDEXPIRY
+notFoundExpiry = "1m0s"
+# 是否暴露缓存指标。
+# EnvSuffix: CLIENT_JETCACHE_ENABLEMETRICS
+enableMetrics = true
+# 是否启用本地缓存同步。
+# EnvSuffix: CLIENT_JETCACHE_ENABLESYNCLOCAL
+enableSyncLocal = false
+# 缓存序列化格式。
+# EnvSuffix: CLIENT_JETCACHE_CODEC
+codec = "msgpack"
+
+[component.logincrypto]
+# 登录加密 challenge 有效期。
+# EnvSuffix: COMPONENT_LOGINCRYPTO_CHALLENGETTL
+challengeTTL = "3m0s"
+# 客户端时间戳允许偏差。
+# EnvSuffix: COMPONENT_LOGINCRYPTO_TIMESTAMPSKEW
+timestampSkew = "2m0s"
+# RSA 密钥位数。
+# EnvSuffix: COMPONENT_LOGINCRYPTO_RSAKEYBITS
+rsaKeyBits = 4096
+# 是否暴露登录加密指标。
+# EnvSuffix: COMPONENT_LOGINCRYPTO_ENABLEMETRICS
+enableMetrics = true
+
 [client.grpc.idgen]
 # idgen 服务 gRPC 地址。默认通过 etcd 服务发现。
 # EnvSuffix: CLIENT_GRPC_IDGEN_ADDR

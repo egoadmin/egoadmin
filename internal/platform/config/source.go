@@ -79,6 +79,13 @@ func (s *fileSource) Watch(onChange func()) {
 	if s.path == "" || onChange == nil {
 		return
 	}
+	if _, err := os.Stat(s.path); err != nil {
+		if os.IsNotExist(err) {
+			return
+		}
+		elog.Error("config file watcher stat", elog.FieldErr(err), elog.String("path", s.path))
+		return
+	}
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		elog.Error("config file watcher init", elog.FieldErr(err))
